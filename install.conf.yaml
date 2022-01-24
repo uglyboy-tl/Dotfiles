@@ -1,0 +1,29 @@
+- defaults:
+    link:
+      create: true
+      relink: true
+
+- clean: ['~','~/.local/bin']
+
+- shell:
+  - [git submodule update --init --recursive, Installing submodules]
+
+- link:
+    ~/.gitconfig:
+    ~/.pip/pip.conf: pip.conf
+
+    ~/.zshrc:
+      path: zsh/zshrc.zsh
+      force: true
+    ~/.zgen: zsh/zgen
+
+    ~/.vimrc: vim/vimrc
+    ~/.vim/autoload/plug.vim: vim/vim-plug/plug.vim
+
+    ~/.tmux.conf: tmux/tmux.conf
+    
+    ~/.local/bin/:
+      create: true
+      glob: true
+      path: scripts/*
+      relink: true

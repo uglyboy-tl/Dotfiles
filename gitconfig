@@ -1,0 +1,11 @@
+[user]
+	email = uglyboy@uglyboy.cn
+	name = uglyboy
+[credential]
+	helper = store
+[pull]
+	rebase = false
+
+# Allow local customizations in the .gitconfig_local file
+[include]
+	path=~/.gitconfig_local
