@@ -1,3 +1,8 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 # Allow local customizations in the ~/.zshrc_local_before file
 [ ! -f ~/.zshrc_local_before ] || source ~/.zshrc_local_before
 
@@ -6,12 +11,7 @@ export DOTFILES="$HOME/.dotfiles"
 export PATH=$PATH:$HOME/.local/bin
 export OS_RELEASE=`awk -F= '/^NAME/{print $2}' /etc/os-release | sed 's/"//g'`
 
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
 # load zgen
 source ~/.zgen/zgen.zsh
 
@@ -35,6 +35,7 @@ if ! zgen saved; then
     esac
     zgen oh-my-zsh plugins/tmux
     zgen oh-my-zsh plugins/autojump
+    zgen oh-my-zsh plugins/fzf
     zgen load zsh-users/zsh-syntax-highlighting
 
     # Theme
