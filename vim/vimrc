@@ -1,17 +1,25 @@
 call plug#begin('~/.vim/plugged')
 Plug 'tpope/vim-sensible'
+Plug 'tpope/vim-fugitive'
+Plug 'hotoo/pangu.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'arcticicestudio/nord-vim'
+Plug 'junegunn/fzf'
+Plug 'junegunn/fzf.vim'
 Plug 'wakatime/vim-wakatime'
-Plug 'tpope/vim-fugitive'
 call plug#end()
+
+set nu
+set autoindent
 
 colorscheme nord
 set laststatus=2  "永远显示状态栏
 let g:airline_powerline_fonts = 1  " 支持 powerline 字体
-"let g:airline#extensions#tabline#enabled = 1 " 显示窗口tab和buffer
+let g:airline#extensions#tabline#enabled = 1 " 显示窗口tab和buffer
 let g:airline#extensions#branch#enabled = 1 " 显示窗口tab和buffer
 let g:airline_theme='nord'
+
+autocmd BufWritePre *.markdown,*.md,*.text,*.txt,*.wiki,*.cnx call PanGuSpacing()
 
 if !exists('g:airline_symbols')
   let g:airline_symbols = {}
@@ -24,5 +32,5 @@ let g:airline_symbols.colnr = '℅:'
 
 let $LOCALFILE=expand("~/.vimrc_local")
 if filereadable($LOCALFILE)
-    source $LOCALFILE
+  source $LOCALFILE
 endif

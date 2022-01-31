@@ -8,10 +8,13 @@ fi
 
 # environment variables
 export DOTFILES="$HOME/.dotfiles"
-export PATH=$PATH:$HOME/.local/bin
 export OS_RELEASE=`awk -F= '/^NAME/{print $2}' /etc/os-release | sed 's/"//g'`
 
-typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+# fzf options
+export FZF_PREVIEW_COMMAND="bat --style=numbers,header --color=always {} || batcat --style=numbers,header --color=always {} || cat {}"
+export FZF_DEFAULT_OPTS="--height 50% --preview-window right:60% --layout=reverse --preview '($FZF_PREVIEW_COMMAND) 2> /dev/null'"
+export FZF_DEFAULT_COMMAND="fd --exclude={.git,.idea,.vscode,.sass-cache,node_modules,build,.m2} --type f --hidden --follow"
+
 # load zgen
 source ~/.zgen/zgen.zsh
 
