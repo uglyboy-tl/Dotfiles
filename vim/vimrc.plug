@@ -1,0 +1,13 @@
+Plug 'tpope/vim-sensible'
+
+Plug 'tpope/vim-fugitive'
+
+Plug 'hotoo/pangu.vim'
+
+Plug 'vim-airline/vim-airline'
+Plug 'arcticicestudio/nord-vim'
+
+Plug 'junegunn/fzf'
+Plug 'junegunn/fzf.vim'
+
+Plug 'wakatime/vim-wakatime'

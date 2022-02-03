@@ -18,6 +18,7 @@
     ~/.zgen: zsh/zgen
 
     ~/.vimrc: vim/vimrc
+    ~/.vimrc.plug: vim/vimrc.plug
     ~/.vim/autoload/plug.vim: vim/vim-plug/plug.vim
 
     ~/.tmux.conf: tmux/tmux.conf

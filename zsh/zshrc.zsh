@@ -4,7 +4,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Allow local customizations in the ~/.zshrc_local_before file
-[ ! -f ~/.zshrc_local_before ] || source ~/.zshrc_local_before
+[ ! -f ~/.zshrc.local.before ] || source ~/.zshrc.local.before
 
 # environment variables
 export DOTFILES="$HOME/.dotfiles"
@@ -13,8 +13,8 @@ export OS_RELEASE=`awk -F= '/^NAME/{print $2}' /etc/os-release | sed 's/"//g'`
 # fzf options
 export FZF_PREVIEW_COMMAND="bat --style=numbers,header --color=always {} || batcat --style=numbers,header --color=always {} || cat {}"
 export FZF_DEFAULT_OPTS="--height 50% --preview-window right:60% --layout=reverse --preview '($FZF_PREVIEW_COMMAND) 2> /dev/null'"
-export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!{.git,.idea,.vscode,.sass-cache,node_modules,build,.m2}/*" 2> /dev/null'
-export FZF_ALT_C_COMMAND="rg --sort-files --files --null 2> /dev/null | xargs -0 dirname | uniq"
+#export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!{.git,.idea,.vscode,.sass-cache,node_modules,build,.m2}/*" 2> /dev/null'
+#export FZF_ALT_C_COMMAND="rg --sort-files --files --null 2> /dev/null | xargs -0 dirname | uniq"
 
 # load zgen
 source ~/.zgen/zgen.zsh
@@ -57,4 +57,4 @@ alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 alias cp='rsync -av --progress'
 
 # Allow local customizations in the ~/.zshrc_local_after file
-[ ! -f ~/.zshrc_local_after ] || source ~/.zshrc_local_after
+[ ! -f ~/.zshrc.local.after ] || source ~/.zshrc.local.after
