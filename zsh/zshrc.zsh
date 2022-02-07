@@ -34,6 +34,9 @@ if ! zgen saved; then
         "Raspbian GNU/Linux" )
             zgen oh-my-zsh plugins/debian
         ;;
+	"Debian GNU/Linux" )
+            zgen oh-my-zsh plugins/debian
+        ;;
         * )
 	    echo "other"
     esac
