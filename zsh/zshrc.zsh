@@ -1,3 +1,6 @@
+# If you come from bash you might have to change your $PATH.
+export PATH=$PATH:$HOME/.local/bin
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -32,10 +35,10 @@ if ! zgen saved; then
 	    zgen oh-my-zsh plugins/ubuntu
         ;;
         "Raspbian GNU/Linux" )
-            zgen oh-my-zsh plugins/debian
+            zgen oh-my-zsh plugins/ubuntu
         ;;
 	"Debian GNU/Linux" )
-            zgen oh-my-zsh plugins/debian
+            zgen oh-my-zsh plugins/ubuntu
         ;;
         * )
 	    echo "other"
