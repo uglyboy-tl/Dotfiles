@@ -55,7 +55,7 @@ if ! zgen saved; then
     zgen save
 fi  
 
-source $DOTFILES/zsh/p10k.zsh
+#source $DOTFILES/zsh/p10k.zsh
 
 # alias definitions
 alias size='f(){ du -h --max-depth=1 $1 | sort -hr; }; f'
@@ -64,3 +64,6 @@ alias cp='rsync -av --progress'
 
 # Allow local customizations in the ~/.zshrc_local_after file
 [ ! -f ~/.zshrc.local.after ] || source ~/.zshrc.local.after
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
