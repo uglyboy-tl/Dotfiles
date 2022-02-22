@@ -43,10 +43,12 @@ if ! zgen saved; then
         * )
 	    echo "other"
     esac
-    zgen oh-my-zsh plugins/tmux
+    zgen oh-my-zsh plugins/cp
     zgen oh-my-zsh plugins/autojump
     zgen oh-my-zsh plugins/fzf
     zgen load zsh-users/zsh-syntax-highlighting
+
+    [ ! -f ~/.zshrc.local.zgen ] || source ~/.zshrc.local.zgen
 
     # Theme
     zgen load romkatv/powerlevel10k powerlevel10k
@@ -60,7 +62,7 @@ fi
 # alias definitions
 alias size='f(){ du -h --max-depth=1 $1 | sort -hr; }; f'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
-alias cp='rsync -av --progress'
+#alias cp='rsync -av --progress'
 
 # Allow local customizations in the ~/.zshrc_local_after file
 [ ! -f ~/.zshrc.local.after ] || source ~/.zshrc.local.after

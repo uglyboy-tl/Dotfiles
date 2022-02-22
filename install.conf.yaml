@@ -9,6 +9,7 @@
   - [git submodule update --init --recursive, Installing submodules]
 
 - link:
+    ~/.Xresources:
     ~/.gitconfig:
     ~/.pip/pip.conf: pip.conf
 
@@ -28,3 +29,9 @@
       glob: true
       path: scripts/*
       relink: true
+
+    ~/.config/bspwm/bspwmrc: config/bspwmrc
+    ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
+    ~/.config/wallpaper.jpg: config/wallpaper.jpg
+    ~/.config/polybar/config: config/polybarrc
+    ~/.config/picom/picom.conf: config/picom.conf
