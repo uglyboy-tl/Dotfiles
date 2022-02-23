@@ -9,7 +9,6 @@
   - [git submodule update --init --recursive, Installing submodules]
 
 - link:
-    ~/.Xresources:
     ~/.gitconfig:
     ~/.pip/pip.conf: pip.conf
 
@@ -32,6 +31,7 @@
 
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
-    ~/.config/wallpaper.jpg: config/wallpaper.jpg
-    ~/.config/polybar/config: config/polybarrc
     ~/.config/picom/picom.conf: config/picom.conf
+    ~/.config/polybar: config/polybar
+    ~/.config/rofi: config/rofi
+    ~/.config/alacritty/alacritty.yml: config/alacritty.yml
