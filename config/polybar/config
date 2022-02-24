@@ -1,4 +1,5 @@
-;=========================================================
+
+;========================================================
 ;
 ;
 ;   ██████╗  ██████╗ ██╗  ██╗   ██╗██████╗  █████╗ ██████╗
@@ -30,7 +31,6 @@ wm-restack = bspwm
 
 override-redirect = false
 
-padding = 1
 module-margin-right = 1
 
 dpi = 120
@@ -46,26 +46,50 @@ modules-center = title
 modules-right= xkeyboard cpu memory temperature eth date powermenu
 dim-value = 1.0
 
-tray-position = right
-;tray-detached = false
+tray-position = none
 tray-maxsize = 16
-;tray-offset-x = 0
-;tray-offset-y = 0
 ;tray-padding = 2
-;transparent = false
+
+;tray-detached = true
+;tray-offset-x = 0
+;tray-offset-y = 46
+;ransparent = true
 
 cursor-click = pointer
 cursor-scroll = ns-resize
 
-line-size = 2
+line-size = 4
 
 [module/launcher]
 type = custom/text
-content = 
-content-padding = 3
-module-margin-right = 0
+content = " "
 content-foreground = ${colors.red}
+content-underline = ${colors.red}
+content-padding = 3
 click-left = rofi -no-lazy-grab -show drun -theme launcher
+
+[module/powermenu]
+type = custom/menu
+
+expand-right = false
+
+format-spacing = 1
+
+label-open = ""
+label-open-padding = 3
+#label-open-underline = ${colors.background}
+label-open-foreground = ${colors.background}
+label-open-background = ${colors.foreground}
+label-close = "ﰸ 取消 "
+label-close-foreground = ${colors.red}
+label-separator = |
+label-separator-foreground = ${colors.orange}
+
+menu-0-0 =  重启
+menu-0-0-exec = sudo systemctl reboot
+menu-0-1 =  关机
+menu-0-1-exec = sudo systemctl poweroff
 
 [settings]
 screenchange-reload = true
+

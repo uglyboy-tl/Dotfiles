@@ -18,6 +18,12 @@ window:
     x: 10
     y: 10
 
+scrolling:
+  history: 2000
+  multiplier: 20
+  faux_multiplier: 100
+  auto_scroll: true
+
 font:
   size: 12
   normal:

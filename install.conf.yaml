@@ -10,6 +10,7 @@
 
 - link:
     ~/.gitconfig:
+    ~/.Xresources:
     ~/.pip/pip.conf: pip.conf
 
     ~/.zshrc:
@@ -34,4 +35,8 @@
     ~/.config/picom/picom.conf: config/picom.conf
     ~/.config/polybar: config/polybar
     ~/.config/rofi: config/rofi
+    ~/.config/dunst/dunstrc: config/dunstrc
+    ~/.config/gtk-3.0/settings.ini: config/settings.ini
+    ~/.config/fcitx/config: config/fcitx
+
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
