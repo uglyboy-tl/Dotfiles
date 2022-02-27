@@ -12,7 +12,8 @@ xsetroot -cursor_name left_ptr &
 pgrep -x sxhkd > /dev/null || sxhkd &
 
 # Feh
-feh --bg-fill $HOME/.config/wallpaper.jpg
+#feh --bg-fill $HOME/.config/wallpaper.jpg
+~/.fehbg &
 
 #Picom
 picom -b
@@ -38,6 +39,8 @@ bspc config presel_feedback_color "#3B4252"
 bspc rule -a feh state=floating
 bspc rule -a Microsoft-edge desktop='^1' follow=on
 bspc rule -a obsidian desktop='^2' follow=on
+bspc rule -a fluent-reader desktop='^2' follow=on
 bspc rule -a Code desktop='^3' follow=on
 bspc rule -a Io.github.celluloid_player.Celluloid desktop='^5' follow=on
+bspc rule -a MComix desktop='^5' follow=on
 bspc rule -a rofi state=floating sticky=on

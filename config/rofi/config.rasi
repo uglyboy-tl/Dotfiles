@@ -1,25 +1,12 @@
 configuration {
-   modi: "window,drun";
+   show-icons:	false;
+   modi: "window,drun,run";
    font: "Sarasa Gothic SC 12";
    dpi: 120;
    display-ssh:    "";
    display-run:    "";
-   display-drun:   "";
+   display-drun:   "";
    display-window: "";
-}
-
-window {
-    location: center;
-    anchor:   center;
-    transparency: "screenshot";
-    padding: 10px;
-    border:  0px;
-    border-radius: 6px;
-
-    background-color: @transparent;
-    spacing: 0;
-    children:  [mainbox];
-    orientation: horizontal;
 }
 
 @theme "nord"

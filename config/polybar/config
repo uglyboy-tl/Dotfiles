@@ -1,5 +1,4 @@
-
-;========================================================
+;==========================================================
 ;
 ;
 ;   ██████╗  ██████╗ ██╗  ██╗   ██╗██████╗  █████╗ ██████╗
@@ -19,6 +18,9 @@
 
 include-file = $HOME/.config/polybar/include-modules.ini
 
+[settings]
+screenchange-reload = true
+
 [bar/main]
 width = 100%:-20
 height = 36
@@ -31,19 +33,19 @@ wm-restack = bspwm
 
 override-redirect = false
 
-module-margin-right = 1
+;module-margin-right = 1
 
 dpi = 120
-;enable-ipc = true
+enable-ipc = true
 
 background = ${colors.background}
 foreground = ${colors.foreground}
 
 include-file = $HOME/.config/polybar/fonts.ini
 
-modules-left = launcher bspwm
+modules-left = launcher margin bspwm margin mpd
 modules-center = title
-modules-right= xkeyboard cpu memory temperature eth date powermenu
+modules-right= xkeyboard margin cpu memory temperature margin eth margin alsa margin date margin powermenu
 dim-value = 1.0
 
 tray-position = none
@@ -62,34 +64,19 @@ line-size = 4
 
 [module/launcher]
 type = custom/text
-content = " "
+
+content = %{T4}%{T-}
 content-foreground = ${colors.red}
-content-underline = ${colors.red}
-content-padding = 3
+content-background = ${colors.nord2} 
+;content-underline = ${colors.red}
+content-padding = 2
 click-left = rofi -no-lazy-grab -show drun -theme launcher
 
 [module/powermenu]
-type = custom/menu
+type = custom/text
 
-expand-right = false
-
-format-spacing = 1
-
-label-open = ""
-label-open-padding = 3
-#label-open-underline = ${colors.background}
-label-open-foreground = ${colors.background}
-label-open-background = ${colors.foreground}
-label-close = "ﰸ 取消 "
-label-close-foreground = ${colors.red}
-label-separator = |
-label-separator-foreground = ${colors.orange}
-
-menu-0-0 =  重启
-menu-0-0-exec = sudo systemctl reboot
-menu-0-1 =  关机
-menu-0-1-exec = sudo systemctl poweroff
-
-[settings]
-screenchange-reload = true
-
+content = %{T3}⏻%{T-}
+content-padding = 2
+content-background = ${colors.nord2}
+;content-underline = ${colors.foreground-alt}
+click-left = $HOME/.local/bin/rofi-powermenu

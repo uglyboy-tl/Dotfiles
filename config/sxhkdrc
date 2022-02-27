@@ -13,25 +13,37 @@ super + @space
 alt + Tab
 	rofi -show window
 
+#super + r
+#	rofi -show run
+
 # make sxhkd reload its configuration files:
 super + Escape
 	pkill -USR1 -x sxhkd
 
-super + {b}
+super + b
 	~/.local/bin/rofi-bluetooth
 
-super + e
-	microsoft-edge
+super + m
+	alacritty -e ncmpcpp
 
-super + n
-	~/.local/bin/obsidian
+#
+# Msater Volume
+#
+XF86AudioRaiseVolume
+	amixer -Mq set Master 2.5%+,5%+ unmute 
+ 
+XF86AudioLowerVolume
+	amixer -Mq set Master 2.5%-,5%- unmute
+ 
+XF86AudioMute
+	amixer -q set Master toggle
 #
 # bspwm hotkeys
 #
 
 # quit/restart bspwm
-super + alt + {q,r}
-	bspc {quit,wm -r}
+super + alt + q
+	bspc quit
 
 # close and kill
 super + {_,shift + }w

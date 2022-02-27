@@ -1,0 +1,84 @@
+configuration {
+}
+
+window {
+    transparency:		"real";
+    background-color:		@background;
+    text-color:			@foreground;
+    border-radius:		6px;
+    width:			371px;
+    location:			center;
+}
+
+mainbox {
+  children: [inputbar, listview];
+}
+
+inputbar {
+  position: center;
+  padding: 4px;
+  expand: false;
+  border: 4px;
+  border-color: @nord6;
+  border-radius: 100%;
+  margin: 20px 20px 0 20px;
+  color: @nord6;
+  background-color: @nord2;
+
+  border-color: @nord2;
+
+  children: [textbox-prompt-colon, prompt];
+}
+
+textbox-prompt-colon {
+  expand:                                                 false;
+  str:                                                    " |";
+  background-color:                               inherit;
+  text-color:                                     @nord11;
+  margin: 0 6px 0 6px;
+}
+
+prompt {
+  location: center;
+  expand: false;
+  text-font: inherit;
+  text-color: @nord4;
+  background-color: inherit;
+  margin-right: 6px;
+}
+
+listview {
+    background-color:               @background;
+    margin:                         35px 20px;
+    /*spacing:                        12px;*/
+    cycle:                          true;
+    dynamic:                        true;
+    layout:                         horizontal;
+}
+
+element {
+    padding:	19px 11px 19px 29px;
+    border-radius:                  100%;
+    border: 1px;
+    border-color: @nord10;
+    background-color:               @transparent;
+    text-color: rgb(216, 222, 233);
+    orientation:                    horizontal;
+    margin: 0 15px;
+}
+
+element-text {
+  font: "Hack Nerd Font Mono 20";
+  background-color: inherit;
+  text-color:       inherit;
+  height:	38px;
+  width:	38px;
+}
+
+element selected {
+  text-color: @nord0;
+  background-color: @nord7;
+  border-radius: 100%;
+}
+
+@import "color-nord"

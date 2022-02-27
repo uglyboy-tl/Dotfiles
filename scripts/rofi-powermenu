@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+#############################################################################################
+#																							#
+# ?88,.d88b, d8888b ?88   d8P  d8P d8888b  88bd88b88bd8b,d88b  d8888b  88bd88b ?88   d8P 	#
+# `?88'  ?88d8P' ?88d88  d8P' d8P'd8b_,dP  88P'  `88P'`?8P'?8bd8b_,dP  88P' ?8bd88   88  	#
+#   88b  d8P88b  d88?8b ,88b ,88' 88b     d88    d88  d88  88P88b     d88   88P?8(  d88 	#
+#   888888P'`?8888P'`?888P'888P'  `?888P'd88'   d88' d88'  88b`?888P'd88'   88b`?88P'?8b 	#
+#   88P'		           	                                                              	#
+#  d88																						#
+#  ?8P       																				#
+#																							#
+############################################################################################# 
+
+
+# A fork from Benjamin Chrétien menu
+# Use rofi to change system runstate thanks to systemd.
+#
+# Inspired from i3pystatus wiki:
+# https://github.com/enkore/i3pystatus/wiki/Shutdown-Menu
+#
+
+
+# Get updtime
+uptime=$(uptime -p | sed -e 's/up //g')
+
+#  Change rofi theme here
+rofi_theme="rofi -theme powermenu"
+rofi_theme_2="rofi"
+
+# Whether to ask for user's confirmation
+enable_confirmation=false
+
+# This script depends on:
+#   - systemd,
+#   - i3,
+#   - rofi
+usage="$(basename "$0") [-h] [-c] -- display a menu for shutdown, reboot, lock etc.\n
+\n
+where:\n
+    -h  show this help text\n
+    -c  ask for user confirmation\n
+\n
+This script depends on:\n
+  	-systemd,\n
+  	-rofi\n
+"
+# Generate Menu Map
+declare -A actions
+actions[]="systemctl poweroff"
+actions[累]="sudo reboot"
+actions[拉]="$HOME/.local/bin/rofi-powermenu -a"
+actions[]="$HOME/.local/bin/reboot2win"
+actions[]="$HOME/.local/bin/reboot2bios"
+actions[]="$HOME/.local/bin/rofi-powermenu"
+
+# Check whether a command exists#####
+function command_exists() {
+  command -v "$1" &> /dev/null 2>&1
+}
+
+# systemctl required
+if ! command_exists systemctl ; then
+  exit 1
+fi
+
+# Store selection
+function show_menu() {
+  if [[ $1 == "-a" ]]
+  then
+  all=(  )
+  title="高级选项"
+  else
+  all=( 累 拉)
+  title="已运行 : ${uptime}"
+  fi
+  show=("${all[@]}")
+  selection="$(printf '%s\n' "${show[@]}")"
+
+  # Variable passed to rofi
+  chosen="$(echo -e "$selection" | $rofi_theme -p "${title}" -dmenu -selected-row 0)"
+
+  # Run this piece of garbage
+  if [[ $? -eq 0 && ! -z ${chosen} ]]; then
+    if [[ "${enable_confirmation}" = true ]]; then
+      ask_confirmation
+    else
+      ${actions[${chosen}]}
+    fi
+  fi
+}
+
+if [ $# == 1 ]
+then
+  if [[ $@ == "-h" || $@ == "-c" ]];
+  then
+  echo -e $usage
+  exit 1
+  elif [[ $@ == "-a" ]];
+  then
+  show_menu $@
+  else
+  echo -e $usage
+  fi
+elif [ $# == 0 ]
+then
+show_menu
+else
+echo -e ${usage}
+fi
+
+
+# Confirmation
+confirm_exit() {
+	rofi -dmenu\
+		-i\
+		-no-fixed-num-lines\
+		-p "You Sure? : "
+}
+
+# Ask user for confirmation (so user can enable or disable the confirmation)
+function ask_confirmation() {
+	confirmed=$(echo -e "Yes\nNo" | rofi -dmenu -i -lines 2 -p "${chosen}?" ${rofi_theme_2} )
+    [ "${confirmed}" == "Yes" ] && confirmed=0
+
+	if [ "${confirmed}" == 0 ]; then
+		${actions[${chosen}]}
+	fi
+}
+
