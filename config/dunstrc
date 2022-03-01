@@ -1,4 +1,4 @@
-/# vim: ft=cfg
+# vim: ft=cfg
 ###############################################################################################
 #   _____ _    _ _____        _    _       __          ________  _____  ____  __  __ ______   #
 #  / ____| |  | |  __ \ /\   | |  | |     /\ \        / /  ____|/ ____|/ __ \|  \/  |  ____|  #
@@ -47,7 +47,7 @@
 	shrink = yes
 
 	# The transparency of the window.  Range: [0; 100]
-	transparency = 0
+	transparency = 15
 
 	# The height of the entire notification.  If the height is smaller
 	# than the font height and padding combined, it will be raised
@@ -168,7 +168,7 @@
 	max_icon_size = 64
 
 	# Paths to default icons.
-	icon_path = /usr/share/icons/Paper/16x16/status/:/usr/share/icons/Paper/16x16/devices/:/usr/share/icons/Paper/16x16/apps/
+	icon_path = /usr/share/icons/Adwaita/16x16/status/:/usr/share/icons/Adwaita/16x16/devices/:/usr/share/icons/Adwaita/16x16/legacy/
 
 	### History ###
 
@@ -229,53 +229,22 @@
 	# Context menu.
 	context = ctrl+shift+period
 
-/[cmus]
-    appname = Cmus
-	format = "Now Playing:\n%b"
-	max_icon_size = 128
-	timeout = 20
- 
-[Discord]
-appname = Discord
-format = "Discord\n%s\n%b"
-
-
-/[spotify]
-    # The format of the message.  Possible variables are:
-    #   %a  appname
-    #   %s  summary
-    #   %b  body
-    #   %i  iconname (including its path)
-    #   %I  iconname (without its path)
-    #   %p  progress value if set ([  0%] to [100%]) or nothing
-    #   %n  progress value if set without any extra characters
-    #   %%  Literal %
-    # Markup is allowed
-    # 
-    history_ignore = yes
-    appname = Spotify
-    format = "<b>Now Playing...</b>\n%s"
-    #new_icon = Spotify
-    max_icon_size = 128
-    timeout = 20
-
-
 [urgency_low]
 	background  = "#2E3440"
 	foreground  = "#D8DEE9"
-	timeout     = 2
-	icon	    = "/home/uglyboy/.dotfiles/config/dunst_icons/low.svg"
+	timeout     = 3
+	#icon	    = "/home/uglyboy/.dotfiles/config/dunst_icons/low.svg"
 
 
 [urgency_normal]
 	background = "#2E3440"
 	foreground = "#D8DEE9"
-	timeout = 3
-	icon        = "/home/uglyboy/.dotfiles/config/dunst_icons/normal.svg" 
+	timeout = 4
+	#icon        = "/home/uglyboy/.dotfiles/config/dunst_icons/normal.svg" 
 
 [urgency_critical]
 	background = "#2E3440"
 	foreground = "#D8DEE9"
 	timeout = 5
-        icon        = "/home/uglyboy/.dotfiles/config/dunst_icons/critical.svg" 
+    #icon        = "/home/uglyboy/.dotfiles/config/dunst_icons/critical.svg" 
 

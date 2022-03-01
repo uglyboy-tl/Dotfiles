@@ -1,12 +1,12 @@
 configuration {
-   show-icons:	false;
-   modi: "window,drun,run";
-   font: "Sarasa Gothic SC 12";
-   dpi: 120;
-   display-ssh:    "";
-   display-run:    "";
-   display-drun:   "";
-   display-window: "";
+  show-icons:	false;
+  modi: "window,drun,run";
+  font: "Sarasa Gothic SC 12";
+  dpi: 120;
+  display-ssh:    "";
+  display-run:    "";
+  display-drun:   "";
+  display-window: "";
 }
 
 @theme "nord"

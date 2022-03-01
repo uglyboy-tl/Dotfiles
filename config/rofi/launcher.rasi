@@ -1,21 +1,24 @@
 configuration {
-    show-icons:		true;
-    display-drun:		"";
-    icon-theme:			"Numix";
-    /*drun-display-format:	" {name}";*/
-    location:			1;
+  show-icons:		true;
+  display-drun:		"";
+  icon-theme:			"Numix";
+  /*drun-display-format:	" {name}";*/
+  hover-select: true;
+  me-select-entry: "";
+  me-accept-entry: "MousePrimary";
+  location:			1;
 }
 
 @import "color-nord"
 
 window {
-    transparency:		"real";
-    background-color:		@background;
-    text-color:			@foreground;
-    border-radius:		6px;
-    width:			400px;
-    x-offset:			10px;
-    y-offset:			51px;
+  transparency:		"real";
+  background-color:		@background;
+  text-color:			@foreground;
+  border-radius:		6px;
+  width:			400px;
+  x-offset:			10px;
+  y-offset:			51px;
 }
 
 mainbox {
@@ -34,8 +37,8 @@ inputbar {
 }
 
 entry, prompt, case-indicator {
-    text-font: inherit;
-    text-color:inherit;
+  text-font: inherit;
+  text-color:inherit;
 }
 
 entry {
@@ -78,6 +81,6 @@ element selected {
 }
 
 element-text, element-icon {
-    background-color: inherit;
-    text-color:       inherit;
+  background-color: inherit;
+  text-color:       inherit;
 }

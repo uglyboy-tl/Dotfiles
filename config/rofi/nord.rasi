@@ -45,17 +45,17 @@
 }
 
 window {
-    location: center;
-    anchor:   center;
-    /*transparency: "screenshot";
-    padding: 10px;
-    border:  0px;*/
-    border-radius: 6px;
+  location: center;
+  anchor:   center;
+  /*transparency: "screenshot";
+  padding: 10px;
+  border:  0px;*/
+  border-radius: 6px;
 
-    background-color: @transparent;
-    spacing: 0;
-    children:  [mainbox];
-    orientation: horizontal;
+  background-color: @transparent;
+  spacing: 0;
+  children:  [mainbox];
+  orientation: horizontal;
 }
 
 mainbox {
@@ -74,8 +74,8 @@ inputbar {
 }
 
 entry, prompt, case-indicator {
-    text-font: inherit;
-    text-color:inherit;
+  text-font: inherit;
+  text-color:inherit;
 }
 
 entry {
