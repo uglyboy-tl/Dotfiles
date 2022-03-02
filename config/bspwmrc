@@ -46,4 +46,5 @@ bspc rule -a obsidian desktop='^3' follow=on
 bspc rule -a fluent-reader desktop='^3' follow=on
 bspc rule -a Io.github.celluloid_player.Celluloid desktop='^4' follow=on
 bspc rule -a MComix desktop='^5' follow=on
+bspc rule -a Zathura desktop='^5' follow=on state=tiled
 bspc rule -a rofi state=floating sticky=on

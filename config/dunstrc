@@ -233,18 +233,14 @@
 	background  = "#2E3440"
 	foreground  = "#D8DEE9"
 	timeout     = 3
-	#icon	    = "/home/uglyboy/.dotfiles/config/dunst_icons/low.svg"
-
 
 [urgency_normal]
 	background = "#2E3440"
 	foreground = "#D8DEE9"
 	timeout = 4
-	#icon        = "/home/uglyboy/.dotfiles/config/dunst_icons/normal.svg" 
 
 [urgency_critical]
 	background = "#2E3440"
 	foreground = "#D8DEE9"
 	timeout = 5
-    #icon        = "/home/uglyboy/.dotfiles/config/dunst_icons/critical.svg" 
 

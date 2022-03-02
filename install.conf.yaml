@@ -10,7 +10,6 @@
 
 - link:
     ~/.gitconfig:
-    ~/.Xresources:
     ~/.pip/pip.conf: pip.conf
 
     ~/.zshrc:
@@ -30,6 +29,7 @@
       path: scripts/*
       relink: true
 
+    ~/.Xresources: config/Xresources
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
     ~/.config/picom/picom.conf: config/picom.conf
@@ -38,5 +38,6 @@
     ~/.config/dunst/dunstrc: config/dunstrc
     ~/.config/gtk-3.0/settings.ini: config/settings.ini
     ~/.config/fcitx/config: config/fcitx
+    ~/.config/zathura/zathurarc: config/zathurarc
 
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
