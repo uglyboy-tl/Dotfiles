@@ -46,8 +46,8 @@ This script depends on:\n
 "
 # Generate Menu Map
 declare -A actions
-actions[]="systemctl poweroff"
-actions[累]="sudo reboot"
+actions[]="sudo systemctl poweroff"
+actions[累]="sudo systemctl reboot"
 actions[拉]="$HOME/.local/bin/rofi-powermenu -a"
 actions[]="$HOME/.local/bin/reboot2win"
 actions[]="$HOME/.local/bin/reboot2bios"

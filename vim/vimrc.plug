@@ -1,6 +1,7 @@
 Plug 'tpope/vim-sensible'
 
 Plug 'tpope/vim-fugitive'
+Plug 'bronson/vim-trailing-whitespace'
 
 Plug 'hotoo/pangu.vim'
 

@@ -39,5 +39,6 @@
     ~/.config/gtk-3.0/settings.ini: config/settings.ini
     ~/.config/fcitx/config: config/fcitx
     ~/.config/zathura/zathurarc: config/zathurarc
+    ~/.config/lf: config/lf
 
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml

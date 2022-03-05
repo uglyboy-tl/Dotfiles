@@ -1,0 +1,51 @@
+set shell sh
+
+map x cut
+map d delete
+map <enter> open
+map n new
+map <c-n> mkdir
+
+# define a custom 'delete' command
+cmd delete %{{
+    set -f
+    printf " 确认删除 $fx? [y/n]"
+    read ans
+    #printf "$ans"
+    [ $ans = "y" ] && rm -rf $fx
+    printf "完成"
+}}
+
+cmd open ${{
+    test -L "$f" && f=$(readlink -f "$f")
+    case $(file --mime-type "$f" -b) in
+        text/*) vim "$fx";;
+        application/pdf) bspc rule -a \* -o state=floating rectangle=1280x720+640+320 && zathura "$fx" ;;
+        *) for f in "$fx"; do xdg-open "$f" > /dev/null 2> /dev/null & done;;
+    esac
+}}
+
+cmd new % {{
+    set -f
+    printf " 文件名称: "
+    read name && touch $name
+    printf "完成"
+}}
+
+cmd mkdir %{{
+    set -f
+    printf " 文件夹名称: "
+    read name && mkdir $name
+    printf "完成"
+}}
+# use '<delete>' key for either 'trash' or 'delete' command
+# map <delete> trash
+# map <delete> delete
+
+# set previewer ~/.config/lf/pv.sh
+# map i $~/.dotfiles/scripts/pv.sh $f | less -R
+
+set previewer ~/.config/lf/preview
+set cleaner ~/.config/lf/cleaner
+
+set icons
