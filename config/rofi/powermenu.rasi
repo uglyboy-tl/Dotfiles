@@ -12,7 +12,7 @@ window {
   border-radius:		6px;
   width:			371px;
   x-offset:			-10px;
-  y-offset:			51px;
+  y-offset:			46px;
 }
 
 mainbox {

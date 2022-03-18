@@ -43,7 +43,7 @@ trap exit_on_signal_SIGINT SIGINT
 trap exit_on_signal_SIGTERM SIGTERM
 
 ## Prerequisite
-Prerequisite() { 
+Prerequisite() {
     dependencies=(feh xrandr crontab)
     for dependency in "${dependencies[@]}"; do
         type -p "$dependency" &>/dev/null || {
@@ -60,17 +60,17 @@ usage() {
 		${RED}╺┳┓╻ ╻┏┓╻┏━┓┏┳┓╻┏━╸   ${GREEN}╻ ╻┏━┓╻  ╻  ┏━┓┏━┓┏━┓┏━╸┏━┓
 		${RED} ┃┃┗┳┛┃┗┫┣━┫┃┃┃┃┃     ${GREEN}┃╻┃┣━┫┃  ┃  ┣━┛┣━┫┣━┛┣╸ ┣┳┛
 		${RED}╺┻┛ ╹ ╹ ╹╹ ╹╹ ╹╹┗━╸   ${GREEN}┗┻┛╹ ╹┗━╸┗━╸╹  ╹ ╹╹  ┗━╸╹┗╸${WHITE}
-		
+
 		Dwall V2.0   : Set wallpapers according to current time.
 		Developed By : Aditya Shakya (@adi1090x)
-			
+
 		Usage : `basename $0` [-h] [-p] [-s style]
 
 		Options:
-		   -h	Show this help message
-		   -p	Use pywal to set wallpaper
-		   -s	Name of the style to apply
-		   
+			-h	Show this help message
+			-p	Use pywal to set wallpaper
+			-s	Name of the style to apply
+
 	EOF
 
 	styles=(`ls $DIR`)
@@ -79,10 +79,10 @@ usage() {
 	printf -- '\n\n'${WHITE}
 
     cat <<- EOF
-		Examples: 
+		Examples:
 		`basename $0` -s beach        Set wallpaper from 'beach' style
 		`basename $0` -p -s sahara    Set wallpaper from 'sahara' style using pywal
-		
+
 	EOF
 }
 
@@ -103,7 +103,7 @@ set_kde() {
 
 ## Set wallpaper in cinnamon
 set_cinnamon() {
-	 gsettings set org.cinnamon.desktop.background picture-uri "file:///$1"
+	gsettings set org.cinnamon.desktop.background picture-uri "file:///$1"
 }
 
 ## For XFCE only
@@ -129,7 +129,7 @@ case "$OSTYPE" in
 				SETTER=set_kde
 			elif [[ "$DESKTOP_SESSION" =~ ^(PANTHEON|Pantheon|pantheon|GNOME|Gnome|gnome|Gnome-xorg|gnome-xorg|UBUNTU|Ubuntu|ubuntu|DEEPIN|Deepin|deepin|POP|Pop|pop)$ ]]; then
 				SETTER="gsettings set org.gnome.desktop.background picture-uri"
-			else 
+			else
 				SETTER="feh --bg-fill"
 			fi
 			;;
@@ -176,7 +176,7 @@ set_wallpaper() {
 		touch "$cfile"
 		echo "$image.$FORMAT" > "$cfile"
 	else
-		echo "$image.$FORMAT" > "$cfile"	
+		echo "$image.$FORMAT" > "$cfile"
 	fi
 }
 

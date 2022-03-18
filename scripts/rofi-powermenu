@@ -41,8 +41,8 @@ where:\n
     -c  ask for user confirmation\n
 \n
 This script depends on:\n
-  	-systemd,\n
-  	-rofi\n
+    -systemd,\n
+    -rofi\n
 "
 # Generate Menu Map
 declare -A actions
