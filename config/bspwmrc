@@ -54,6 +54,7 @@ bspc rule -a feh state=floating follow=on
 bspc rule -a mpv state=floating follow=on
 bspc rule -a Microsoft-edge desktop='^1' follow=on
 bspc rule -a Code desktop='^2' follow=on
+bspc rule -a shimo desktop='^3' follow=on
 bspc rule -a obsidian desktop='^3' follow=on
 bspc rule -a fluent-reader desktop='^3' follow=on
 bspc rule -a Io.github.celluloid_player.Celluloid desktop='^4' follow=on
