@@ -52,10 +52,10 @@ if ! zgen saved; then
 
     # Theme
     zgen load romkatv/powerlevel10k powerlevel10k
-   
+
     # Generate init.sh
     zgen save
-fi  
+fi
 
 #source $DOTFILES/zsh/p10k.zsh
 
