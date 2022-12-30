@@ -1,6 +1,6 @@
 set selection-clipboard clipboard
 
-set font      "Hack Nerd Font Mono 10"
+set font      "Hack Nerd Font Mono 11"
 set default-fg      "#2e3440"
 set default-bg      "#fafafa"
 

@@ -3,8 +3,8 @@
 #
 
 # terminal emulator
-super + {_,shift +}Return
-	{bspc rule -a \* -o state=floating rectangle=1280x720+640+320 && alacritty, alacritty}
+super + Return
+	alacritty
 
 # program launcher
 super + @space
@@ -24,8 +24,7 @@ super + b
 	~/.local/bin/rofi-bluetooth
 
 super + {m, e, h}
-	bspc rule -a \* -o state=floating rectangle=1280x720+640+320 && alacritty -e {ncmpcpp, ~/.local/bin/lfrun, htop}
-
+	alacritty -e {ncmpcpp, ~/.local/bin/lfrun, htop}
 
 #
 # Msater Volume
