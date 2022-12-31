@@ -23,8 +23,11 @@ super + Escape
 super + b
 	~/.local/bin/rofi-bluetooth
 
-super + {m, e, h}
-	alacritty -e {ncmpcpp, ~/.local/bin/lfrun, htop}
+super + e
+	pcmanfm
+
+super + {m, h}
+	alacritty -e {ncmpcpp, htop}
 
 #
 # Msater Volume

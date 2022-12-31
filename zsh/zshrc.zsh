@@ -61,7 +61,7 @@ fi
 
 # alias definitions
 alias size='f(){ du -h --max-depth=1 $1 | sort -hr; }; f'
-alias slideshow='feh --recursive --randomize --fullscreen --quiet --hide-pointer --slideshow-delay 5'
+alias slideshow='feh -rzqFZYD 5'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 #alias cp='rsync -av --progress'
 
