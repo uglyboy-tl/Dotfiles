@@ -38,6 +38,5 @@
     ~/.config/dunst/dunstrc: config/dunstrc
     ~/.config/fcitx/config: config/fcitx
     ~/.config/zathura/zathurarc: config/zathurarc
-    ~/.config/lf: config/lf
 
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
