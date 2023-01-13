@@ -46,6 +46,7 @@ if ! zgen saved; then
     zgen oh-my-zsh plugins/cp
     zgen oh-my-zsh plugins/autojump
     zgen oh-my-zsh plugins/fzf
+    zgen load wbingli/zsh-wakatime
     zgen load zsh-users/zsh-syntax-highlighting
 
     [ ! -f ~/.zshrc.local.zgen ] || source ~/.zshrc.local.zgen
