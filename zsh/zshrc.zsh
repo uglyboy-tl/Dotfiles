@@ -65,6 +65,9 @@ alias size='f(){ du -h --max-depth=1 $1 | sort -hr; }; f'
 alias slideshow='feh -rzqFZYD 5'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 #alias cp='rsync -av --progress'
+# replaced command
+alias cat='bat'
+alias grep='rg'
 
 # Allow local customizations in the ~/.zshrc_local_after file
 [ ! -f ~/.zshrc.local.after ] || source ~/.zshrc.local.after
