@@ -27,7 +27,7 @@ $HOME/.local/bin/dwall.sh -s lakeside
 #Focus in the mouse
 #bspc config focus_follows_pointer true
 
-bspc monitor -d I II III IV V VI
+bspc monitor -d I II III IV V
 
 bspc config border_width         0
 bspc config window_gap           10
@@ -42,11 +42,13 @@ bspc config focused_border_color "#2E3440"
 bspc config presel_feedback_color "#3B4252"
 
 bspc rule -a Microsoft-edge desktop='^1' follow=on
-bspc rule -a sublime_text desktop='^2' follow=on
-bspc rule -a shimo desktop='^3' follow=on
+bspc rule -a obsidian desktop='^2' follow=on
+bspc rule -a Pcmanfm state=floating rectangle=1280x720+640+320 desktop='^3' follow=on
 bspc rule -a vlc desktop='^4' follow=on
-bspc rule -a netease-cloud-music state=tiled desktop='^5' follow=on
+bspc rule -a netease-cloud-music state=tiled desktop='^4' follow=on
+bspc rule -a shimo desktop='^5' follow=on
+bspc rule -a sublime_text desktop='^5' follow=on
 bspc rule -a rofi state=floating sticky=on
 bspc rule -a feh state=floating
-bspc rule -a Pcmanfm state=floating rectangle=1280x720+640+320 desktop='^6' follow=on
+
 bspc rule -a Alacritty state=floating rectangle=1280x720+640+320
