@@ -67,6 +67,7 @@ alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 # replaced command
 alias cat='batcat'
 alias grep='rg'
+alias duf='duf --only local'
 
 # Allow local customizations in the ~/.zshrc_local_after file
 [ ! -f ~/.zshrc.local.after ] || source ~/.zshrc.local.after
