@@ -65,7 +65,7 @@ alias slideshow='feh -rzqFZYD 5'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 #alias cp='rsync -av --progress'
 # replaced command
-alias cat='bat'
+alias cat='batcat'
 alias grep='rg'
 
 # Allow local customizations in the ~/.zshrc_local_after file

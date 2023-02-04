@@ -47,7 +47,7 @@ bspc rule -a Pcmanfm state=floating rectangle=1280x720+640+320 desktop='^3' foll
 bspc rule -a vlc desktop='^4' follow=on
 bspc rule -a netease-cloud-music state=tiled desktop='^4' follow=on
 bspc rule -a shimo desktop='^5' follow=on
-bspc rule -a sublime_text desktop='^5' follow=on
+bspc rule -a Code desktop='^5' follow=on
 bspc rule -a rofi state=floating sticky=on
 bspc rule -a feh state=floating
 
