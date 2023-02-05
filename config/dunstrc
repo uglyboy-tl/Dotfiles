@@ -195,7 +195,7 @@
 
 	# Define the class of the windows spawned by dunst
 	class = Dunst
-	
+
 	startup_notification = false
 	force_xinerama = false
 
