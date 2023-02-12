@@ -32,7 +32,7 @@ if ! zgen saved; then
     zgen oh-my-zsh plugins/extract
     case ${OS_RELEASE} in
         "Ubuntu" )
-	    zgen oh-my-zsh plugins/ubuntu
+        zgen oh-my-zsh plugins/ubuntu
         ;;
         "Raspbian GNU/Linux" )
             zgen oh-my-zsh plugins/ubuntu
@@ -41,7 +41,7 @@ if ! zgen saved; then
             zgen oh-my-zsh plugins/ubuntu
         ;;
         * )
-	    echo "other"
+        echo "other"
     esac
     zgen oh-my-zsh plugins/cp
     zgen oh-my-zsh plugins/autojump
