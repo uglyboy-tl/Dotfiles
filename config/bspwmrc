@@ -44,6 +44,7 @@ bspc config presel_feedback_color "#3B4252"
 bspc rule -a Microsoft-edge desktop='^1' follow=on
 bspc rule -a obsidian desktop='^2' follow=on
 bspc rule -a Typora desktop='^2' follow=on
+bspc rule -a bluemail desktop='^2' follow=on
 bspc rule -a Thunar state=floating rectangle=1280x720+640+320 desktop='^3' follow=on
 bspc rule -a vlc desktop='^4' follow=on
 bspc rule -a netease-cloud-music state=tiled desktop='^4' follow=on

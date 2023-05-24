@@ -1,5 +1,5 @@
 [user]
-	email = uglyboy@uglyboy.cn
+	email = uglyboy@aliyun.cn
 	name = uglyboy
 [credential]
 	helper = store
@@ -22,3 +22,10 @@
 # Allow local customizations in the .gitconfig_local file
 [include]
     path=~/.gitconfig.local
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[http]
+	sslVerify = false
