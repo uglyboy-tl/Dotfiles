@@ -24,7 +24,7 @@ super + b
 	~/.local/bin/rofi-bluetooth
 
 super + e
-	pcmanfm
+	alacritty -e "joshuto"
 
 super + {m, h}
 	alacritty -e {ncmpcpp, htop}

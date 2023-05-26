@@ -30,6 +30,8 @@
       relink: true
 
     ~/.Xresources: config/Xresources
+    ~/.config/joshuto: config/joshuto
+
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
     ~/.config/picom/picom.conf: config/picom.conf
@@ -37,6 +39,4 @@
     ~/.config/rofi: config/rofi
     ~/.config/dunst/dunstrc: config/dunstrc
     ~/.config/fcitx/config: config/fcitx
-    ~/.config/zathura/zathurarc: config/zathurarc
-
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
