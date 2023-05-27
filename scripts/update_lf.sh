@@ -3,13 +3,14 @@
 # debug output and exit on error or use of undeclared variable or pipe error:
 set -o xtrace -o errtrace -o errexit -o nounset -o pipefail
 
-version="$(curl --location --head https://github.com/gokcehan/lf/releases/latest | grep -i location: | sed 's/^.*\/tag\/\([^\/]*\)\r$/\1/')"
-filename="lf-linux-amd64.tar.gz"
-uri_to_download="https://github.com/gokcehan/lf/releases/download/${version}/${filename}"
-
 # set proxy
 export http_proxy="http://192.168.0.100:20171"
 export https_proxy="http://192.168.0.100:20171"
+
+version="$(curl --location --head https://github.com/gokcehan/lf/releases/latest | grep -i location: | sed 's/^.*\/tag\/\([^\/]*\)\r$/\1/')"
+filename="lf-linux-arm64.tar.gz"
+uri_to_download="https://github.com/gokcehan/lf/releases/download/${version}/${filename}"
+
 curl --fail --show-error --location "$uri_to_download" |
   tar -xz -C /tmp/
 mv --force /tmp/lf "${HOME}/.local/bin/lf" && 
