@@ -23,11 +23,8 @@ super + Escape
 super + b
 	~/.local/bin/rofi-bluetooth
 
-super + e
-	alacritty -e "joshuto"
-
-super + {m, h}
-	alacritty -e {ncmpcpp, htop}
+super + {m, h, e}
+	alacritty -e {ncmpcpp, htop, ranger}
 
 #
 # Msater Volume

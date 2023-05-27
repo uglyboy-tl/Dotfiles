@@ -30,7 +30,7 @@
       relink: true
 
     ~/.Xresources: config/Xresources
-    ~/.config/joshuto: config/joshuto
+    ~/.config/ranger: config/ranger
 
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
