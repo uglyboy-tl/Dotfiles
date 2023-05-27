@@ -24,7 +24,7 @@ super + b
 	~/.local/bin/rofi-bluetooth
 
 super + {m, h, e}
-	alacritty -e {ncmpcpp, htop, ranger}
+	alacritty -e {ncmpcpp, htop, ~/.local/bin/lf.sh}
 
 #
 # Msater Volume

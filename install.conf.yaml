@@ -31,6 +31,7 @@
 
     ~/.Xresources: config/Xresources
     ~/.config/ranger: config/ranger
+    ~/.config/lf: config/lf
 
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
