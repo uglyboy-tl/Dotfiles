@@ -47,6 +47,8 @@ case "$(file -Lb --mime-type -- "$file")" in
       else
         draw "$file" "$@"
       fi
+    else
+      exiftool "$file" && exit 5
     fi
     ;;
 	video/* )
