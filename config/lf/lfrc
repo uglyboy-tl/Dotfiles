@@ -3,8 +3,8 @@ set ifs "\n"
 set drawbox
 set icons
 
-#set previewer ~/.config/lf/previewer.sh
-#set cleaner ~/.config/lf/clear_img.sh
+set previewer ~/.config/lf/scope
+set cleaner ~/.config/lf/cleaner
 
 # define a custom 'open' command
 # This command is called when current file is not a directory. You may want to
