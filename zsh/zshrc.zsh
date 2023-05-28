@@ -44,7 +44,7 @@ if ! zgen saved; then
         echo "other"
     esac
     zgen oh-my-zsh plugins/cp
-    zgen oh-my-zsh plugins/autojump
+    zgen oh-my-zsh plugins/zoxide
     zgen oh-my-zsh plugins/fzf
     zgen load zsh-users/zsh-syntax-highlighting
 

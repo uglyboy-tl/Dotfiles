@@ -57,8 +57,15 @@ case "$(file -Lb --mime-type -- "$file")" in
       cache "$cache" "$@"
       ffmpegthumbnailer -i "$file" -o "$cache" -s 0
       draw "$cache" "$@"
+    else
+      exiftool "$file" && exit 5
     fi
 		;;
+  audio/* )
+    exiftool "$file" && exit 5
+    ;;
+  * )
+    echo "不支持的文件类型" && exit 1;;
 	#text/html) lynx -width="$4" -display_charset=utf-8 -dump "$1" ;;
 	#text/troff) man ./ "$1" | col -b ;;
 	#application/zip) atool --list -- "$1" ;;

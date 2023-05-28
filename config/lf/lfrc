@@ -11,9 +11,26 @@ set cleaner ~/.config/lf/cleaner
 # use either file extensions and/or mime types here. Below uses an editor for
 # text files and a file opener for the rest.
 cmd open &{{
+    test -L $f && f=$(readlink -f $f)
     case $(file --mime-type -Lb $f) in
         text/*) lf -remote "send $id \$$EDITOR \$fx";;
         *) for f in $fx; do $OPENER $f > /dev/null 2> /dev/null & done;;
+    esac
+}}
+
+# extrat compress files
+cmd extract ${{
+    set -f
+    archive="${fx%.*}"
+    mkdir "$archive"
+    cd "$archive"
+    case $f in
+        *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f;;
+        *.tar.gz|*.tgz) tar xzvf $f;;
+        *.tar.xz|*.txz) tar xJvf $f;;
+        *.zip) unzip -O gbk $f;;
+        *.rar) unrar x $f;;
+        *.7z) 7z x $f;;
     esac
 }}
 
@@ -28,13 +45,60 @@ cmd trash %set -f; mv $fx ~/.trash
 cmd delete ${{
     set -f
     printf "$fx\n"
-    printf "delete?[y/n]"
+    printf "是否删除?[y/n]"
     read ans
     [ "$ans" = "y" ] && rm -rf $fx
 }}
 
+#Combining fzf with ripgrep, you can interactively search in the contents of files under the current directory and select a file from the results:
+cmd fzf_search ${{
+    res="$( \
+        RG_PREFIX="rg --column --line-number --no-heading --color=always \
+            --smart-case "
+        FZF_DEFAULT_COMMAND="$RG_PREFIX ''" \
+            fzf --bind "change:reload:$RG_PREFIX {q} || true" \
+            --ansi --layout=reverse --header 'Search in files' \
+            | cut -d':' -f1
+    )"
+    [ ! -z "$res" ] && lf -remote "send $id select \"$res\""
+}}
 # use '<delete>' key for either 'trash' or 'delete' command
 #map <delete> trash
 # map <delete> delete
 
+# key bindings
+# Remove some defaults
+map d
+map f
+map F
+map t
+map h
+map j
+map k
+map l
+map c
+map y
+
+map yy copy
+map d cut
+map D trash
+map x delete
+
+map <c-x> cut
+map <c-c> copy
+map <c-v> paste
+map <delete> delete
+map <c-f> :fzf_search
+map <esc> clear
+
+map x extract
+map R reload
+
 map <enter> shell
+
+cmd zoxide %{{
+	result="$(zoxide query --exclude $PWD $@)"
+	lf -remote "send $id cd \"$result\""
+}}
+
+map j push :zoxide<space>
