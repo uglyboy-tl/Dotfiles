@@ -1,10 +1,21 @@
 set shell zsh
 set ifs "\n"
 set drawbox
+set period 1
 set icons
 
 set previewer ~/.config/lf/scope
 set cleaner ~/.config/lf/cleaner
+
+cmd on-cd &{{
+    # '&' commands run silently in background (which is what we want here),
+    # but are not connected to stdout.
+    # To make sure our escape sequence still reaches stdout we pipe it to /dev/tty
+    printf "\033]0; $(pwd | sed "s|$HOME|~|") - lf\007" > /dev/tty
+}}
+
+# also run at startup
+on-cd
 
 # define a custom 'open' command
 # This command is called when current file is not a directory. You may want to
@@ -17,6 +28,9 @@ cmd open &{{
         *) for f in $fx; do $OPENER $f > /dev/null 2> /dev/null & done;;
     esac
 }}
+
+# create direactory
+cmd mkdir $mkdir -p "$(echo $* | tr ' ' '\ ')"
 
 # extrat compress files
 cmd extract ${{
@@ -34,13 +48,6 @@ cmd extract ${{
     esac
 }}
 
-# make sure trash folder exists
-#%mkdir -p ~/.trash
-
-# move current file or selected files to trash folder
-# (also see 'man mv' for backup/overwrite options)
-cmd trash %set -f; mv $fx ~/.trash
-
 # define a custom 'delete' command
 cmd delete ${{
     set -f
@@ -57,15 +64,18 @@ cmd fzf_search ${{
             --smart-case "
         FZF_DEFAULT_COMMAND="$RG_PREFIX ''" \
             fzf --bind "change:reload:$RG_PREFIX {q} || true" \
-            --ansi --layout=reverse --header 'Search in files' \
+            --ansi --layout=reverse --header '在文件中搜索' \
             | cut -d':' -f1
     )"
-    [ ! -z "$res" ] && lf -remote "send $id select \"$res\""
+    [ ! -z "$res" ] && lf -remote "send $id select \"$res\"" || true
 }}
-# use '<delete>' key for either 'trash' or 'delete' command
-#map <delete> trash
-# map <delete> delete
 
+cmd zoxide %{{
+	result="$(zoxide query --exclude $PWD $@)"
+	lf -remote "send $id cd \"$result\""
+}}
+
+#########################################################################################
 # key bindings
 # Remove some defaults
 map d
@@ -78,11 +88,13 @@ map k
 map l
 map c
 map y
+map w
 
-map yy copy
-map d cut
-map D trash
-map x delete
+map l $$SHELL
+
+map y copy
+map x cut
+map d delete
 
 map <c-x> cut
 map <c-c> copy
@@ -91,14 +103,10 @@ map <delete> delete
 map <c-f> :fzf_search
 map <esc> clear
 
-map x extract
+map X extract
 map R reload
+map M push :mkdir<space>
 
 map <enter> shell
-
-cmd zoxide %{{
-	result="$(zoxide query --exclude $PWD $@)"
-	lf -remote "send $id cd \"$result\""
-}}
 
 map j push :zoxide<space>
