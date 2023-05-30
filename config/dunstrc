@@ -244,3 +244,14 @@
 	foreground = "#D8DEE9"
 	timeout = 5
 
+# Scripting
+[ncmpcpp]
+	appname = ncmpcpp
+	format = "<b> Now Playing:</b>\n%s\n%b"
+	background = "#32302f"
+	foreground = "#83a598"
+	frame_color = "#a89984"
+	timeout = 5
+
+
+# vim: ft=cfg

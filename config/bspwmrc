@@ -40,7 +40,6 @@ _s dunst
 _r Microsoft-edge desktop='^1' follow=on
 _r obsidian desktop='^2' follow=on
 _r Typora desktop='^2' follow=on
-_r bluemail desktop='^2' follow=on
 _r lf desktop='^3' follow=on
 _r vlc desktop='^4' follow=on
 _r netease-cloud-music state=tiled desktop='^4' follow=on

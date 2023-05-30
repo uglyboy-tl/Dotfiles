@@ -1,36 +1,57 @@
 set shell zsh
+set shellopts '-eu:--shwordsplit'
 set ifs "\n"
 set drawbox
 set period 1
 set icons
+set hiddenfiles ".*:*.aux:*.log:*.bbl:*.bcf:*.blg:*.run.xml:lost+found"
+set promptfmt "\033[33;1m%u\033[0m\033[32;1m@\033[0m\033[34;1m%h\033[0m:\033[35;1m%d\033[0m\033[36;1m%f\033[0m"
+set mouse
+
+# set terminal title to current working directory
+cmd on-cd &{{
+    printf "\033]0; $(pwd | sed "s|$HOME|~|") - lf\007" > /dev/tty
+}}
+# also run at startup
+on-cd
 
 set previewer ~/.config/lf/scope
 set cleaner ~/.config/lf/cleaner
-
-cmd on-cd &{{
-    # '&' commands run silently in background (which is what we want here),
-    # but are not connected to stdout.
-    # To make sure our escape sequence still reaches stdout we pipe it to /dev/tty
-    printf "\033]0; $(pwd | sed "s|$HOME|~|") - lf\007" > /dev/tty
-}}
-
-# also run at startup
-on-cd
 
 # define a custom 'open' command
 # This command is called when current file is not a directory. You may want to
 # use either file extensions and/or mime types here. Below uses an editor for
 # text files and a file opener for the rest.
 cmd open &{{
-    test -L $f && f=$(readlink -f $f)
     case $(file --mime-type -Lb $f) in
-        text/*) lf -remote "send $id \$$EDITOR \$fx";;
-        *) for f in $fx; do $OPENER $f > /dev/null 2> /dev/null & done;;
+        inode/symlink) $OPENER $(realpath $f) >/dev/null 2>&1 ;;
+        text/*|application/json|application/csv|*opendocument.text) lf -remote "send $id \$$EDITOR \$fx";;
+        image/*) feh $f ;;
+        *) for f in $fx; do setsid -f $OPENER $f > /dev/null 2> /dev/null & done;;
     esac
 }}
 
+
 # create direactory
 cmd mkdir $mkdir -p "$(echo $* | tr ' ' '\ ')"
+
+cmd paste &{{
+    set -- $(cat ~/.local/share/lf/files)
+    mode="$1"
+    shift
+    case "$mode" in
+        copy)
+            rsync -av --ignore-existing --progress -- "$@" . |
+            stdbuf -i0 -o0 -e0 tr '\r' '\n' |
+            while IFS= read -r line; do
+                lf -remote "send $id echo $line"
+            done
+            ;;
+        move) mv -n -- "$@" .;;
+    esac
+    rm ~/.local/share/lf/files
+    lf -remote "send clear"
+}}
 
 # extrat compress files
 cmd extract ${{
@@ -50,6 +71,7 @@ cmd extract ${{
 
 # define a custom 'delete' command
 cmd delete ${{
+    clear
     set -f
     printf "$fx\n"
     printf "是否删除?[y/n]"
@@ -99,14 +121,17 @@ map d delete
 map <c-x> cut
 map <c-c> copy
 map <c-v> paste
-map <delete> delete
 map <c-f> :fzf_search
+map . set hidden!
+map <c-r> reload
+map <delete> delete
 map <esc> clear
 
 map X extract
 map R reload
 map M push :mkdir<space>
+map T push :touch<space>
 
-map <enter> shell
+map <enter> open
 
 map j push :zoxide<space>

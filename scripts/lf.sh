@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+export PATH="$HOME/.local/bin:$PATH"
+
 if [ -n "$DISPLAY" ]; then
   export FIFO_UEBERZUG="${TMPDIR:-/tmp}/lf-ueberzug-$$"
 
@@ -18,7 +20,7 @@ if [ -n "$DISPLAY" ]; then
     mkdir -p "$HOME/.cache/lf"
   fi
 
-  ~/.local/bin/lf "$@" 3>&-
+  lf "$@" 3>&-
 else
-  exec ~/.local/bin/lf "$@"
+  exec lf "$@"
 fi
