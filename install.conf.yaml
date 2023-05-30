@@ -9,7 +9,6 @@
     ~/.local/bin:
         force: true
     ~/.config:
-        force: true
         recursive: true
 
 - shell:
