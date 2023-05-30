@@ -1,20 +1,28 @@
 - defaults:
     link:
-      create: true
-      relink: true
+        create: true
+        relink: true
 
-- clean: ["~", "~/.local/bin"]
+- clean:
+    ~/:
+        force: true
+    ~/.local/bin:
+        force: true
+    ~/.config:
+        force: true
+        recursive: true
 
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
+    - cd ~/.dotfiles/mimi && sudo make install
 
 - link:
     ~/.gitconfig:
     ~/.pip/pip.conf: pip.conf
 
     ~/.zshrc:
-      path: zsh/zshrc.zsh
-      force: true
+        path: zsh/zshrc.zsh
+        force: true
     ~/.zgen: zsh/zgen
 
     ~/.vimrc: vim/vimrc
@@ -24,10 +32,10 @@
     ~/.tmux.conf: tmux/tmux.conf
 
     ~/.local/bin/:
-      create: true
-      glob: true
-      path: scripts/*
-      relink: true
+        create: true
+        glob: true
+        path: scripts/*
+        relink: true
 
     ~/.Xresources: config/Xresources
     ~/.config/lf: config/lf
@@ -40,3 +48,4 @@
     ~/.config/dunst/dunstrc: config/dunstrc
     ~/.config/fcitx/config: config/fcitx
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
+    ~/.config/mimi/mimi.conf: config/mimi.conf

@@ -10,3 +10,6 @@
 	path = vim/vim-plug
 	url = https://github.com/junegunn/vim-plug.git
 	ignore = dirty
+[submodule "mimi"]
+	path = mimi
+	url = https://github.com/BachoSeven/mimi.git
