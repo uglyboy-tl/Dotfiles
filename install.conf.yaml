@@ -47,4 +47,3 @@
     ~/.config/dunst/dunstrc: config/dunstrc
     ~/.config/fcitx/config: config/fcitx
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
-    ~/.config/mimi/mimi.conf: config/mimi.conf
