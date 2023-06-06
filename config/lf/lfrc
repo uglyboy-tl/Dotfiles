@@ -93,7 +93,7 @@ cmd fzf_search ${{
 }}
 
 cmd zoxide %{{
-	result="$(zoxide query --exclude $PWD $@)"
+	result="$(zoxide query $PWD $@)"
 	lf -remote "send $id cd \"$result\""
 }}
 
