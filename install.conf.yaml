@@ -13,7 +13,6 @@
 
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
-    - cd ~/.dotfiles/mimi && sudo make install
 
 - link:
     ~/.gitconfig:
@@ -37,13 +36,14 @@
         relink: true
 
     ~/.Xresources: config/Xresources
-    ~/.config/lf: config/lf
+    ~/.dir_colors: config/dir_colors
 
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
     ~/.config/picom/picom.conf: config/picom.conf
     ~/.config/polybar: config/polybar
     ~/.config/rofi: config/rofi
+    ~/.config/lf: config/lf
     ~/.config/dunst/dunstrc: config/dunstrc
     ~/.config/fcitx/config: config/fcitx
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
