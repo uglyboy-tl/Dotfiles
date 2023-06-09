@@ -62,7 +62,7 @@ listview {
 }
 
 element {
-  padding:	19px 11px 19px 29px;
+  padding:	17px 11px 17px 29px;
   border-radius:                  100%;
   border: 1px;
   border-color: @nord10;
