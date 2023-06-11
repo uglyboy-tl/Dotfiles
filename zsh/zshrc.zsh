@@ -32,16 +32,23 @@ if ! zgen saved; then
     zgen oh-my-zsh plugins/extract
     case ${OS_RELEASE} in
         "Ubuntu" )
-        zgen oh-my-zsh plugins/ubuntu
-        ;;
+            zgen oh-my-zsh plugins/ubuntu
+            ;;
         "Raspbian GNU/Linux" )
             zgen oh-my-zsh plugins/ubuntu
-        ;;
-	"Debian GNU/Linux" )
+            ;;
+        "Debian GNU/Linux" )
             zgen oh-my-zsh plugins/ubuntu
-        ;;
+            ;;
+        "Arch Linux" )
+            zgen oh-my-zsh plugins/archlinux
+            ;;
+        "Arch Linux ARM" )
+            zgen oh-my-zsh plugins/archlinux
+            ;;
         * )
-        echo "other"
+            echo "other"
+            ;;
     esac
     zgen oh-my-zsh plugins/cp
     zgen oh-my-zsh plugins/zoxide
@@ -65,7 +72,6 @@ alias slideshow='feh -rzqFZYD 5'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 #alias cp='rsync -av --progress'
 # replaced command
-alias cat='batcat'
 alias duf='duf --only local'
 
 # Allow local customizations in the ~/.zshrc_local_after file
