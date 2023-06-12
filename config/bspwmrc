@@ -21,6 +21,11 @@ _c split_ratio          0.52
 _c borderless_monocle   true
 _c gapless_monocle      true
 
+_c pointer_modifier mod1
+_c pointer_action1 resize_side
+_c pointer_action1 resize_corner
+_c config pointer_action3 move
+
 #Border colors
 _c normal_border_color "#4C566A"
 _c active_border_color "#434C5E"
