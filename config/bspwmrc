@@ -38,9 +38,10 @@ _s picom -b
 _s xsetroot -cursor_name left_ptr
 _s xmodmap -e 'pointer = 3 2 1'
 _s redshift
-_s polybar --reload main
-_s ~/.local/bin/dwall.sh -s aurora
+_s ~/.fehbg
+#_s ~/.local/bin/dwall.sh -s aurora
 _s dunst
+_s polybar --reload main
 
 _r Microsoft-edge desktop='^1' follow=on
 _r obsidian desktop='^2' follow=on
