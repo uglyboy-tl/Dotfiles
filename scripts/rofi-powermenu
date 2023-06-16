@@ -50,7 +50,7 @@ actions[󰐥]="sudo systemctl poweroff"
 actions[󰑐]="sudo systemctl reboot"
 actions[󰐦]="$HOME/.local/bin/rofi-powermenu -a"
 actions[]="$HOME/.local/bin/reboot2win"
-actions[]="$HOME/.local/bin/reboot2bios"
+actions[󰋊]="$HOME/.local/bin/reboot2bios"
 actions[]="$HOME/.local/bin/rofi-powermenu"
 
 # Check whether a command exists#####
@@ -67,7 +67,7 @@ fi
 function show_menu() {
   if [[ $1 == "-a" ]]
   then
-  all=(  )
+  all=( 󰋊 )
   title="高级选项"
   else
   all=(󰐥 󰑐 󰐦)
