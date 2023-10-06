@@ -81,3 +81,4 @@ alias duf='duf --only local'
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 test -r ~/.dir_colors && eval $(dircolors ~/.dir_colors)
+setopt no_nomatch
