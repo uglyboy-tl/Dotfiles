@@ -54,6 +54,7 @@ if ! zgen saved; then
     zgen oh-my-zsh plugins/zoxide
     zgen oh-my-zsh plugins/fzf
     zgen load zsh-users/zsh-syntax-highlighting
+    zgen load marlonrichert/zsh-autocomplete
 
     [ ! -f ~/.zshrc.local.zgen ] || source ~/.zshrc.local.zgen
 
@@ -70,6 +71,7 @@ fi
 alias size='f(){ du -h --max-depth=1 $1 | sort -hr; }; f'
 alias slideshow='feh -rzqFZYD 5'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
+alias runv='source .venv/bin/activate'
 #alias cp='rsync -av --progress'
 # replaced command
 alias duf='duf --only local'
