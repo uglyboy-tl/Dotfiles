@@ -36,10 +36,8 @@ _c presel_feedback_color "#3B4252"
 _s sxhkd
 _s picom -b
 _s xsetroot -cursor_name left_ptr
-_s xmodmap -e 'pointer = 3 2 1'
 _s redshift
 _s ~/.fehbg
-#_s ~/.local/bin/dwall.sh -s aurora
 _s dunst
 _s polybar --reload main
 
@@ -47,6 +45,7 @@ _r Microsoft-edge desktop='^1' follow=on
 _r obsidian desktop='^2' follow=on
 _r Typora desktop='^2' follow=on
 _r lf desktop='^3' follow=on
+_r Bytedance-feishu desktop='^3' follow=on
 _r vlc desktop='^4' follow=on
 _r netease-cloud-music state=tiled desktop='^4' follow=on
 _r TDAppDesktop desktop='^5' follow=on
@@ -54,5 +53,5 @@ _r Code desktop='^5' follow=on
 _r rofi state=floating sticky=on
 _r feh state=floating
 
-_r Alacritty state=floating rectangle=1280x720+640+320
+_r Alacritty state=floating rectangle=1280x720+440+100
 #_r Alacritty state=floating rectangle=1960x1080+300+140
