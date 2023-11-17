@@ -47,3 +47,4 @@
     ~/.config/dunst/dunstrc: config/dunstrc
     ~/.config/fcitx/config: config/fcitx
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
+    ~/.config/fontconfig/fonts.conf: config/fonts.conf
