@@ -33,13 +33,17 @@ super + {m, h}
 # Msater Volume
 #
 XF86AudioRaiseVolume
-	amixer -Mq set Master 2.5%+,5%+ unmute
+	wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+
+	#amixer -Mq set Master 2.5%+,5%+ unmute
 
 XF86AudioLowerVolume
-	amixer -Mq set Master 2.5%-,5%- unmute
+	wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+	#amixer -Mq set Master 2.5%-,5%- unmute
 
 XF86AudioMute
-	amixer -q set Master toggle
+	wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+	#amixer -q set Master toggle
+
 #
 # bspwm hotkeys
 #
