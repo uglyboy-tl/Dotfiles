@@ -41,6 +41,7 @@ _s ~/.local/bin/dwall.sh -s aurora
 #_s ~/.fehbg
 _s dunst
 _s polybar --reload main
+_s /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1
 
 _r Microsoft-edge desktop='^1' follow=on
 _r obsidian desktop='^2' follow=on
