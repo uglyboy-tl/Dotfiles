@@ -1,7 +1,7 @@
 configuration {
   show-icons:	false;
   modi: "window,drun,run";
-  font: "Sarasa Gothic SC 12";
+  font: "Sarasa UI SC";
   dpi: 128;
   display-ssh:    "";
   display-run:    "";
