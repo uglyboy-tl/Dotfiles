@@ -7,7 +7,7 @@ sudo apt-get install --no-install-recommends fzf vim git zoxide ripgrep bat duf 
 sudo apt-get install --no-install-recommends xserver-xorg-input-libinput wireplumber pipewire-pulse pipewire-alsa syncthing ncmpcpp
 sudo apt-get install --no-install-recommends lightdm bspwm polybar picom rofi feh dunst redshift x11-xserver-utils
 sudo apt-get install --no-install-recommends alacritty
-sudo apt-get install --no-install-recommends fonts-noto-color-emoji bibata-cursor-theme gnome-themes-extra librsvg2-common
+sudo apt-get install --no-install-recommends bibata-cursor-theme gnome-themes-extra librsvg2-common
 sudo apt-get install --no-install-recommends fcitx fcitx-sunpinyin fcitx-ui-classic
 
 sudo sed -i 's/# ignore_dav_header = 0/ignore_dav_header = 1/g' /etc/davfs2/davfs2.conf
@@ -68,15 +68,15 @@ sudo apt-get remove --purge vim-tiny tasksel nftables nano zhcon
 #sudo groupadd -r autologin
 #sudo gpasswd -a uglyboy autologin
 #sudo sed -i 's/#autologin-user=/autologin-user=uglyboy/g' /etc/lightdm/lightdm.conf
-#sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=0/g' /etc/default/grub
-#sudo update-grub2
+sudo sed -i 's/GRUB_TIMEOUT=5/GRUB_TIMEOUT=0/g' /etc/default/grub
+sudo update-grub2
 #sudo apt-get install --no-install-recommends celluloid
 
 sudo sed -i '/^deb-src/s/^/#/' /etc/apt/sources.list
 sudo sed -i 's/\(deb.*\) bookworm main non-free-firmware/\1 bookworm main contrib non-free non-free-firmware/' /etc/apt/sources.list
 
 sudo apt-get update
-#sudo apt-get install --no-install-recommends linux-headers-amd64 nvidia-driver firmware-misc-nonfree
+sudo apt-get install --no-install-recommends linux-headers-amd64 nvidia-kernel-open-dkms nvidia-driver firmware-misc-nonfree
 sudo apt-get install --no-install-recommends file ueberzug upower xdg-desktop-portal-gtk accountsservice policykit-1-gnome plymouth
 #sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet"/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia-drm.modeset=1"/g' /etc/default/grub
 #sudo plymouth-set-default-theme -R tribar
