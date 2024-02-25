@@ -69,7 +69,7 @@ fi
 #source $DOTFILES/zsh/p10k.zsh
 
 # alias definitions
-alias size='f(){ du -h --max-depth=1 $1 | sort -hr; }; f'
+alias size='f(){ sudo du -h --max-depth=1 $1 | sort -hr; }; f'
 alias slideshow='feh -rzqFZYD 5'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 alias runv='source .venv/bin/activate'
