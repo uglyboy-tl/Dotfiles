@@ -1,5 +1,6 @@
 #! /bin/sh
 export TERM=linux
+~/.screenlayout/default.sh
 
 #inspired by gk
 _c() { bspc config "$@"; }
@@ -13,7 +14,8 @@ _s() {
 	}
 }
 
-_m -d I II III IV V VI
+_m DP-2 -d I II III IV V VI
+_m eDP-1 -d VII
 
 _c border_width         0
 _c window_gap           10
@@ -37,11 +39,9 @@ _s sxhkd
 _s picom -b
 _s xsetroot -cursor_name left_ptr
 _s redshift
-_s ~/.local/bin/dwall.sh -s aurora
-#_s ~/.fehbg
+_s ~/.fehbg
 _s dunst
 _s polybar --reload main
-_s /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1
 
 _r Microsoft-edge desktop='^1' follow=on
 _r obsidian desktop='^2' follow=on
@@ -59,5 +59,4 @@ _r Code desktop='^6' follow=on
 _r rofi state=floating sticky=on
 _r feh state=floating
 
-_r Alacritty state=floating rectangle=1280x720+640+100
-#_r Alacritty state=floating rectangle=1280x720+440+100
+_r Alacritty state=floating rectangle=1280x720+1280+200
