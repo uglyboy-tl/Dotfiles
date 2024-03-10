@@ -37,7 +37,7 @@ _s sxhkd
 _s picom -b
 _s xsetroot -cursor_name left_ptr
 _s redshift
-_s ~/.local/bin/dwall.sh -s aurora
+_s ~/.local/bin/dwall.sh -s forest
 #_s ~/.fehbg
 _s dunst
 _s polybar --reload main
