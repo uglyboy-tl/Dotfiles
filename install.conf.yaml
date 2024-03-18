@@ -27,8 +27,6 @@
     ~/.vimrc.plug: vim/vimrc.plug
     ~/.vim/autoload/plug.vim: vim/vim-plug/plug.vim
 
-    ~/.tmux.conf: tmux/tmux.conf
-
     ~/.local/bin/:
         create: true
         glob: true
