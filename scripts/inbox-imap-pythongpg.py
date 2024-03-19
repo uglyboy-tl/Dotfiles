@@ -12,7 +12,7 @@ IMAP_DICT = {
 unread_count = 0
 
 for email, imap_url in IMAP_DICT.items():
-    completed_process = subprocess.run(['cat', os.path.join(os.getenv('HOME'), f'.password/{email}')], check=True, stdout=subprocess.PIPE, encoding="utf-8")
+    completed_process = subprocess.run(['gpg', '-dq', os.path.join(os.getenv('HOME'), f'.password/{email}.gpg')], check=True, stdout=subprocess.PIPE, encoding="utf-8")
     password = completed_process.stdout[:-1]
     obj = imaplib.IMAP4_SSL(imap_url, 993)
     # Only put your email address below.
