@@ -1,3 +1,11 @@
+# UI
+set ascii_chars=yes                         # 用纯 ascii 表示树状列表
+set charset="utf-8"                         # 编码以及发件编码
+set sidebar_visible = yes
+set sidebar_width   = 24
+color sidebar_new color221 color233
+;set sidebar_format = "%B%*  %N" # Show number of unread messages
+
 # Change the following line to a different editor you prefer.
 set editor = "vim"
 
@@ -14,10 +22,9 @@ set realname="田陆"
 set from="uglyboy@aliyun.com"
 
 # 分类邮箱
+set mbox_type="Maildir"
 set folder = "$HOME/.Mail"
-source ~/.Mail/mailboxes
-#set spoolfile = "+account/INBOX"
-#set record = "+account/Sent\ Items"
+source ~/.mutt/mailboxes
+set spoolfile="+Exmail/INBOX"
+set record = "+Exmail/Sent\ Messages"
 #set postponed = "+account/Drafts"
-
-mailboxes `ls -r ~/.Mail | xargs | sed 's/ / =/g' |sed 's/inbox/=inbox/'`

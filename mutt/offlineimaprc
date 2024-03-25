@@ -19,7 +19,6 @@ type = Maildir
 localfolders = ~/.Mail/Exmail
 
 [Repository Remote-Aliyun]
-readonly = true
 folderfilter = lambda foldername: foldername in ["INBOX"]
 type = IMAP
 remotehost = imap.aliyun.com
@@ -31,22 +30,12 @@ ssl = yes
 sslcacertfile = OS-DEFAULT
 
 [Repository Remote-Exmail]
-readonly = true
 folderfilter = lambda foldername: foldername in ["INBOX", "Sent Messages"]
 type = IMAP
 remotehost = imap.exmail.qq.com
 remoteuser = uglyboy@uglyboy.cn
 remotepasseval = get_pass("uglyboy@uglyboy.cn")
-;remotepass = aeJDdCHRwCFRyCqH
 auth_mechanisms = LOGIN
 createfolder = true
 ssl = yes
 sslcacertfile = OS-DEFAULT
-
-[mbnames]
-enabled = yes
-filename = ~/.mutt/mailboxes
-header = "mailboxes "
-peritem = "+%(accountname)s/%(foldername)s"
-sep = " "
-footer = "\n"
