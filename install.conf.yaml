@@ -47,6 +47,6 @@
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
     ~/.config/fontconfig/fonts.conf: config/fonts.conf
 
-    ~/.fetchmailrc: mutt/fetchmailrc
-    ~/.procmailrc: mutt/procmailrc
+    ~/.offlineimaprc: mutt/offlineimaprc
     ~/.mutt/muttrc: mutt/muttrc
+    ~/.mutt/mailboxes: mutt/mailboxes

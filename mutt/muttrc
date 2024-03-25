@@ -14,19 +14,10 @@ set realname="田陆"
 set from="uglyboy@aliyun.com"
 
 # 分类邮箱
-set mbox_type=Maildir
 set folder = "$HOME/.Mail"
-set mbox= $HOME/.Mail
-set spoolfile=+inbox
-set record = +sent
-set postponed=+draft
+source ~/.Mail/mailboxes
+#set spoolfile = "+account/INBOX"
+#set record = "+account/Sent\ Items"
+#set postponed = "+account/Drafts"
 
 mailboxes `ls -r ~/.Mail | xargs | sed 's/ / =/g' |sed 's/inbox/=inbox/'`
-
-#
-# keybindings
-#
-macro index,pager I '<shell-escape> fetchmail<enter>' "获取邮件"
-
-# List mailboxes
-macro index,pager c "<change-folder>?<toggle-mailboxes>" "打开另一个文件夹"
