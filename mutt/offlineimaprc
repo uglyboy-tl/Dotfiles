@@ -1,6 +1,6 @@
 [general]
 accounts = Exmail,Aliyun
-pythonfile = ~/.local/bin/get_pass.py
+pythonfile = ~/.dotfiles/mutt/get_pass.py
 
 [Account Aliyun]
 localrepository = Local-Aliyun
