@@ -19,8 +19,6 @@ let g:airline_symbols.maxlinenr = ' '
 let g:airline_symbols.colnr = '℅:'
 " AirLine Theme Nord
 colorscheme nord
-" PanGu
-autocmd BufWritePre *.markdown,*.md,*.text,*.txt,*.wiki,*.cnx call PanGuSpacing()
 
 " keyboard shortcuts
 let mapleader = ','
