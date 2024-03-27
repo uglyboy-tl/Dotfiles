@@ -12,6 +12,7 @@ fi
 # environment variables
 export DOTFILES="$HOME/.dotfiles"
 export OS_RELEASE=`awk -F= '/^NAME/{print $2}' /etc/os-release | sed 's/"//g'`
+export PYTHON_VENV_NAME=".venv"
 
 # fzf options
 export FZF_PREVIEW_COMMAND="bat --style=numbers,header --color=always {} || batcat --style=numbers,header --color=always {} || cat {}"

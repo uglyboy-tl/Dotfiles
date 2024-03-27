@@ -38,3 +38,8 @@
     ~/.dir_colors: config/dir_colors
 
     ~/.config/lf: config/lf
+
+    ~/.offlineimaprc: mutt/offlineimaprc
+    ~/.mutt/muttrc: mutt/muttrc
+    ~/.mutt/mailboxes: mutt/mailboxes
+    ~/.mailcap: mutt/mailcap

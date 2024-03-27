@@ -1,0 +1,41 @@
+[general]
+accounts = Exmail,Aliyun
+pythonfile = ~/.dotfiles/mutt/get_pass.py
+
+[Account Aliyun]
+localrepository = Local-Aliyun
+remoterepository = Remote-Aliyun
+
+[Account Exmail]
+localrepository = Local-Exmail
+remoterepository = Remote-Exmail
+
+[Repository Local-Aliyun]
+type = Maildir
+localfolders = ~/.Mail/Aliyun
+
+[Repository Local-Exmail]
+type = Maildir
+localfolders = ~/.Mail/Exmail
+
+[Repository Remote-Aliyun]
+folderfilter = lambda foldername: foldername in ["INBOX"]
+type = IMAP
+remotehost = imap.aliyun.com
+remoteuser = uglyboy@aliyun.com
+remotepasseval = get_pass("uglyboy@aliyun.com")
+auth_mechanisms = LOGIN
+createfolder = true
+ssl = yes
+sslcacertfile = OS-DEFAULT
+
+[Repository Remote-Exmail]
+folderfilter = lambda foldername: foldername in ["INBOX", "Sent Messages"]
+type = IMAP
+remotehost = imap.exmail.qq.com
+remoteuser = uglyboy@uglyboy.cn
+remotepasseval = get_pass("uglyboy@uglyboy.cn")
+auth_mechanisms = LOGIN
+createfolder = true
+ssl = yes
+sslcacertfile = OS-DEFAULT
