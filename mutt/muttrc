@@ -15,7 +15,6 @@ unset wait_key
 
 # Change the following line to a different editor you prefer.
 set editor = "vim"
-
 set pager_index_lines = 6
 set pager_context = 3
 set pager_stop
@@ -23,8 +22,6 @@ set tilde
 unset markers
 unhdr_order *
 hdr_order from: to: cc: date: subject:
-auto_view text/html # View HTML automatically
-alternative_order text/plain text/enriched text/html # save html for last
 set display_filter="sed -e '/\\[-- Type: text.* --\\]/d' | sed -e '/\\[-- Autoview.* --\\]/d' | sed -e '/\\[-- Type.* --\\]/d' |  sed -e '/\\[-- .*unsupported.* --\\]/d' | sed -e '/\\[-- Attachment #[0-9] --\\]/d' | sed -e 's/Attachment #[0-9]: //g' | sed '/./,/^$/!d'"
 
 # 通用设定
@@ -34,6 +31,7 @@ set sort_aux = 'reverse-date'
 set auto_tag = yes
 set charset="utf-8"
 auto_view text/html   #自动显示HTML
+alternative_order text/plain text/enriched text/html # save html for last
 
 # 发送者账号
 set realname="田陆"
