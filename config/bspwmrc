@@ -51,7 +51,7 @@ _r Typora desktop='^2' follow=on
 _r lf desktop='^3' follow=on
 _r Zotero desktop='^3' follow=on
 _r EDRLab.ThoriumReader desktop='^3' follow=on
-_r melonDS desktop='^4' follow=on state=floating rectangle=1280x1440+640
+_r melonDS desktop='^4' follow=on
 _r vlc desktop='^4' follow=on
 _r Io.github.celluloid_player.Celluloid desktop='^4' follow=on
 _r netease-cloud-music state=tiled desktop='^4' follow=on
