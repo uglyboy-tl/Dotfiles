@@ -16,7 +16,7 @@
 
 - link:
     ~/.gitconfig:
-    ~/.pip/pip.conf: pip.conf
+    ~/.config/pip/pip.conf: pip.conf
 
     ~/.zshrc:
         path: zsh/zshrc.zsh
