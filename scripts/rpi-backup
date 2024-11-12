@@ -1,3 +1,3 @@
 #!/bin/bash
-sudo dd if=/dev/mmcblk0 of=/srv/Base/Data/rpibackup/rpi.img bs=8M status=progress
-sudo pishrink.sh -zZvs /srv/Base/Data/rpibackup/rpi.img
+sudo dd if=/dev/mmcblk0 of=/srv/Base/Data/rpibackup/rpi.$(date '+%Y%m%d').img bs=8M status=progress
+sudo pishrink.sh -Zvs /srv/Base/Data/rpibackup/rpi.$(date '+%Y%m%d').img
