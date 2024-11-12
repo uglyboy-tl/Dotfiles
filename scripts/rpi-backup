@@ -1,0 +1,2 @@
+udo dd if=/dev/mmcblk0 of=/srv/Base/Data/rpibackup/rpi.img bs=8M status=progress
+sudo pishrink.sh -zZvs /srv/Base/Data/rpibackup/rpi.img
