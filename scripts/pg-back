@@ -1,0 +1,21 @@
+#!/bin/bash
+#保留文件数
+ReservedNum=7
+DATE=`date +%y%m%d-%H%M`
+BACK_DIR=/srv/Base/Data/PG
+cd ${BACK_DIR}
+BACK_DATA=${DATE}.out  # 这里设置备份文件的名字, 加入日期是为了防止重复
+BACK_ARCHIVE=${DATE}.tar.gz  # 这里设置备份文件的名字, 加入日期是为了防止重复
+docker exec pgvecto.rs pg_dumpall -U uglyboy > ${BACK_DATA} # pg-db 是数据库的 docker 名称 
+tar -zcvf ${BACK_ARCHIVE} ${BACK_DATA}
+rm ${BACK_DATA}
+
+FileNum=$(ls -l $BACK_DIR/*.tar.gz |grep ^- |wc -l)
+
+while [ $FileNum -gt $ReservedNum ]
+do
+    OldFile=$(ls -rt  $BACK_DIR/*.tar.gz| head -1)
+    echo  "Delete File:" $OldFile
+    rm -f $OldFile
+    FileNum=$(expr $FileNum - 1)
+done
