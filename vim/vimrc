@@ -1,8 +1,8 @@
 call plug#begin('~/.vim/plugged')
 
 " install Plug plugins
-if filereadable(expand("~/.vimrc.plug"))
-  source ~/.vimrc.plug
+if filereadable(expand("~/.vim/vimrc.plug"))
+  source ~/.vim/vimrc.plug
 endif
 
 call plug#end()
@@ -34,7 +34,9 @@ map ; :Files<CR>
 "nnoremap <leader>b :Buffers<CR>
 
 " Go crazy!
-let $LOCALFILE=expand("~/.vimrc.local")
+let $LOCALFILE=expand("~/.vim/local")
 if filereadable($LOCALFILE)
   source $LOCALFILE
 endif
+
+if !has('nvim') | set viminfofile=$XDG_STATE_HOME/vim/viminfo | endif

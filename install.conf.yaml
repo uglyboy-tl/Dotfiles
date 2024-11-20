@@ -15,16 +15,19 @@
     - [git submodule update --init --recursive, Installing submodules]
 
 - link:
-    ~/.gitconfig:
+    ~/.profile:
+    ~/.config/environment: environment
+    ~/.config/git/config: git/config
     ~/.config/pip/pip.conf: pip.conf
 
-    ~/.zshrc:
+    ~/.config/zsh/.zshrc:
         path: zsh/zshrc.zsh
         force: true
+    ~/.config/zsh/.p10k.zsh: zsh/p10k.zsh
     ~/.zgen: zsh/zgen
 
-    ~/.vimrc: vim/vimrc
-    ~/.vimrc.plug: vim/vimrc.plug
+    ~/.vim/vimrc: vim/vimrc
+    ~/.vim/vimrc.plug: vim/vimrc.plug
     ~/.vim/autoload/plug.vim: vim/vim-plug/plug.vim
 
     ~/.local/bin/:
@@ -47,7 +50,7 @@
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
     ~/.config/fontconfig/fonts.conf: config/fonts.conf
 
-    ~/.offlineimaprc: mutt/offlineimaprc
+    ~/.config/offlineimap/config: mutt/offlineimaprc
     ~/.mutt/muttrc: mutt/muttrc
     ~/.mutt/mailboxes: mutt/mailboxes
     ~/.mailcap: mutt/mailcap
