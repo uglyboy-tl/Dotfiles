@@ -6,11 +6,29 @@ set period 1
 set icons
 set hiddenfiles ".*:*.aux:*.log:*.bbl:*.bcf:*.blg:*.run.xml:lost+found"
 set promptfmt "\033[33;1m%u\033[0m\033[32;1m@\033[0m\033[34;1m%h\033[0m:\033[35;1m%d\033[0m\033[36;1m%f\033[0m"
+set cursorpreviewfmt "\033[7m"
 set mouse
 
 # set terminal title to current working directory
 cmd on-cd &{{
     printf "\033]0; $(pwd | sed "s|$HOME|~|") - lf\007" > /dev/tty
+
+    # display repository status in your prompt
+    if [ -d .git ] || [ -f .git ]; then
+        branch="$(git branch --show-current 2>/dev/null)" || true
+        remote="$(git config --get "branch.$branch.remote" 2>/dev/null)" || true
+        url="$(git remote get-url "$remote" 2>/dev/null)" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [GIT BRANCH:> $branch >> $url]\033[0m"
+    elif [ -d .hg ]; then
+        hg="$(hg branch 2>/dev/null)" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [HG BRANCH:> $hg]\033[0m"
+    elif [ -d .svn ]; then
+        svn="$(svn info 2>/dev/null | awk '/^URL: /{print $2}')" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [SVN URL:> $svn]\033[0m"
+    else
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
+    fi
+    lf -remote "send $id set promptfmt \"$fmt\""
 }}
 # also run at startup
 on-cd
@@ -44,10 +62,14 @@ cmd paste &{{
             rsync -av --ignore-existing --progress -- "$@" . |
             stdbuf -i0 -o0 -e0 tr '\r' '\n' |
             while IFS= read -r line; do
-                lf -remote "send $id echo $line"
+                line="$(printf '%s' "$line" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+                lf -remote "send $id echo \"$line\""
             done
             ;;
-        move) mv -n -- "$@" .;;
+        move)
+            mv -n -- "$@" .
+            lf -remote "send clear"
+            ;;
     esac
     rm ~/.local/share/lf/files
     lf -remote "send clear"
@@ -63,20 +85,10 @@ cmd extract ${{
         *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f;;
         *.tar.gz|*.tgz) tar xzvf $f;;
         *.tar.xz|*.txz) tar xJvf $f;;
-        *.zip) unzip -O gbk $f;;
-        *.rar) unrar x $f;;
-        *.7z) 7z x $f;;
+        *.zip) unzip $f;;
+        *.rar) 7zr x $f;;
+        *.7z) 7zr x $f;;
     esac
-}}
-
-# define a custom 'delete' command
-cmd delete ${{
-    clear
-    set -f
-    printf "$fx\n"
-    printf "是否删除?[y/n]"
-    read ans
-    [ "$ans" = "y" ] && rm -rf $fx
 }}
 
 #Combining fzf with ripgrep, you can interactively search in the contents of files under the current directory and select a file from the results:
@@ -97,6 +109,12 @@ cmd zoxide %{{
 	lf -remote "send $id cd \"$result\""
 }}
 
+cmd git_branch ${{
+    git branch | fzf | xargs git checkout
+    pwd_shell="$(pwd | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    lf -remote "send $id updir; cd \"$pwd_shell\""
+}}
+
 #########################################################################################
 # key bindings
 # Remove some defaults
@@ -112,26 +130,27 @@ map c
 map y
 map w
 
+# Custom
 map l $$SHELL
 
 map y copy
 map x cut
 map d delete
 
-map <c-x> cut
 map <c-c> copy
 map <c-v> paste
 map <c-f> :fzf_search
 map . set hidden!
-map <c-r> reload
 map <delete> delete
 map <esc> clear
 
-map X extract
-map R reload
-map M push :mkdir<space>
+map <c-x> extract
+map M push %mkdir<space>
 map T push :touch<space>
 
 map <enter> open
 
-map j push :zoxide<space>
+map z push :zoxide<space>
+
+map gp $clear; git pull --rebase || true; echo "press ENTER"; read ENTER
+map gs $clear; git status; echo "press ENTER"; read ENTER
