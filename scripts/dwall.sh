@@ -130,7 +130,7 @@ case "$OSTYPE" in
 			elif [[ "$DESKTOP_SESSION" =~ ^(PANTHEON|Pantheon|pantheon|GNOME|Gnome|gnome|Gnome-xorg|gnome-xorg|UBUNTU|Ubuntu|ubuntu|DEEPIN|Deepin|deepin|POP|Pop|pop)$ ]]; then
 				SETTER="gsettings set org.gnome.desktop.background picture-uri"
 			else
-				SETTER="feh --bg-fill"
+				SETTER="feh --bg-fill --no-fehbg"
 			fi
 			;;
 esac
