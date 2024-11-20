@@ -2,7 +2,7 @@
 
 # 设置你的邮件目录的路径，这里以 "~/Maildir" 为例
 # 如果你有多个账户，可能需要为每个账户设置并检查
-MAILDIR=~/.Mail
+MAILDIR=~/.local/share/Mail
 
 # 计算未读邮件的数量
 # Maildir格式中，未读邮件位于 "new" 目录中

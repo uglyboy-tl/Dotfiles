@@ -1,5 +1,6 @@
 [general]
 accounts = Exmail,Aliyun
+metadata = ~/.local/share/offlineimap
 pythonfile = ~/.dotfiles/mutt/get_pass.py
 
 [Account Aliyun]
