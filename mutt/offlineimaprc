@@ -12,11 +12,11 @@ remoterepository = Remote-Exmail
 
 [Repository Local-Aliyun]
 type = Maildir
-localfolders = ~/.Mail/Aliyun
+localfolders = ~/.local/share/Mail/Aliyun
 
 [Repository Local-Exmail]
 type = Maildir
-localfolders = ~/.Mail/Exmail
+localfolders = ~/.local/share/Mail/Exmail
 
 [Repository Remote-Aliyun]
 folderfilter = lambda foldername: foldername in ["INBOX"]
