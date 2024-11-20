@@ -21,7 +21,7 @@
 
 # Allow local customizations in the .gitconfig_local file
 [include]
-    path=~/.gitconfig.local
+    path=~/.config/git/local
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
