@@ -37,7 +37,6 @@
         relink: true
 
     ~/.Xresources: config/Xresources
-    ~/.dir_colors: config/dir_colors
 
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
@@ -51,6 +50,6 @@
     ~/.config/fontconfig/fonts.conf: config/fonts.conf
 
     ~/.config/offlineimap/config: mutt/offlineimaprc
-    ~/.mutt/muttrc: mutt/muttrc
-    ~/.mutt/mailboxes: mutt/mailboxes
+    ~/.config/mutt/muttrc: mutt/muttrc
+    ~/.config/mutt/mailboxes: mutt/mailboxes
     ~/.mailcap: mutt/mailcap

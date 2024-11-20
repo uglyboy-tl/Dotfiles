@@ -39,8 +39,8 @@ set from="uglyboy@aliyun.com"
 
 # 分类邮箱
 set mbox_type="Maildir"
-set folder = "$HOME/.Mail"
-source ~/.mutt/mailboxes
+set folder = "$XDG_DATA_HOME/Mail"
+source ~/.config/mutt/mailboxes
 set spoolfile="+Aliyun/INBOX"
 set record = "+Aliyun/Sent\ Messages"
 #set postponed = "+account/Drafts"
