@@ -15,7 +15,7 @@
     - [git submodule update --init --recursive, Installing submodules]
 
 - link:
-    ~/.profile:
+    ~/.xsessionrc: environment
     ~/.config/environment: environment
     ~/.config/git/config: git/config
     ~/.config/pip/pip.conf: pip.conf
@@ -26,9 +26,9 @@
     ~/.config/zsh/.p10k.zsh: zsh/p10k.zsh
     ~/.zgen: zsh/zgen
 
-    ~/.vim/vimrc: vim/vimrc
-    ~/.vim/vimrc.plug: vim/vimrc.plug
-    ~/.vim/autoload/plug.vim: vim/vim-plug/plug.vim
+    ~/.config/vim/vimrc: vim/vimrc
+    ~/.config/vim/vimrc.plug: vim/vimrc.plug
+    ~/.config/vim/plug.vim: vim/vim-plug/plug.vim
 
     ~/.local/bin/:
         create: true

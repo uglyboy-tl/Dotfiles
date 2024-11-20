@@ -1,0 +1,39 @@
+# XDG Base Directory
+export XDG_DATA_HOME=$HOME/.local/share
+export XDG_CONFIG_HOME=$HOME/.config
+export XDG_STATE_HOME=$HOME/.local/state
+export XDG_CACHE_HOME=$HOME/.cache
+
+# [CUDA]
+export CUDA_CACHE_PATH="$XDG_CACHE_HOME"/nv
+
+# [dotnet]
+export DOTNET_CLI_HOME="$XDG_DATA_HOME"/dotnet
+
+# [gnupg]
+export GNUPGHOME="$XDG_DATA_HOME"/gnupg
+
+# [gtk-2]
+export GTK2_RC_FILES="$XDG_CONFIG_HOME"/gtk-2.0/gtkrc
+
+# [icons]
+export XCURSOR_PATH=/usr/share/icons:$XDG_DATA_HOME/icons
+
+# [openjdk]
+export _JAVA_OPTIONS=-Djava.util.prefs.userRoot="$XDG_CONFIG_HOME"/java
+
+# [sqlite]
+export SQLITE_HISTORY="$XDG_CACHE_HOME"/sqlite_history
+
+# [vim]
+export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
+
+# [wakatime]
+export WAKATIME_HOME="$XDG_CONFIG_HOME"/wakatime
+
+# [xorg-xauth] lightdm Useless
+# export XAUTHORITY="$XDG_RUNTIME_DIR"/Xauthority
+
+# [zsh]
+export ZDOTDIR="$HOME"/.config/zsh
+export HISTFILE=$XDG_STATE_HOME/zsh/history
