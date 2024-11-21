@@ -1,8 +1,13 @@
-call plug#begin('~/.vim/plugged')
+" 手动加载 vim-plug
+if filereadable(expand('~/.config/vim/plug.vim'))
+  source ~/.config/vim/plug.vim
+endif
+
+call plug#begin('~/.config/vim/plugged')
 
 " install Plug plugins
-if filereadable(expand("~/.vimrc.plug"))
-  source ~/.vimrc.plug
+if filereadable(expand("~/.config/vim/vimrc.plug"))
+  source ~/.config/vim/vimrc.plug
 endif
 
 call plug#end()
@@ -34,7 +39,7 @@ map ; :Files<CR>
 "nnoremap <leader>b :Buffers<CR>
 
 " Go crazy!
-let $LOCALFILE=expand("~/.vimrc.local")
+let $LOCALFILE=expand("~/.config/vim/local")
 if filereadable($LOCALFILE)
   source $LOCALFILE
 endif

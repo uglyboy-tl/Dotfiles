@@ -1,2 +1,0 @@
-text/html; lynx -dump -width=78 -nolist %s | sed 's/^  //';
-sopiousoutput; needsterminal;nametemplate=%s.html

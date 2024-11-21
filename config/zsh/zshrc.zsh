@@ -2,13 +2,15 @@
 export PATH=$HOME/.local/bin:$PATH
 export ZSH_DISABLE_COMPFIX=true
 
+source ${XDG_CONFIG_HOME:-$HOME/.config}/environment
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
     source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
 # Allow local customizations in the ~/.zshrc_local_before file
-[ ! -f ~/.zshrc.local.before ] || source ~/.zshrc.local.before
+[ ! -f ${ZDOTDIR:-~}/before ] || source ${ZDOTDIR:-~}/before
 
 # environment variables
 export DOTFILES="$HOME/.dotfiles"
@@ -59,7 +61,7 @@ if ! zgen saved; then
     zgen load zsh-users/zsh-syntax-highlighting
     zgen load marlonrichert/zsh-autocomplete
 
-    [ ! -f ~/.zshrc.local.zgen ] || source ~/.zshrc.local.zgen
+    [ ! -f ${ZDOTDIR:-~}/zgen ] || source ${ZDOTDIR:-~}/zgen
 
     # Theme
     zgen load romkatv/powerlevel10k powerlevel10k
@@ -68,6 +70,7 @@ if ! zgen saved; then
     zgen save
 fi
 
+compinit -d "$XDG_CACHE_HOME"/zsh/zcompdump-"$ZSH_VERSION"
 #source $DOTFILES/zsh/p10k.zsh
 
 # alias definitions
@@ -76,14 +79,14 @@ alias slideshow='feh -rzqFZYD 5'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 alias runv='source .venv/bin/activate'
 #alias cp='rsync -av --progress'
+alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
 # replaced command
 alias duf='duf --only local'
 
 # Allow local customizations in the ~/.zshrc_local_after file
-[ ! -f ~/.zshrc.local.after ] || source ~/.zshrc.local.after
+[ ! -f ${ZDOTDIR:-~}/after ] || source ${ZDOTDIR:-~}/after
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+[[ ! -f ${ZDOTDIR:-~}/.p10k.zsh ]] || source ${ZDOTDIR:-~}/.p10k.zsh
 
-test -r ~/.dir_colors && eval $(dircolors ~/.dir_colors)
 setopt no_nomatch
