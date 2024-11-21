@@ -13,7 +13,7 @@ fi
 [ ! -f ${ZDOTDIR:-~}/before ] || source ${ZDOTDIR:-~}/before
 
 # environment variables
-export DOTFILES="$HOME/.dotfiles"
+export DOTFILES="$XDG_DATA_HOME/dotfiles"
 export OS_RELEASE=`awk -F= '/^NAME/{print $2}' /etc/os-release | sed 's/"//g'`
 export PYTHON_VENV_NAME=".venv"
 
