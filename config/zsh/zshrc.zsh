@@ -78,13 +78,12 @@ compinit -d "$XDG_CACHE_HOME"/zsh/zcompdump-"$ZSH_VERSION"
 
 # alias definitions
 alias size='f(){ sudo du -h --max-depth=1 $1 | sort -hr; }; f'
-alias slideshow='feh -rzqFZYD 5'
 alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 alias runv='source .venv/bin/activate'
-#alias cp='rsync -av --progress'
-alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
+
 # replaced command
 alias duf='duf --only local'
+alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
 
 # Allow local customizations in the ~/.zshrc_local_after file
 [ ! -f $ZDOTDIR/after ] || source $ZDOTDIR/after
