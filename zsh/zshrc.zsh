@@ -19,7 +19,7 @@ fi
 [ ! -f ${ZDOTDIR:-~}/before ] || source ${ZDOTDIR:-~}/before
 
 # environment variables
-export DOTFILES="$HOME/.dotfiles"
+export DOTFILES="$XDG_DATA_HOME/dotfiles"
 export OS_RELEASE=`awk -F= '/^NAME/{print $2}' /etc/os-release | sed 's/"//g'`
 export PYTHON_VENV_NAME=".venv"
 
@@ -94,5 +94,4 @@ alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
 # To customize prompt, run `p10k configure` or edit ~/.config/zsh/.p10k.zsh.
 [[ ! -f ${ZDOTDIR:-~}/.p10k.zsh ]] || source ${ZDOTDIR:-~}/.p10k.zsh
 
-test -r ~/.dir_colors && eval $(dircolors ~/.dir_colors)
 setopt no_nomatch

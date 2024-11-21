@@ -17,8 +17,8 @@
 - link:
     ~/.xsessionrc: environment
     ~/.config/environment: environment
-    ~/.config/git/config: git/config
-    ~/.config/pip/pip.conf: pip.conf
+    ~/.config/git/config: config/git/config
+    ~/.config/pip/pip.conf: config/pip/pip.conf
 
     ~/.config/zsh/.zshrc:
         path: zsh/zshrc.zsh
@@ -26,9 +26,9 @@
     ~/.config/zsh/.p10k.zsh: zsh/p10k.zsh
     ~/.zgen: zsh/zgen
 
-    ~/.config/vim/vimrc: vim/vimrc
-    ~/.config/vim/vimrc.plug: vim/vimrc.plug
-    ~/.config/vim/plug.vim: vim/vim-plug/plug.vim
+    ~/.config/vim/vimrc: config/vim/vimrc
+    ~/.config/vim/vimrc.plug: config/vim/vimrc.plug
+    ~/.config/vim/plug.vim: config/vim/vim-plug/plug.vim
 
     ~/.local/bin/:
         create: true
@@ -49,7 +49,7 @@
     ~/.config/alacritty/alacritty.yml: config/alacritty.yml
     ~/.config/fontconfig/fonts.conf: config/fonts.conf
 
-    ~/.config/offlineimap/config: mutt/offlineimaprc
-    ~/.config/mutt/muttrc: mutt/muttrc
-    ~/.config/mutt/mailboxes: mutt/mailboxes
-    ~/.mailcap: mutt/mailcap
+    ~/.config/offlineimap/config: config/mutt/offlineimaprc
+    ~/.config/mutt/muttrc: config/mutt/muttrc
+    ~/.config/mutt/mailboxes: config/mutt/mailboxes
+    ~/.mailcap: config/mutt/mailcap
