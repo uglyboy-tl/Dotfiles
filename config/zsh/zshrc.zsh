@@ -66,7 +66,6 @@ if ! zgen saved; then
     zgen oh-my-zsh plugins/fzf
     zgen oh-my-zsh plugins/poetry
     zgen load zsh-users/zsh-syntax-highlighting
-    zgen load marlonrichert/zsh-autocomplete . main
 
     [ ! -f ${ZDOTDIR:-~}/zgen ] || source ${ZDOTDIR:-~}/zgen
 
