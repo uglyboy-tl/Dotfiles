@@ -1,16 +1,18 @@
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/.local/bin:$PATH
+source ${XDG_CONFIG_HOME:-$HOME/.config}/environment
+
 export ZSH_DISABLE_COMPFIX=true
 
-source ${XDG_CONFIG_HOME:-$HOME/.config}/environment
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
     source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+
 # Allow local customizations in the ~/.zshrc_local_before file
-[ ! -f ${ZDOTDIR:-~}/before ] || source ${ZDOTDIR:-~}/before
+[ ! -f $ZDOTDIR/before ] || source $ZDOTDIR/before
 
 # environment variables
 export DOTFILES="$XDG_DATA_HOME/dotfiles"
@@ -24,14 +26,15 @@ export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!{.git,.idea,.v
 export FZF_ALT_C_COMMAND="rg --sort-files --files --null 2> /dev/null | xargs -0 dirname | uniq"
 
 # load zgen
-source ~/.zgen/zgen.zsh
+export ZGEN_DIR=$ZDOTDIR/zgen
+source $ZGEN_DIR/zgen.zsh
 
 # Generate zgen init.sh if it doesn't exist
 if ! zgen saved; then
     zgen oh-my-zsh
 
-    # Plugins
     zgen oh-my-zsh plugins/git
+    #zgen oh-my-zsh plugins/tmux
     zgen oh-my-zsh plugins/git-auto-fetch
     zgen oh-my-zsh plugins/extract
     case ${OS_RELEASE} in
@@ -59,9 +62,9 @@ if ! zgen saved; then
     zgen oh-my-zsh plugins/fzf
     zgen oh-my-zsh plugins/poetry
     zgen load zsh-users/zsh-syntax-highlighting
-    zgen load marlonrichert/zsh-autocomplete
 
-    [ ! -f ${ZDOTDIR:-~}/zgen ] || source ${ZDOTDIR:-~}/zgen
+    # Plugins
+    [ ! -f $ZDOTDIR/plugins ] || source $ZDOTDIR/plugins
 
     # Theme
     zgen load romkatv/powerlevel10k powerlevel10k
@@ -84,9 +87,9 @@ alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
 alias duf='duf --only local'
 
 # Allow local customizations in the ~/.zshrc_local_after file
-[ ! -f ${ZDOTDIR:-~}/after ] || source ${ZDOTDIR:-~}/after
+[ ! -f $ZDOTDIR/after ] || source $ZDOTDIR/after
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ${ZDOTDIR:-~}/.p10k.zsh ]] || source ${ZDOTDIR:-~}/.p10k.zsh
+[[ ! -f $ZDOTDIR/.p10k.zsh ]] || source $ZDOTDIR/.p10k.zsh
 
 setopt no_nomatch
