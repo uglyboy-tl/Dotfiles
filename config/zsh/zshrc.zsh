@@ -30,7 +30,8 @@ export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!{.git,.idea,.v
 export FZF_ALT_C_COMMAND="rg --sort-files --files --null 2> /dev/null | xargs -0 dirname | uniq"
 
 # load zgen
-source ~/.zgen/zgen.zsh
+export ZGEN_DIR=~/.config/zsh/zgen
+source ~/.config/zsh/zgen/zgen.zsh
 
 # Generate zgen init.sh if it doesn't exist
 if ! zgen saved; then
@@ -65,7 +66,7 @@ if ! zgen saved; then
     zgen oh-my-zsh plugins/fzf
     zgen oh-my-zsh plugins/poetry
     zgen load zsh-users/zsh-syntax-highlighting
-    zgen load marlonrichert/zsh-autocomplete
+    zgen load marlonrichert/zsh-autocomplete . main
 
     [ ! -f ${ZDOTDIR:-~}/zgen ] || source ${ZDOTDIR:-~}/zgen
 

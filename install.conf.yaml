@@ -21,10 +21,10 @@
     ~/.config/pip/pip.conf: config/pip/pip.conf
 
     ~/.config/zsh/.zshrc:
-        path: zsh/zshrc.zsh
+        path: config/zsh/zshrc.zsh
         force: true
-    ~/.config/zsh/.p10k.zsh: zsh/p10k.zsh
-    ~/.zgen: zsh/zgen
+    ~/.config/zsh/.p10k.zsh: config/zsh/p10k.zsh
+    ~/.config/zsh/zgen: config/zsh/zgen
 
     ~/.config/vim/vimrc: config/vim/vimrc
     ~/.config/vim/vimrc.plug: config/vim/vimrc.plug
