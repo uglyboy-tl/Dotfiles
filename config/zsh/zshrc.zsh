@@ -1,9 +1,9 @@
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/.local/bin:$PATH
-source ${XDG_CONFIG_HOME:-$HOME/.config}/environment
+[ ! -f ${XDG_CONFIG_HOME:-$HOME/.config}/environment ] || source ${XDG_CONFIG_HOME:-$HOME/.config}/environment
+export ZDOTDIR=${ZDOTDIR:-$HOME/.config/zsh}
 
 export ZSH_DISABLE_COMPFIX=true
-
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -34,7 +34,6 @@ if ! zgen saved; then
     zgen oh-my-zsh
 
     zgen oh-my-zsh plugins/git
-    #zgen oh-my-zsh plugins/tmux
     zgen oh-my-zsh plugins/git-auto-fetch
     zgen oh-my-zsh plugins/extract
     case ${OS_RELEASE} in
@@ -60,7 +59,6 @@ if ! zgen saved; then
     zgen oh-my-zsh plugins/cp
     zgen oh-my-zsh plugins/zoxide
     zgen oh-my-zsh plugins/fzf
-    zgen oh-my-zsh plugins/poetry
     zgen load zsh-users/zsh-syntax-highlighting
 
     # Plugins
@@ -78,7 +76,6 @@ compinit -d "$XDG_CACHE_HOME"/zsh/zcompdump-"$ZSH_VERSION"
 
 # alias definitions
 alias size='f(){ sudo du -h --max-depth=1 $1 | sort -hr; }; f'
-alias auto='systemctl list-unit-files --type=service | grep enabled | more'
 alias runv='source .venv/bin/activate'
 
 # replaced command
@@ -89,6 +86,6 @@ alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
 [ ! -f $ZDOTDIR/after ] || source $ZDOTDIR/after
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f $ZDOTDIR/.p10k.zsh ]] || source $ZDOTDIR/.p10k.zsh
+[[ ! -f $ZDOTDIR/p10k.zsh ]] || source $ZDOTDIR/p10k.zsh
 
 setopt no_nomatch
