@@ -28,7 +28,7 @@
     ~/.config/zsh/.zshrc:
         path: config/zsh/zshrc.zsh
         force: true
-    ~/.config/zsh/.p10k.zsh: config/zsh/p10k.zsh
+    ~/.config/zsh/p10k.zsh: config/zsh/p10k.zsh
     ~/.config/zsh/zgen: config/zsh/zgen
 
     ~/.local/bin/:
