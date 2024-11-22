@@ -3,7 +3,7 @@ if filereadable(expand('~/.config/vim/plug.vim'))
   source ~/.config/vim/plug.vim
 endif
 
-call plug#begin("~/.config/vim/plugged")
+call plug#begin('~/.config/vim/plugged')
 
 " install Plug plugins
 if filereadable(expand("~/.config/vim/vimrc.plug"))

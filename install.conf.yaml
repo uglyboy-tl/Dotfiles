@@ -15,20 +15,23 @@
     - [git submodule update --init --recursive, Installing submodules]
 
 - link:
-    ~/.xsessionrc: environment
-    ~/.config/environment: environment
     ~/.config/git/config: config/git/config
     ~/.config/pip/pip.conf: config/pip/pip.conf
+
+    ~/.config/vim/vimrc: config/vim/vimrc
+    ~/.config/vim/vimrc.plug: config/vim/vimrc.plug
+    ~/.config/vim/plug.vim: config/vim/vim-plug/plug.vim
+
+    ~/.xsessionrc: config/environment
+    ~/.config/environment: config/environment
+
+    ~/.config/tmux/tmux.conf: config/tmux/tmux.conf
 
     ~/.config/zsh/.zshrc:
         path: config/zsh/zshrc.zsh
         force: true
     ~/.config/zsh/.p10k.zsh: config/zsh/p10k.zsh
     ~/.config/zsh/zgen: config/zsh/zgen
-
-    ~/.config/vim/vimrc: config/vim/vimrc
-    ~/.config/vim/vimrc.plug: config/vim/vimrc.plug
-    ~/.config/vim/plug.vim: config/vim/vim-plug/plug.vim
 
     ~/.local/bin/:
         create: true
