@@ -1,7 +1,7 @@
 [general]
 accounts = Exmail,Aliyun
 metadata = ~/.local/share/offlineimap
-pythonfile = ~/.dotfiles/mutt/get_pass.py
+pythonfile = ~/.local/share/dotfiles/config/mutt/get_pass.py
 
 [Account Aliyun]
 localrepository = Local-Aliyun
@@ -31,7 +31,7 @@ ssl = yes
 sslcacertfile = OS-DEFAULT
 
 [Repository Remote-Exmail]
-folderfilter = lambda foldername: foldername in ["INBOX", "Sent Messages"]
+folderfilter = lambda foldername: foldername in ["INBOX"]
 type = IMAP
 remotehost = imap.exmail.qq.com
 remoteuser = uglyboy@uglyboy.cn

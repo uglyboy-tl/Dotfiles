@@ -32,6 +32,7 @@ set auto_tag = yes
 set charset="utf-8"
 auto_view text/html   #自动显示HTML
 alternative_order text/plain text/enriched text/html # save html for last
+set mailcap_path = ~/.config/mutt/mailcap
 
 # 发送者账号
 set realname="田陆"

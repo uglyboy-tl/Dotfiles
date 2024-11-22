@@ -53,4 +53,4 @@
     ~/.config/offlineimap/config: config/mutt/offlineimaprc
     ~/.config/mutt/muttrc: config/mutt/muttrc
     ~/.config/mutt/mailboxes: config/mutt/mailboxes
-    ~/.mailcap: config/mutt/mailcap
+    ~/.config/mutt/mailcap: config/mutt/mailcap
