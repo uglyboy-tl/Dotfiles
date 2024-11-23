@@ -2,6 +2,7 @@
 export PATH=$HOME/.local/bin:$PATH
 [ ! -f ${XDG_CONFIG_HOME:-$HOME/.config}/environment ] || source ${XDG_CONFIG_HOME:-$HOME/.config}/environment
 export ZDOTDIR=${ZDOTDIR:-$HOME/.config/zsh}
+export ZLOCAL=${XDG_CONFIG_HOME:-$HOME/.config}/local
 
 export ZSH_DISABLE_COMPFIX=true
 
@@ -12,7 +13,7 @@ fi
 
 
 # Allow local customizations in the ~/.zshrc_local_before file
-[ ! -f $ZDOTDIR/before ] || source $ZDOTDIR/before
+[ ! -f $ZLOCAL/zshrc.before ] || source $ZLOCAL/zshrc.before
 
 # environment variables
 export DOTFILES="$XDG_DATA_HOME/dotfiles"
@@ -62,7 +63,7 @@ if ! zgen saved; then
     zgen load zsh-users/zsh-syntax-highlighting
 
     # Plugins
-    [ ! -f $ZDOTDIR/plugins ] || source $ZDOTDIR/plugins
+    [ ! -f $ZLOCAL/zshrc.plugins ] || source $ZLOCAL/zshrc.plugins
 
     # Theme
     zgen load romkatv/powerlevel10k powerlevel10k
@@ -83,7 +84,7 @@ alias duf='duf --only local'
 alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
 
 # Allow local customizations in the ~/.zshrc_local_after file
-[ ! -f $ZDOTDIR/after ] || source $ZDOTDIR/after
+[ ! -f $ZLOCAL/zshrc.after ] || source $ZLOCAL/zshrc.after
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f $ZDOTDIR/p10k.zsh ]] || source $ZDOTDIR/p10k.zsh
