@@ -1,4 +1,4 @@
-#include ".Xresources.d/local"
+#include ".config/local/Xresources"
 Xft.autohint:0
 Xft.lcdfilter:lcddefault
 Xft.hintstyle:hintslite

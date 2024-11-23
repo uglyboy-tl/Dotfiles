@@ -40,7 +40,7 @@ map ; :Files<CR>
 "nnoremap <leader>b :Buffers<CR>
 
 " Go crazy!
-let $LOCALFILE=expand("~/.config/vim/local")
+let $LOCALFILE=expand("~/.config/local/vimrc")
 if filereadable($LOCALFILE)
   source $LOCALFILE
 endif
