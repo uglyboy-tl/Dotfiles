@@ -5,7 +5,6 @@ Plug 'bronson/vim-trailing-whitespace'
 
 Plug 'vim-airline/vim-airline'
 Plug 'arcticicestudio/nord-vim'
-Plug 'catppuccin/vim', { 'as': 'catppuccin' }
 
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'

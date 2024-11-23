@@ -24,11 +24,7 @@ let g:airline_symbols.maxlinenr = ' '
 let g:airline_symbols.colnr = ':'
 
 " AirLine Theme Nord
-"colorscheme nord
-
-" AirLine Theme Catppuccin
-set termguicolors
-let g:airline_theme = 'catppuccin_mocha'
+colorscheme nord
 
 " keyboard shortcuts
 let mapleader = ','
