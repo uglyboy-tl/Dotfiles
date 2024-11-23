@@ -39,17 +39,24 @@
 
     ~/.Xresources: config/Xresources
 
+    # BSPWM
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
     ~/.config/picom/picom.conf: config/picom.conf
     ~/.config/polybar: config/polybar
     ~/.config/rofi: config/rofi
-    ~/.config/lf: config/lf
     ~/.config/dunst/dunstrc: config/dunstrc
+
+    ~/.config/lf: config/lf
+
+    # SYSTEM
     ~/.config/fcitx/config: config/fcitx
-    ~/.config/alacritty/alacritty.yml: config/alacritty.yml
     ~/.config/fontconfig/fonts.conf: config/fonts.conf
 
+    # Alacritty
+    ~/.config/alacritty/alacritty.yml: config/alacritty/alacritty.yml
+
+    # MUTT
     ~/.config/offlineimap/config: config/mutt/offlineimaprc
     ~/.config/mutt/muttrc: config/mutt/muttrc
     ~/.config/mutt/mailboxes: config/mutt/mailboxes

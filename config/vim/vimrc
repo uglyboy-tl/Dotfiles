@@ -22,8 +22,13 @@ endif
 let g:airline_symbols.linenr = ' ☰ '
 let g:airline_symbols.maxlinenr = ' '
 let g:airline_symbols.colnr = ':'
+
 " AirLine Theme Nord
-colorscheme nord
+"colorscheme nord
+
+" AirLine Theme Catppuccin
+set termguicolors
+let g:airline_theme = 'catppuccin_mocha'
 
 " keyboard shortcuts
 let mapleader = ','
