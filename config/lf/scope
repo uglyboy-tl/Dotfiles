@@ -35,6 +35,25 @@ y="$5"
 shift
 
 case "$(file -Lb --mime-type -- "$file")" in
+    application/gzip|\
+    application/x-bzip2|\
+    application/x-xz|\
+    application/x-lzma|\
+    application/x-lz4|\
+    application/zstd|\
+    application/x-snappy-framed|\
+    application/x-tar|\
+    application/x-gtar|\
+    application/x-ustar|\
+    application/zip|\
+    application/x-7z-compressed|\
+    application/x-rar)
+        echo "压缩文件，内容如下："
+        bsdtar --list --file "$file"
+        ;;
+    text/html)
+        lynx -width="$width" -dump -- "$file"
+        ;;
 	text/* | */xml | application/json)
         env COLORTERM=8bit batcat  --color=always --style="plain" -- "$file"
         exit 0
