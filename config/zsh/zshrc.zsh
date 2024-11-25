@@ -83,6 +83,9 @@ alias runv='source .venv/bin/activate'
 alias duf='duf --only local'
 alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
 
+# custom alias
+[ ! -f $ZDOTDIR/zshrc.alias ] || source $ZDOTDIR/zshrc.alias
+
 # Allow local customizations in the ~/.zshrc_local_after file
 [ ! -f $ZLOCAL/zshrc.after ] || source $ZLOCAL/zshrc.after
 
