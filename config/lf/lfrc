@@ -11,6 +11,8 @@ set mouse
 
 # set terminal title to current working directory
 cmd on-cd &{{
+    # add path to zoxide database
+    zoxide add "$PWD"
     printf "\033]0; $(pwd | sed "s|$HOME|~|") - lf\007" > /dev/tty
 
     # display repository status in your prompt
@@ -105,8 +107,8 @@ cmd fzf_search ${{
 }}
 
 cmd zoxide %{{
-	result="$(zoxide query $PWD $@)"
-	lf -remote "send $id cd \"$result\""
+    result="$(zoxide query $@ | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    lf -remote "send $id cd \"$result\""
 }}
 
 cmd git_branch ${{
