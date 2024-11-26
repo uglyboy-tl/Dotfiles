@@ -1,29 +1,41 @@
 #!/bin/sh
 
+# 设置选项
 set -C -f
+OLD_IFS="$IFS"
 IFS="$(printf '%b_' '\n')"; IFS="${IFS%_}"
 
-draw(){
+# 绘制图像
+draw_image(){
     if [ -n "$FIFO_UEBERZUG" ]; then
-        path="$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        # 处理路径中的特殊字符
+        image_path="$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        # 发送 JSON 命令到 FIFO
         printf '{"action": "add", "identifier": "preview", "x": %d, "y": %d, "width": %d, "height": %d, "scaler": "contain", "scaling_position_x": 0.5, "scaling_position_y": 0.5, "path": "%s"}\n' \
-            "$x" "$y" "$width" "$height" "$path" >"$FIFO_UEBERZUG"
+            "$x" "$y" "$width" "$height" "$image_path" >"$FIFO_UEBERZUG"
     fi
+    # 恢复 IFS
+    IFS="$OLD_IFS"
     exit 1
 }
 
-hash() {
+# 计算文件的哈希值
+calculate_hash() {
+    file_path="$(readlink -f "$1")"
     printf '%s/.cache/lf/%s' "$HOME" \
-        "$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$1")" | sha256sum | awk '{print $1}')"
+        "$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$file_path" | sha256sum | awk '{print $1}')"
 }
 
-cache() {
+# 检查文件是否存在并绘制
+check_and_draw() {
     if [ -f "$1" ]; then
-        draw "$@"
+        draw_image "$@"
     fi
 }
 
+# 检查输入参数是否为文件或符号链接
 if ! [ -f "$1" ] && ! [ -h "$1" ]; then
+    IFS="$OLD_IFS"
     exit
 fi
 
@@ -89,18 +101,18 @@ case "$(file -Lb --mime-type -- "$file")" in
         if [ -n "$FIFO_UEBERZUG" ]; then
             orientation="$(identify -format '%[EXIF:Orientation]\n' -- "$file")"
             if [ -n "$orientation" ] && [ "$orientation" != 1 ]; then
-                cache="$(hash "$file").jpg"
-                if ! cache "$cache" "$@"; then
+                cache="$(calculate_hash "$file").jpg"
+                if ! check_and_draw "$cache" "$@"; then
                     handle_error "缓存文件失败"
                 fi
                 if ! convert -- "$file" -auto-orient "$cache"; then
                     handle_error "转换图片失败"
                 fi
-                if ! draw "$cache" "$@"; then
+                if ! draw_image "$cache" "$@"; then
                     handle_error "绘制图片失败"
                 fi
             else
-                if ! draw "$file" "$@"; then
+                if ! draw_image "$file" "$@"; then
                     handle_error "绘制图片失败"
                 fi
             fi
@@ -113,14 +125,14 @@ case "$(file -Lb --mime-type -- "$file")" in
         ;;
 	video/* )
         if [ -n "$FIFO_UEBERZUG" ]; then
-            cache="$(hash "$file").jpg"
-            if ! cache "$cache" "$@"; then
+            cache="$(calculate_hash "$file").jpg"
+            if ! check_and_draw "$cache" "$@"; then
                 handle_error "缓存文件失败"
             fi
             if ! ffmpegthumbnailer -i "$file" -o "$cache" -s 0; then
                 handle_error "生成缩略图失败"
             fi
-            if ! draw "$cache" "$@"; then
+            if ! draw_image "$cache" "$@"; then
                 handle_error "绘制图片失败"
             fi
         else
@@ -143,7 +155,7 @@ case "$(file -Lb --mime-type -- "$file")" in
                 handle_error "生成 PDF 缩略图失败"
             fi
         fi
-        if ! draw "$CACHE" "$@"; then
+        if ! draw_image "$CACHE" "$@"; then
             handle_error "绘制图片失败"
         fi
 		;;
