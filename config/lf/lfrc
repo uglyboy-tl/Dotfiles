@@ -13,6 +13,7 @@ set mouse
 cmd on-cd &{{
     # add path to zoxide database
     zoxide add "$PWD"
+
     printf "\033]0; $(pwd | sed "s|$HOME|~|") - lf\007" > /dev/tty
 
     # display repository status in your prompt

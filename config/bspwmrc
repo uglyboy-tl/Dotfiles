@@ -62,4 +62,5 @@ _r rofi state=floating sticky=on
 _r feh state=floating
 
 _r Alacritty state=floating rectangle=1280x720+640+100
+_r kitty state=floating rectangle=1280x720+640+100
 #_r Alacritty state=floating rectangle=1280x720+440+100
