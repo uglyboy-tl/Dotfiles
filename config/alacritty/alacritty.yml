@@ -45,5 +45,5 @@ font:
 
 import:
   # uncomment the flavour you want below:
-  - ~/.local/share/dotfiles/config/alacritty/nord.yml
+  - ./Nord.yml
   #- ~/.local/share/dotfiles/config/alacritty/catppuccin-mocha.yml
