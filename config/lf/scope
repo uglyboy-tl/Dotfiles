@@ -1,0 +1,175 @@
+#!/bin/sh
+
+# 设置选项
+set -C -f
+OLD_IFS="$IFS"
+IFS="$(printf '%b_' '\n')"; IFS="${IFS%_}"
+
+# 绘制图像
+draw_image(){
+    if [ -n "$FIFO_UEBERZUG" ]; then
+        # 处理路径中的特殊字符
+        image_path="$(printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+        # 发送 JSON 命令到 FIFO
+        printf '{"action": "add", "identifier": "preview", "x": %d, "y": %d, "width": %d, "height": %d, "scaler": "contain", "scaling_position_x": 0.5, "scaling_position_y": 0.5, "path": "%s"}\n' \
+            "$x" "$y" "$width" "$height" "$image_path" >"$FIFO_UEBERZUG"
+    fi
+    # 恢复 IFS
+    IFS="$OLD_IFS"
+    exit 1
+}
+
+# 计算文件的哈希值
+calculate_hash() {
+    file_path="$(readlink -f "$1")"
+    printf '%s/.cache/lf/%s' "$HOME" \
+        "$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$file_path" | sha256sum | awk '{print $1}')"
+}
+
+# 检查文件是否存在并绘制
+check_and_draw() {
+    if [ -f "$1" ]; then
+        draw_image "$@"
+    fi
+}
+
+# 检查输入参数是否为文件或符号链接
+if ! [ -f "$1" ] && ! [ -h "$1" ]; then
+    IFS="$OLD_IFS"
+    exit
+fi
+
+file="$1"
+width="$2"
+height="$3"
+x="$4"
+y="$5"
+
+shift
+
+case ${file##*.} in
+    md)
+        if ! (export CLICOLOR_FORCE=1 COLORTERM=truecolor; glow --style=dark --width="$width" -p "$file"); then
+            if ! (export COLORTERM=8bit; batcat --color=always --style="plain" -- "$file"); then
+                handle_error "无法预览 Markdown 文件"
+            fi
+        fi
+        exit 5
+        ;;
+esac
+
+case "$(file -Lb --mime-type -- "$file")" in
+    application/gzip|\
+    application/x-bzip2|\
+    application/x-xz|\
+    application/x-lzma|\
+    application/x-lz4|\
+    application/zstd|\
+    application/x-snappy-framed|\
+    application/x-tar|\
+    application/x-gtar|\
+    application/x-ustar|\
+    application/zip|\
+    application/x-7z-compressed|\
+    application/x-rar)
+        echo "压缩文件，内容如下："
+        if ! bsdtar --list --file "$file"; then
+            handle_error "无法列出压缩文件内容"
+        fi
+        ;;
+    text/html)
+        if ! lynx -width="$width" -dump -- "$file"; then
+            handle_error "无法预览 HTML 文件"
+        fi
+        ;;
+	text/* |\
+    application/json |\
+    application/x-ndjson |\
+    application/javascript |\
+    */xml)
+        if ! (export COLORTERM=8bit; batcat --color=always --style="plain" -- "$file"); then
+            handle_error "无法预览文本文件"
+        fi
+        exit 5
+        ;;
+    application/vnd.debian.binary-package)
+        if ! dpkg-deb --info "$file"; then
+            handle_error "无法预览 Debian 包"
+        fi
+        ;;
+	image/*)
+        if [ -n "$FIFO_UEBERZUG" ]; then
+            orientation="$(identify -format '%[EXIF:Orientation]\n' -- "$file")"
+            if [ -n "$orientation" ] && [ "$orientation" != 1 ]; then
+                cache="$(calculate_hash "$file").jpg"
+                if ! check_and_draw "$cache" "$@"; then
+                    handle_error "缓存文件失败"
+                fi
+                if ! convert -- "$file" -auto-orient "$cache"; then
+                    handle_error "转换图片失败"
+                fi
+                if ! draw_image "$cache" "$@"; then
+                    handle_error "绘制图片失败"
+                fi
+            else
+                if ! draw_image "$file" "$@"; then
+                    handle_error "绘制图片失败"
+                fi
+            fi
+        else
+            if ! exiftool "$file"; then
+                handle_error "无法读取 EXIF 信息"
+            fi
+            exit 5
+        fi
+        ;;
+	video/* )
+        if [ -n "$FIFO_UEBERZUG" ]; then
+            cache="$(calculate_hash "$file").jpg"
+            if ! check_and_draw "$cache" "$@"; then
+                handle_error "缓存文件失败"
+            fi
+            if ! ffmpegthumbnailer -i "$file" -o "$cache" -s 0; then
+                handle_error "生成缩略图失败"
+            fi
+            if ! draw_image "$cache" "$@"; then
+                handle_error "绘制图片失败"
+            fi
+        else
+            if ! exiftool "$file"; then
+                handle_error "无法读取 EXIF 信息"
+            fi
+            exit 5
+        fi
+		;;
+    audio/* )
+        if ! exiftool "$file"; then
+            handle_error "无法读取音频文件信息"
+        fi
+        exit 5
+        ;;
+    */pdf )
+        CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/lf/thumb.$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$file")" | sha256sum | cut -d' ' -f1).jpg"
+        if [ ! -f "$CACHE" ] || [ "$(stat --printf '%Y' -- "$file")" -gt "$(stat --printf '%Y' -- "$CACHE")" ]; then
+            if ! pdftoppm -jpeg -f 1 -singlefile -tiffcompression jpeg "$file" "$CACHE"; then
+                handle_error "生成 PDF 缩略图失败"
+            fi
+        fi
+        if ! draw_image "$CACHE" "$@"; then
+            handle_error "绘制图片失败"
+        fi
+		;;
+    * )
+        echo "不支持预览的文件类型，文件类型："
+        if ! file --mime-type -b "$file"; then
+            handle_error "无法获取文件类型"
+        fi
+        echo "部分信息如下："
+        if ! file -Lb -- "$file" | fold -s -w "$width"; then
+            handle_error "无法显示文件信息"
+        fi
+        exit 1
+        ;;
+esac
+
+exit 0

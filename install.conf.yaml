@@ -38,5 +38,8 @@
         path: scripts/*
         relink: true
 
+    # lf
+    ~/.config/lf: config/lf
+
     # FastFetch
     ~/.config/fastfetch/config.jsonc: config/fastfetch/config.jsonc

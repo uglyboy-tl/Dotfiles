@@ -1,0 +1,159 @@
+set shell zsh
+set shellopts '-eu:--shwordsplit'
+set ifs "\n"
+set drawbox
+set period 1
+set icons
+set hiddenfiles ".*:*.aux:*.log:*.bbl:*.bcf:*.blg:*.run.xml:lost+found"
+set promptfmt "\033[33;1m%u\033[0m\033[32;1m@\033[0m\033[34;1m%h\033[0m:\033[35;1m%d\033[0m\033[36;1m%f\033[0m"
+set cursorpreviewfmt "\033[7m"
+set mouse
+
+# set terminal title to current working directory
+cmd on-cd &{{
+    # add path to zoxide database
+    zoxide add "$PWD"
+
+    printf "\033]0; $(pwd | sed "s|$HOME|~|") - lf\007" > /dev/tty
+
+    # display repository status in your prompt
+    if [ -d .git ] || [ -f .git ]; then
+        branch="$(git branch --show-current 2>/dev/null)" || true
+        remote="$(git config --get "branch.$branch.remote" 2>/dev/null)" || true
+        url="$(git remote get-url "$remote" 2>/dev/null)" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [GIT BRANCH:> $branch >> $url]\033[0m"
+    elif [ -d .hg ]; then
+        hg="$(hg branch 2>/dev/null)" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [HG BRANCH:> $hg]\033[0m"
+    elif [ -d .svn ]; then
+        svn="$(svn info 2>/dev/null | awk '/^URL: /{print $2}')" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [SVN URL:> $svn]\033[0m"
+    else
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
+    fi
+    lf -remote "send $id set promptfmt \"$fmt\""
+}}
+# also run at startup
+on-cd
+
+set previewer ~/.config/lf/scope
+set cleaner ~/.config/lf/cleaner
+
+# define a custom 'open' command
+# This command is called when current file is not a directory. You may want to
+# use either file extensions and/or mime types here. Below uses an editor for
+# text files and a file opener for the rest.
+cmd open &{{
+    case $(file --mime-type -Lb $f) in
+        inode/symlink) $OPENER $(realpath $f) >/dev/null 2>&1 ;;
+        text/*|application/json|application/csv|*opendocument.text) lf -remote "send $id \$$EDITOR \$fx";;
+        image/*) feh $f ;;
+        *) for f in $fx; do setsid -f $OPENER $f > /dev/null 2> /dev/null & done;;
+    esac
+}}
+
+
+# create direactory
+cmd mkdir $mkdir -p "$(echo $* | tr ' ' '\ ')"
+
+cmd paste &{{
+    set -- $(cat ~/.local/share/lf/files)
+    mode="$1"
+    shift
+    case "$mode" in
+        copy)
+            rsync -av --ignore-existing --progress -- "$@" . |
+            stdbuf -i0 -o0 -e0 tr '\r' '\n' |
+            while IFS= read -r line; do
+                line="$(printf '%s' "$line" | sed 's/\\/\\\\/g;s/"/\\"/g')"
+                lf -remote "send $id echo \"$line\""
+            done
+            ;;
+        move)
+            mv -n -- "$@" .
+            lf -remote "send clear"
+            ;;
+    esac
+    rm ~/.local/share/lf/files
+    lf -remote "send clear"
+}}
+
+# extrat compress files
+cmd extract ${{
+    set -f
+    archive="${fx%.*}"
+    mkdir "$archive"
+    cd "$archive"
+    case $f in
+        *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f;;
+        *.tar.gz|*.tgz) tar xzvf $f;;
+        *.tar.xz|*.txz) tar xJvf $f;;
+        *.zip) unzip $f;;
+        *.rar) 7zr x $f;;
+        *.7z) 7zr x $f;;
+    esac
+}}
+
+#Combining fzf with ripgrep, you can interactively search in the contents of files under the current directory and select a file from the results:
+cmd fzf_search ${{
+    res="$( \
+        RG_PREFIX="rg --column --line-number --no-heading --color=always \
+            --smart-case "
+        FZF_DEFAULT_COMMAND="$RG_PREFIX ''" \
+            fzf --bind "change:reload:$RG_PREFIX {q} || true" \
+            --ansi --layout=reverse --header '在文件中搜索' \
+            | cut -d':' -f1
+    )"
+    [ ! -z "$res" ] && lf -remote "send $id select \"$res\"" || true
+}}
+
+cmd zoxide %{{
+    result="$(zoxide query $@ | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    lf -remote "send $id cd \"$result\""
+}}
+
+cmd git_branch ${{
+    git branch | fzf | xargs git checkout
+    pwd_shell="$(pwd | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    lf -remote "send $id updir; cd \"$pwd_shell\""
+}}
+
+#########################################################################################
+# key bindings
+# Remove some defaults
+map d
+map f
+map F
+map t
+map h
+map j
+map k
+map l
+map c
+map y
+map w
+
+# Custom
+map l $$SHELL
+
+map y copy
+map x cut
+map d delete
+
+map <c-c> copy
+map <c-v> paste
+map <c-f> :fzf_search
+map . set hidden!
+map <delete> delete
+map <esc> clear
+
+map <c-x> extract
+map M push %mkdir<space>
+map T push :touch<space>
+
+map <enter> open
+
+map z push :zoxide<space>
+
+map gp $clear; git pull --rebase || true; echo "press ENTER"; read ENTER
+map gs $clear; git status; echo "press ENTER"; read ENTER
