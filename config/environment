@@ -16,6 +16,10 @@ export DOTNET_CLI_HOME="$XDG_DATA_HOME"/dotnet
 # [gnugp]
 export GNUPGHOME="$XDG_DATA_HOME"/gnupg
 
+# [ncurses]
+export TERMINFO="$XDG_DATA_HOME"/terminfo
+export TERMINFO_DIRS="$XDG_DATA_HOME"/terminfo:/usr/share/terminfo
+
 # [python]
 export PYTHONSTARTUP="$XDG_CONFIG_HOME"/python/pythonrc
 

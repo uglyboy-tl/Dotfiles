@@ -37,3 +37,6 @@
         glob: true
         path: scripts/*
         relink: true
+
+    # FastFetch
+    ~/.config/fastfetch/config.jsonc: config/fastfetch/config.jsonc
