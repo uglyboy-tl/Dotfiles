@@ -38,10 +38,11 @@
         path: scripts/*
         relink: true
 
-    ~/.Xresources: config/Xresources
-
     # FastFetch
     ~/.config/fastfetch/config.jsonc: config/fastfetch/config.jsonc
+
+    # X
+    ~/.Xresources: config/Xresources
 
     # BSPWM
     ~/.config/bspwm/bspwmrc: config/bspwmrc
