@@ -40,6 +40,9 @@
 
     ~/.Xresources: config/Xresources
 
+    # FastFetch
+    ~/.config/fastfetch/config.jsonc: config/fastfetch/config.jsonc
+
     # BSPWM
     ~/.config/bspwm/bspwmrc: config/bspwmrc
     ~/.config/sxhkd/sxhkdrc: config/sxhkdrc
