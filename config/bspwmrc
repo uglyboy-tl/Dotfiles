@@ -53,6 +53,7 @@ _r Zotero desktop='^3' follow=on
 _r EDRLab.ThoriumReader desktop='^3' follow=on
 _r melonDS desktop='^4' follow=on
 _r vlc desktop='^4' follow=on
+_r mpv desktop='^4' follow=on
 _r Io.github.celluloid_player.Celluloid desktop='^4' follow=on
 _r netease-cloud-music state=tiled desktop='^4' follow=on
 _r TDAppDesktop desktop='^5' follow=on
