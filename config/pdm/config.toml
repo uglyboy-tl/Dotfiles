@@ -1,0 +1,4 @@
+use_uv = true
+
+[pypi]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
