@@ -1,50 +1,49 @@
 # UI
 set ascii_chars=yes                         # 用纯 ascii 表示树状列表
 set charset="utf-8"                         # 编码以及发件编码
-set sidebar_visible = yes
-set sidebar_width   = 16
-color sidebar_new color221 color233
-set sidebar_format = "%B%*  %N" # Show number of unread messages
-set date_format = "%y-%m-%d"
-set index_format = "%-15.15F  %D  %s"
-set sort = threads
-set sort_aux = reverse-last-date-received
+set sidebar_visible = yes                   # 显示侧边栏
+set sidebar_width   = 16                    # 侧边栏宽度
+color sidebar_new color221 color233         # 侧边栏新邮件颜色
+set sidebar_format = "%B%*  %N"             # 显示未读邮件数
+set date_format = "%y-%m-%d"                # 日期格式
+set index_format = "%-15.15F  %D  %s"       # 索引格式
+set sort = threads                          # 按线程排序
+set sort_aux = reverse-last-date-received   # 按接收日期排序
 
-unset help
-unset wait_key
+unset help                                  # 关闭帮助
+unset wait_key                              # 关闭等待按键
 
-# Change the following line to a different editor you prefer.
-set editor = "vim"
-set pager_index_lines = 6
-set pager_context = 3
-set pager_stop
-set tilde
-unset markers
-unhdr_order *
-hdr_order from: to: cc: date: subject:
+# 编辑器设置
+set editor = "vim"                          # 使用 vim 作为编辑器
+set pager_index_lines = 6                   # 分页索引行数
+set pager_context = 3                       # 分页上下文行数
+set pager_stop                              # 停止分页
+set tilde                                   # 显示波浪号
+unset markers                               # 关闭标记
+unhdr_order *                               # 取消头部顺序
+hdr_order from: to: cc: date: subject:      # 头部顺序
 set display_filter="sed -e '/\\[-- Type: text.* --\\]/d' | sed -e '/\\[-- Autoview.* --\\]/d' | sed -e '/\\[-- Type.* --\\]/d' |  sed -e '/\\[-- .*unsupported.* --\\]/d' | sed -e '/\\[-- Attachment #[0-9] --\\]/d' | sed -e 's/Attachment #[0-9]: //g' | sed '/./,/^$/!d'"
 
 # 通用设定
-set move = no
-set sort = 'threads'
-set sort_aux = 'reverse-date'
-set auto_tag = yes
-set charset="utf-8"
-auto_view text/html   #自动显示HTML
-alternative_order text/plain text/enriched text/html # save html for last
-set mailcap_path = ~/.config/mutt/mailcap
+set move = no                               # 不移动邮件
+set auto_tag = yes                          # 自动标记
+auto_view text/html                         # 自动显示HTML
+alternative_order text/plain text/enriched text/html # 保存html为最后
+set mailcap_path = ~/.config/mutt/mailcap   # mailcap路径
 
 # 发送者账号
-set realname="田陆"
-set from="uglyboy@aliyun.com"
+set realname="田陆"                         # 真实姓名
+set from="uglyboy@aliyun.com"               # 发件人地址
 
 # 分类邮箱
-set mbox_type="Maildir"
-set folder = "$XDG_DATA_HOME/Mail"
-source ~/.config/mutt/mailboxes
-set spoolfile="+Aliyun/INBOX"
-set record = "+Aliyun/Sent\ Messages"
-#set postponed = "+account/Drafts"
+set mbox_type="Maildir"                     # 邮箱类型
+set folder = "$XDG_DATA_HOME/Mail"          # 邮件文件夹
+source ~/.config/mutt/mailboxes             # 加载邮箱配置
+set spoolfile="+Aliyun/INBOX"               # 收件箱
+set record = "+Aliyun/Sent\ Messages"       # 已发送邮件
+#set postponed = "+account/Drafts"          # 草稿箱
 
 # 快捷键
-macro index,pager G '<shell-escape> offlineimap <enter>'
+macro index,pager G '<shell-escape> offlineimap <enter>' # 同步邮件
+macro index,pager A '<change-folder> +Aliyun/INBOX<enter>' # 切换邮箱
+macro index,pager U '<change-folder> +Exmail/INBOX<enter>' # 切换邮箱
