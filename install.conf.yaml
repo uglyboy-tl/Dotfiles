@@ -56,7 +56,6 @@
     ~/.config/lf: config/lf
 
     # SYSTEM
-    ~/.config/fcitx/config: config/fcitx
     ~/.config/fontconfig/fonts.conf: config/fonts.conf
 
     # Alacritty
