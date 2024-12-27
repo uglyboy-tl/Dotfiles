@@ -38,11 +38,12 @@ _c presel_feedback_color "#3B4252"
 _s picom -b
 _s redshift
 _s dunst
-_s ~/.local/bin/dwall.sh -s lakeside
 _s xsetroot -cursor_name left_ptr
 _s polybar --reload main
-#_s ~/.fehbg
 
+# Dynamic-Wallpaper
+#_s ~/.fehbg
+~/.local/bin/dwall.sh -s lakeside &
 # Polkit
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 

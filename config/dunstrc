@@ -12,7 +12,7 @@
 # | |  | | |  | |  \| | (___    | |                                                           #
 # | |  | | |  | | . ` |\___ \   | |                                                           #
 # | |__| | |__| | |\  |____) |  | |                                                           #
-# |_____/ \____/|_| \_|_____/   |_|                                                           # 
+# |_____/ \____/|_| \_|_____/   |_|                                                           #
 #                                                                                             #
 #                                                                                             #
 ###############################################################################################
@@ -88,7 +88,7 @@
 
 	### Text ###
 
-	font = Sarasa UI SC 12
+	font = Maple Mono SC NF 12
 
 	# The spacing between lines.  If the height is smaller than the
 	# font height, it will get raised to the font height.
