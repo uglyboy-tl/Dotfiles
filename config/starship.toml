@@ -1,3 +1,15 @@
+# Custom
+[directory]
+format = "[  $path ]($style)"
+truncation_length = 4
+truncation_symbol = "…/"
+home_symbol = '~'
+
+[directory.substitutions]
+#"~/" = "~./"
+"~" = " ~"
+
+
 [aws]
 format = '\[[$symbol($profile)(\($region\))(\[$duration\])]($style)\]'
 
