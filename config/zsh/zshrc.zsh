@@ -6,12 +6,6 @@ export ZLOCAL=${XDG_CONFIG_HOME:-$HOME/.config}/local
 
 export ZSH_DISABLE_COMPFIX=true
 
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-    source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-
 # Allow local customizations in the ~/.zshrc_local_before file
 [ ! -f $ZLOCAL/zshrc.before ] || source $ZLOCAL/zshrc.before
 
@@ -66,15 +60,11 @@ if ! zgen saved; then
     # Plugins
     [ ! -f $ZLOCAL/zshrc.plugins ] || source $ZLOCAL/zshrc.plugins
 
-    # Theme
-    zgen load romkatv/powerlevel10k powerlevel10k
-
     # Generate init.sh
     zgen save
 fi
 
 compinit -d "$XDG_CACHE_HOME"/zsh/zcompdump-"$ZSH_VERSION"
-#source $DOTFILES/zsh/p10k.zsh
 
 # alias definitions
 alias size='f(){ sudo du -h --max-depth=1 $1 | sort -hr; }; f'
@@ -90,7 +80,6 @@ alias wget=wget --hsts-file="$XDG_DATA_HOME/wget-hsts"
 # Allow local customizations in the ~/.zshrc_local_after file
 [ ! -f $ZLOCAL/zshrc.after ] || source $ZLOCAL/zshrc.after
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f $ZDOTDIR/p10k.zsh ]] || source $ZDOTDIR/p10k.zsh
-
 setopt no_nomatch
+
+eval "$(starship init zsh)"
