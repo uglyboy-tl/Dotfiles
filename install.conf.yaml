@@ -30,7 +30,7 @@
         path: config/zsh/zshrc.zsh
         force: true
     ~/.config/zsh/zshrc.alias: config/zsh/aliases.zsh
-    ~/.config/zsh/p10k.zsh: config/zsh/p10k.zsh
+    ~/.config/starship.toml: config/starship.toml
     ~/.config/zsh/zgen: config/zsh/zgen
 
     ~/.local/bin/:

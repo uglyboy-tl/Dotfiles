@@ -23,3 +23,7 @@ fetch_content() {
 # fabric
 summarize(){ fetch_content "$1" | fabric -p summarize -s; }
 alias summarize='f(){curl -s "https://r.jina.ai/$1" | fabric -p summarize -s;}; f'
+
+# alias definitions
+alias size='f(){ sudo du -h --max-depth=1 $1 | sort -hr; }; f'
+alias runv='source .venv/bin/activate'
