@@ -17,20 +17,7 @@ cmd on-cd &{{
     printf "\033]0; $(pwd | sed "s|$HOME|~|") - lf\007" > /dev/tty
 
     # display repository status in your prompt
-    if [ -d .git ] || [ -f .git ]; then
-        branch="$(git branch --show-current 2>/dev/null)" || true
-        remote="$(git config --get "branch.$branch.remote" 2>/dev/null)" || true
-        url="$(git remote get-url "$remote" 2>/dev/null)" || true
-        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [GIT BRANCH:> $branch >> $url]\033[0m"
-    elif [ -d .hg ]; then
-        hg="$(hg branch 2>/dev/null)" || true
-        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [HG BRANCH:> $hg]\033[0m"
-    elif [ -d .svn ]; then
-        svn="$(svn info 2>/dev/null | awk '/^URL: /{print $2}')" || true
-        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [SVN URL:> $svn]\033[0m"
-    else
-        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
-    fi
+    fmt="$(STARSHIP_SHELL= starship prompt | sed 's/\\/\\\\/g;s/"/\\"/g')"
     lf -remote "send $id set promptfmt \"$fmt\""
 }}
 # also run at startup
@@ -118,6 +105,41 @@ cmd git_branch ${{
     lf -remote "send $id updir; cd \"$pwd_shell\""
 }}
 
+cmd trash %{{
+	# put items into array that we can count them
+	files=()
+	while read -r line; do files+=("$line"); done <<< "$fx"
+
+	# count how many items there are
+	len=${#files[@]}
+
+	# confirm trashing
+	if [[ $len == 1 ]]; then
+		echo -n "Trash '$fx' ?"
+	else
+		echo -n "Trash $len items?"
+	fi
+	echo -n " [y/N] "
+
+	# read answer
+	read -r ans
+
+	echo
+
+	# nuke
+	if [[ $ans == y ]]; then
+		trash-put $fx
+		if [[ $len == 1 ]]; then
+			echo "Trashed '$files'"
+		else
+			echo "Trashed $len items"
+		fi
+	else
+		# needed to clear the bottom row
+		echo
+	fi
+}}
+
 #########################################################################################
 # key bindings
 # Remove some defaults
@@ -138,13 +160,13 @@ map l $$SHELL
 
 map y copy
 map x cut
-map d delete
+map d trash
 
 map <c-c> copy
 map <c-v> paste
 map <c-f> :fzf_search
 map . set hidden!
-map <delete> delete
+map <delete> trash
 map <esc> clear
 
 map <c-x> extract
