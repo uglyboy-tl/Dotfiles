@@ -1,7 +1,19 @@
+# Custom
+[directory]
+format = "[  $path ]($style)"
+truncation_length = 4
+truncation_symbol = "…/"
+home_symbol = '~'
+
+[directory.substitutions]
+#"~/" = "~./"
+"~" = " ~"
+
 [hostname]
 ssh_only = false
 detect_env_vars = ['!TMUX', 'SSH_CONNECTION']
 disabled = false
+
 
 [aws]
 format = '\[[$symbol($profile)(\($region\))(\[$duration\])]($style)\]'
