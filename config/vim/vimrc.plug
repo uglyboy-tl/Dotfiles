@@ -3,8 +3,7 @@ Plug 'tpope/vim-sensible'
 Plug 'tpope/vim-fugitive'
 Plug 'bronson/vim-trailing-whitespace'
 
-Plug 'vim-airline/vim-airline'
-Plug 'arcticicestudio/nord-vim'
+Plug 'itchyny/lightline.vim'
 
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
