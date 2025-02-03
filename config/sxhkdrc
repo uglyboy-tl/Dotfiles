@@ -33,16 +33,13 @@ super + {m, h}
 # Msater Volume
 #
 XF86AudioRaiseVolume
-	wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+
-	#amixer -Mq set Master 2.5%+,5%+ unmute
+	~/.local/bin/barify v i
 
 XF86AudioLowerVolume
-	wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
-	#amixer -Mq set Master 2.5%-,5%- unmute
+	~/.local/bin/barify v d
 
 XF86AudioMute
-	wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
-	#amixer -q set Master toggle
+	~/.local/bin/barify v m
 
 #
 # bspwm hotkeys
@@ -53,8 +50,8 @@ super + alt + q
 	bspc quit
 
 # close and kill
-super + {_,shift + }w
-	bspc node -{c,k}
+super + {_, shift + }w
+	bspc node -{c, k}
 
 # alternate between the tiled and monocle layout
 super + shift + f
@@ -65,17 +62,17 @@ super + shift + f
 #
 
 # set the window state
-super + {t,shift + t,s,f}
-	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
+super + {t, shift + t, s, f}
+	bspc node -t {tiled, pseudo_tiled, floating, fullscreen}
 
 # set the node flags
-super + ctrl + {m,x,y,z}
-        bspc node -g {marked,locked,sticky,private}
+super + ctrl + {m, x, y, z}
+        bspc node -g {marked, locked, sticky, private}
 
 #
 # focus/swap
 #
 
 # focus or send to the given desktop
-super + {_,shift + }{1-9,0}
-	bspc {desktop -f,node -d} '^{1-9,10}'
+super + {_, shift + }{1-9, 0}
+	bspc {desktop -f, node -d} '^{1-9, 10}'
