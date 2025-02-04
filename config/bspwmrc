@@ -43,7 +43,7 @@ _s polybar --reload main
 
 # Dynamic-Wallpaper
 #_s ~/.fehbg
-~/.local/bin/dwall.sh -s lakeside &
+~/.local/bin/dwall.sh -s exodus &
 # Polkit
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 

@@ -13,6 +13,8 @@
 
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
+    - [git submodule sync, Syncing submodule remotes]
+    - [git submodule foreach git pull origin master, Updating submodule contents]
 
 - link:
     ~/.config/git/config: config/git/config
@@ -73,5 +75,9 @@
     ~/.config/mutt/mailcap: config/mutt/mailcap
 
     # Dynamic wallpaper
-    ~/.local/share/dynamic-wallpaper: data/dynamic-wallpaper/images
-    ~/.local/bin/dwall.sh: data/dynamic-wallpaper/dwall.sh
+    ~/.local/share/dynamic-wallpaper: data/dynamic-wallpaper
+
+- crontab:
+  - time: 0 * * * *
+    command: env PATH=/usr/local/bin:/usr/bin:/home/uglyboy/.local/bin DISPLAY=:0 DESKTOP_SESSION=lightdm-xsession DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus" dwall.sh -s exodus
+    platform: linux
