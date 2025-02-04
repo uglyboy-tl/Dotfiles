@@ -13,9 +13,14 @@ endif
 call plug#end()
 
 " plugin settings
+" ColorScheme
+colorscheme nord
 " Lightline
 let g:lightline = {'colorscheme': 'wombat'}
 set noshowmode
+" AutoSave
+let g:auto_save = 1
+let g:auto_save_silent = 1
 
 " keyboard shortcuts
 let mapleader = ','

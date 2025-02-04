@@ -1,8 +1,11 @@
 Plug 'tpope/vim-sensible'
-
+Plug 'sheerun/vim-polyglot'
+Plug 'arcticicestudio/nord-vim'
 Plug 'itchyny/lightline.vim'
 
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
+Plug 'tpope/vim-commentary'
+Plug '907th/vim-auto-save'
 
 Plug 'wakatime/vim-wakatime'
