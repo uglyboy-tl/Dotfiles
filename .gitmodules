@@ -8,3 +8,6 @@
 [submodule "config/zsh/zgen"]
 	path = config/zsh/zgen
 	url = https://github.com/tarjoilija/zgen.git
+[submodule "data/dynamic-wallpaper"]
+	path = data/dynamic-wallpaper
+	url = https://github.com/adi1090x/dynamic-wallpaper

@@ -71,3 +71,7 @@
     ~/.config/mutt/muttrc: config/mutt/muttrc
     ~/.config/mutt/mailboxes: config/mutt/mailboxes
     ~/.config/mutt/mailcap: config/mutt/mailcap
+
+    # Dynamic wallpaper
+    ~/.local/share/dynamic-wallpaper: data/dynamic-wallpaper/images
+    ~/.local/bin/dwall.sh: data/dynamic-wallpaper/dwall.sh
