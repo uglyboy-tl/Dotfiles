@@ -2,10 +2,12 @@
 	path = dotbot
 	url = https://github.com/anishathalye/dotbot
 	ignore = dirty
+[submodule "dotbot-plugins/crontab"]
+	path = dotbot-plugins/crontab
+	url = https://github.com/codekansas/dotbot-crontab.git
 [submodule "config/vim/vim-plug"]
 	path = config/vim/vim-plug
 	url = https://github.com/junegunn/vim-plug.git
-        ignore = dirty
 [submodule "config/zsh/zgen"]
 	path = config/zsh/zgen
 	url = https://github.com/tarjoilija/zgen.git

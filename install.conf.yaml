@@ -13,33 +13,45 @@
 
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
+    - [git submodule sync, Syncing submodule remotes]
 
 - link:
-    ~/.config/git/config: config/git/config
-    ~/.config/pip/pip.conf: config/pip/pip.conf
+    # Env
+    ~/.config/environment: config/environment
 
+    # vim
     ~/.config/vim/vimrc: config/vim/vimrc
     ~/.config/vim/vimrc.plug: config/vim/vimrc.plug
     ~/.config/vim/plug.vim: config/vim/vim-plug/plug.vim
 
-    ~/.config/environment: config/environment
-
+    # tmux
     ~/.config/tmux/tmux.conf: config/tmux/tmux.conf
 
+    # zsh
     ~/.config/zsh/.zshrc:
         path: config/zsh/zshrc.zsh
         force: true
     ~/.config/starship.toml: config/starship.toml
     ~/.config/zsh/zgen: config/zsh/zgen
 
+    # Scripts
     ~/.local/bin/:
         create: true
         glob: true
         path: scripts/*
         relink: true
 
+    # Other Configs
+    ~/.config/git/config: config/git/config
+    ~/.config/pip/pip.conf: config/pip/pip.conf
+
     # lf
     ~/.config/lf: config/lf
 
     # FastFetch
     ~/.config/fastfetch/config.jsonc: config/fastfetch/config.jsonc
+
+- crontab:
+  - time: 0 0 * * *
+    command: env PATH=/usr/local/bin:/usr/bin:/home/uglyboy/.local/bin pg-back
+    platform: linux
