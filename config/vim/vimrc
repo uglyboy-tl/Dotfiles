@@ -1,48 +1,4 @@
-" 手动加载 vim-plug
-if filereadable(expand('~/.config/vim/plug.vim'))
-  source ~/.config/vim/plug.vim
-endif
-
-call plug#begin('~/.config/vim/plugged')
-
-" install Plug plugins
-if filereadable(expand("~/.config/vim/vimrc.plug"))
-  source ~/.config/vim/vimrc.plug
-endif
-
-call plug#end()
-
-" plugin settings
-" ColorScheme
-colorscheme nord
-let g:nord_cursor_line_number_background = 1
-let g:nord_italic_comments = 1
-" Lightline
-let g:lightline = {'colorscheme': 'nord'}
-set noshowmode
-" AutoSave
-let g:auto_save = 1
-let g:auto_save_silent = 1
-
-" keyboard shortcuts
-let mapleader = ','
-
-" Fast saving
-nmap <leader>w :w!<cr>
-" :W sudo saves the file
-" (useful for handling the permission-denied error)
-command! W execute 'w !sudo tee % > /dev/null' <bar> edit!
-
-map <space> /
-map ; :Files<CR>
-"nnoremap <leader>b :Buffers<CR>
-
-" Go crazy!
-let $LOCALFILE=expand("~/.config/local/vimrc")
-if filereadable($LOCALFILE)
-  source $LOCALFILE
-endif
-
+" 设置路径
 set runtimepath^=$XDG_CONFIG_HOME/vim
 set runtimepath+=$XDG_DATA_HOME/vim
 set runtimepath+=$XDG_CONFIG_HOME/vim/after
@@ -59,3 +15,59 @@ set undodir=$XDG_STATE_HOME/vim/undo     | call mkdir(&undodir,   'p')
 set viewdir=$XDG_STATE_HOME/vim/view     | call mkdir(&viewdir,   'p')
 
 if !has('nvim') | set viminfofile=$XDG_STATE_HOME/vim/viminfo | endif
+
+" 开始配置
+let $LOCALFILE=expand("~/.config/local/vimrc")
+if filereadable($LOCALFILE)
+  source $LOCALFILE
+endif
+
+" 手动加载 vim-plug 插件管理器
+if filereadable(expand('~/.config/vim/plug.vim'))
+  source ~/.config/vim/plug.vim
+endif
+
+call plug#begin('~/.config/vim/plugged')
+
+" 安装 Plug 插件
+if filereadable(expand("~/.config/vim/vimrc.plug"))
+  source ~/.config/vim/vimrc.plug
+endif
+
+call plug#end()
+
+" 插件设置
+" 配色方案
+colorscheme nord
+let g:nord_cursor_line_number_background = 1
+let g:nord_italic_comments = 1
+" Lightline 状态栏
+let g:lightline = {'colorscheme': 'nord'}
+set noshowmode
+" 自动保存
+let g:auto_save = 1
+let g:auto_save_silent = 1
+let g:auto_save_events = ["InsertLeave", "TextChanged"]  " 触发条件
+
+" 鼠标设置
+set mouse=a  " 启用所有鼠标功能
+if has("mouse_sgr")
+    set ttymouse=sgr  " 更好的终端鼠标支持
+else
+    set ttymouse=xterm2
+endif
+
+" 键位映射
+map <space> /
+map ; :Files<CR>
+
+let mapleader = ','
+
+nmap <leader>w :w!<cr>
+nnoremap <silent> <leader>f :Rg<CR>
+
+"nnoremap <leader>b :Buffers<CR>
+
+" :W 命令以 sudo 权限保存文件
+" （处理权限拒绝错误时非常有用）
+command! W execute 'w !sudo tee % > /dev/null' <bar> edit!

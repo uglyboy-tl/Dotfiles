@@ -3,7 +3,7 @@ export TERM=linux
 
 pgrep -x sxhkd > /dev/null || sxhkd &
 
-#inspired by gk
+# 灵感来源于 gk
 _c() { bspc config "$@"; }
 _m() { bspc monitor "$@"; }
 _r() { bspc rule -a "$@"; }
@@ -26,25 +26,28 @@ _c gapless_monocle      true
 _c pointer_modifier mod1
 _c pointer_action1 resize_side
 _c pointer_action1 resize_corner
-_c config pointer_action3 move
+_c pointer_action3 move
 
-#Border colors
+# 边框颜色
 _c normal_border_color "#4C566A"
 _c active_border_color "#434C5E"
 _c focused_border_color "#2E3440"
 _c presel_feedback_color "#3B4252"
 
-# startup
-_s picom -b
-_s redshift
-_s dunst
-_s xsetroot -cursor_name left_ptr
-_s polybar --reload main
+# 启动服务
+# 并行启动常规服务
+(
+    _s picom -b
+    _s redshift
+    _s dunst
+    _s xsetroot -cursor_name left_ptr
+    _s polybar --reload main
+) &
 
-# Dynamic-Wallpaper
+# 动态壁纸
 #_s ~/.fehbg
-~/.local/bin/dwall.sh -s exodus &
-# Polkit
+~/.local/bin/dwall.sh -s lakeside &
+# 权限管理
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 
 _r Microsoft-edge desktop='^1' follow=on
@@ -66,4 +69,3 @@ _r feh state=floating
 
 _r Alacritty state=floating rectangle=1280x720+640+100
 _r kitty state=floating rectangle=1280x720+640+100
-#_r Alacritty state=floating rectangle=1280x720+440+100

@@ -79,5 +79,5 @@
 
 - crontab:
   - time: 0 * * * *
-    command: env PATH=/usr/local/bin:/usr/bin:/home/uglyboy/.local/bin DISPLAY=:0 DESKTOP_SESSION=lightdm-xsession DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus" dwall.sh -s exodus
+    command: env PATH=/usr/local/bin:/usr/bin:/home/uglyboy/.local/bin DISPLAY=:0 DESKTOP_SESSION=lightdm-xsession DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus" dwall.sh -s lakeside
     platform: linux
