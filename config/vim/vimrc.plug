@@ -1,11 +1,20 @@
+" 基础优化
 Plug 'tpope/vim-sensible'
+Plug '907th/vim-auto-save'
+
+" 语法高亮
 Plug 'sheerun/vim-polyglot'
+
+" 界面美化
 Plug 'arcticicestudio/nord-vim'
 Plug 'itchyny/lightline.vim'
 
+" 文件导航
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
-Plug 'tpope/vim-commentary'
-Plug '907th/vim-auto-save'
 
+" 代码操作
+Plug 'tpope/vim-commentary'
+
+" 效率统计
 Plug 'wakatime/vim-wakatime'
