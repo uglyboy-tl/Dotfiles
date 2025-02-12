@@ -17,6 +17,10 @@
     - [git submodule foreach git pull origin master, Updating submodule contents]
 
 - link:
+    # BASH
+    ~/.bashrc: config/bashrc
+
+    # GIT & PIP & PDM
     ~/.config/git/config: config/git/config
     ~/.config/pip/pip.conf: config/pip/pip.conf
     ~/.config/pdm/config.toml: config/pdm/config.toml
