@@ -31,8 +31,12 @@
     ~/.config/zsh/.zshrc:
         path: config/zsh/zshrc.zsh
         force: true
+    ~/.config/zsh/zshrc.alias: config/zsh/aliases.zsh
     ~/.config/starship.toml: config/starship.toml
     ~/.config/zsh/zgen: config/zsh/zgen
+
+    # bash
+    ~/.bashrc: config/bashrc
 
     # Scripts
     ~/.local/bin/:
