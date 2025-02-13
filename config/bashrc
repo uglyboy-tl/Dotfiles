@@ -1,9 +1,50 @@
+# 避免重复加载
+if [[ -n "$BASHRC_LOADED" ]]; then
+  return
+fi
+export BASHRC_LOADED=1
+
+# Alias
+## 文件操作
+alias ll='ls -alF'
+alias rm='rm -i'          # 删除前确认
+alias cp='cp -i'          # 覆盖前确认
+
+## 快速导航
+alias ..='cd ..'
+alias ...='cd ../..'
+
+## 网络工具
+alias myip='curl ifconfig.me'
+
+## Git 快捷操作
+alias gs='git status'
+alias gl='git log --oneline --graph'
+
+# 默认编辑器
+export EDITOR='vim'
+
 # 设置 Bash 使用自己的历史文件
-export HISTFILE=~/.config/bash/history
-# 内存中保存的历史记录条目数
-export HISTSIZE=1000
-# 历史文件中保存的历史记录条目数
-export HISTFILESIZE=50000
+if [ -n "$BASH_VERSION" ]; then
+    export HISTFILE=~/.local/state/bash/history
+    # 历史记录优化
+    export HISTSIZE=10000      # 内存中保存的历史命令数量
+    export HISTFILESIZE=20000  # 历史文件最大行数
+    export HISTCONTROL=ignoredups:erasedups  # 忽略重复命令
+fi
+
+
+# 快捷键绑定
+# 输入部分命令后，按上箭头匹配历史记录
+bind '"\e[A": history-search-backward'
+bind '"\e[B": history-search-forward'
+
+# 启用可编程补全（部分系统需先安装 bash-completion）
+if [ -f /etc/bash_completion ]; then
+  . /etc/bash_completion
+elif [ -f /usr/share/bash-completion/bash_completion ]; then
+  . /usr/share/bash-completion/bash_completion
+fi
 
 # 设置 starship 为 Bash 的提示符
 eval "$(starship init bash)"
