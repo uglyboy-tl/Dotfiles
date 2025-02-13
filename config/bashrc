@@ -1,5 +1,5 @@
 # 设置 Bash 使用自己的历史文件
-export HISTFILE=~/.local/state/bash/history
+export HISTFILE=~/.config/bash/history
 # 内存中保存的历史记录条目数
 export HISTSIZE=1000
 # 历史文件中保存的历史记录条目数
