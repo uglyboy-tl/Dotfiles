@@ -51,21 +51,21 @@ _c presel_feedback_color "#3B4252"
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 
 _r Microsoft-edge desktop='^1' follow=on
-_r Code desktop='^6' follow=on
 _r obsidian desktop='^2' follow=on
-
-_r Inky desktop='^2' follow=on
-_r Typora desktop='^2' follow=on
 _r lf desktop='^3' follow=on
+_r mpv desktop='^4' follow=on
+_r Code desktop='^6' follow=on
+
+
+_r Typora desktop='^2' follow=on
+
 _r Zotero desktop='^3' follow=on
 _r melonDS desktop='^4' follow=on
-_r mpv desktop='^4' follow=on
-_r UxPlay@debian desktop='^4' follow=on
+_r GStreamer desktop='^4' follow=on
 _r Io.github.celluloid_player.Celluloid desktop='^4' follow=on
 _r wechat desktop='^5' follow=on
 _r Bytedance-feishu desktop='^5' follow=on
 _r TDAppDesktop desktop='^5' follow=on
-_r discord desktop='^5' follow=on
 
 _r rofi state=floating sticky=on
 _r feh state=floating
