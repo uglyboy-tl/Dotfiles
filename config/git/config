@@ -29,4 +29,4 @@
 	process = git-lfs filter-process
 	required = true
 [http "https://github.com"]
-	proxy = http://192.168.0.100:20172
+	proxy = http://192.168.0.100:50172
