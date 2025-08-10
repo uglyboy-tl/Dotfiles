@@ -48,7 +48,7 @@ _c presel_feedback_color "#3B4252"
 #_s ~/.fehbg
 ~/.local/bin/dwall.sh -s lakeside &
 # 权限管理
-/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+#/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 
 _r Microsoft-edge desktop='^1' follow=on
 _r obsidian desktop='^2' follow=on

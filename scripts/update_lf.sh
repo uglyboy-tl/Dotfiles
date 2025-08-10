@@ -4,8 +4,8 @@
 set -o xtrace -o errtrace -o errexit -o nounset -o pipefail
 
 # set proxy
-export http_proxy="http://192.168.0.100:20171"
-export https_proxy="http://192.168.0.100:20171"
+export http_proxy="http://192.168.0.100:50171"
+export https_proxy="http://192.168.0.100:50171"
 
 version="$(curl --location --head https://github.com/gokcehan/lf/releases/latest | grep -i location: | sed 's/^.*\/tag\/\([^\/]*\)\r$/\1/')"
 filename="lf-linux-amd64.tar.gz"

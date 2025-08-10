@@ -7,8 +7,8 @@ configuration {
 
 window {
   transparency:		"real";
-  background-color:		@background;
-  text-color:			@foreground;
+  background-color:		@bg;
+  text-color:			@fg;
   border-radius:		6px;
   width:			371px;
   x-offset:			-10px;
@@ -53,7 +53,7 @@ prompt {
 }
 
 listview {
-  background-color:               @background;
+  background-color:               @bg;
   margin:                         35px 20px;
   /*spacing:                        12px;*/
   cycle:                          true;

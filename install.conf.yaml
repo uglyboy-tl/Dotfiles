@@ -58,8 +58,6 @@
     ~/.config/newsboat/config: config/newsboat/config
     ## PIP
     ~/.config/pip/pip.conf: config/pip/pip.conf
-    ## PDM
-    ~/.config/pdm/config.toml: config/pdm/config.toml
 
     # X
     ## Xresources
@@ -73,13 +71,13 @@
     ~/.config/rofi: config/rofi
     ~/.config/dunst/dunstrc: config/dunstrc
 
-    ## Alacritty
-    ~/.config/alacritty/alacritty.yml: config/alacritty/alacritty.yml
-    ~/.config/alacritty/Nord.yml: config/alacritty/nord.yml
+    ## FCITX5-RIME
+    ~/.local/share/fcitx5/rime/default.custom.yaml: config/fcitx5-rime/default.custom.yaml
+    ~/.local/share/fcitx5/rime/luna_pinyin.custom.yaml: config/fcitx5-rime/luna_pinyin.custom.yaml
 
-    ## Kitty
-    ~/.config/kitty/kitty.conf: config/kitty/kitty.conf
-    ~/.config/kitty/Nord.conf: config/kitty/nord.conf
+    ## Alacritty
+    ~/.config/alacritty/alacritty.toml: config/alacritty/alacritty.toml
+    ~/.config/alacritty/Nord.toml: config/alacritty/nord.toml
 
     ## MUTT
     ~/.config/offlineimap/config: config/mutt/offlineimaprc
