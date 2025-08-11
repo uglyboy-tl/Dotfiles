@@ -135,7 +135,7 @@ case "$OSTYPE" in
 				elif [[ "$DESKTOP_SESSION" =~ ^(PANTHEON|Pantheon|pantheon|GNOME|Gnome|gnome|Gnome-xorg|gnome-xorg|UBUNTU|Ubuntu|ubuntu|DEEPIN|Deepin|deepin|POP|Pop|pop|ZORIN|Zorin|zorin|budgie-desktop)$ ]]; then
 					SETTER=set_gnome
 				else
-					SETTER="feh --bg-fill"
+					SETTER="feh --bg-fill --no-fehbg"
 				fi
 			elif [[ "$XDG_SESSION_TYPE" == 'wayland' ]]; then
 				SETTER="eval ogurictl output '*' --image"
