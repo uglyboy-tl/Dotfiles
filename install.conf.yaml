@@ -78,6 +78,7 @@
     ## Alacritty
     ~/.config/alacritty/alacritty.toml: config/alacritty/alacritty.toml
     ~/.config/alacritty/Nord.toml: config/alacritty/nord.toml
+    ~/.config/alacritty/keybindings.toml: config/alacritty/keybindings.toml
 
     ## MUTT
     ~/.config/offlineimap/config: config/mutt/offlineimaprc

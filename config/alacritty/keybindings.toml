@@ -1,0 +1,5 @@
+[keyboard]
+bindings = [
+    # 新建窗口 (Cmd + N)
+    { key = "N", mods = "Control", action = "CreateNewWindow" },
+]
