@@ -34,6 +34,7 @@ cmd open &{{
     case $(file --mime-type -Lb $f) in
         inode/symlink) $OPENER $(realpath $f) >/dev/null 2>&1 ;;
         text/*|application/json|application/csv|*opendocument.text) lf -remote "send $id \$$EDITOR \$fx";;
+        application/pdf) zathura $f ;;
         image/*) feh $f ;;
         *) for f in $fx; do setsid -f $OPENER $f > /dev/null 2> /dev/null & done;;
     esac

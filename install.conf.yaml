@@ -56,6 +56,8 @@
     ~/.config/lf: config/lf
     ## Newsboat
     ~/.config/newsboat/config: config/newsboat/config
+    ## Zathura
+    ~/.config/zathura/zathurarc: config/zathurarc
     ## PIP
     ~/.config/pip/pip.conf: config/pip/pip.conf
 

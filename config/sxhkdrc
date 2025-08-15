@@ -7,7 +7,7 @@ super + Return
 	alacritty
 
 # program launcher
-super + @space
+super + r
 	rofi -show drun
 
 alt + Tab
@@ -46,8 +46,8 @@ XF86AudioMute
 #
 
 # quit/restart bspwm
-super + alt + q
-	bspc quit
+super + alt + {q,r}
+	bspc {quit,wm -r}
 
 # close and kill
 super + {_, shift + }w
@@ -64,6 +64,10 @@ super + shift + f
 # set the window state
 super + {t, shift + t, s, f}
 	bspc node -t {tiled, pseudo_tiled, floating, fullscreen}
+
+# Toggle beetwen floating & tiled
+super + space
+    bspc node -t "~"{floating,tiled}
 
 # set the node flags
 super + ctrl + {m, x, y, z}

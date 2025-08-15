@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 export TERM=linux
 
 pgrep -x sxhkd > /dev/null || sxhkd &
@@ -50,25 +50,56 @@ _c presel_feedback_color "#3B4252"
 # 权限管理
 #/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
 
-_r Microsoft-edge desktop='^1' follow=on
-_r obsidian desktop='^2' follow=on
-_r lf desktop='^3' follow=on
-_r mpv desktop='^4' follow=on
-_r Code desktop='^6' follow=on
+## Window rules ----------------------------------------------#
+#remove all rules first
+bspc rule -r *:*
 
+## web
+declare -a web=(Microsoft-edge)
+for i in ${web[@]}; do
+	bspc rule -a $i desktop='^1' follow=on focus=on
+done
 
-_r Typora desktop='^2' follow=on
+## office
+declare -a office=(obsidian Typora Zotero)
+for i in ${office[@]}; do
+	_r $i desktop='^2' follow=on
+done
 
-_r Zotero desktop='^3' follow=on
-_r melonDS desktop='^4' follow=on
-_r GStreamer desktop='^4' follow=on
-_r Io.github.celluloid_player.Celluloid desktop='^4' follow=on
-_r wechat desktop='^5' follow=on
-_r Bytedance-feishu desktop='^5' follow=on
-_r TDAppDesktop desktop='^5' follow=on
+## files
+declare -a files=(lf)
+for i in ${files[@]}; do
+	bspc rule -a $i desktop='^3' follow=on focus=on
+done
 
-_r rofi state=floating sticky=on
-_r feh state=floating
+## media
+declare -a media=(melonDS GStreamer Io.github.celluloid_player.Celluloid mpv)
+for i in ${media[@]}; do
+	_r $i desktop='^4' follow=on
+done
 
-_r Alacritty state=floating rectangle=1280x720+640+100
-_r kitty state=floating rectangle=1280x720+640+100
+## chat
+declare -a chat=(wechat Bytedance-feishu TDAppDesktop)
+for i in ${chat[@]}; do
+	_r $i desktop='^5' follow=on focus=on
+done
+
+## code
+declare -a code=(Code)
+for i in ${code[@]}; do
+	_r $i desktop='^6' follow=on
+done
+
+## floating
+declare -a terminal=(Alacritty kitty)
+for i in ${terminal[@]}; do
+	_r $i state=floating rectangle=1280x720+640+100 focus=on
+done
+
+declare -a floating=(rofi feh Zathura)
+for i in ${floating[@]}; do
+	_r $i state=floating follow=on focus=on
+done
+
+_r '*:*:画中画' follow=false state=floating sticky=on
+_r 'Microsoft-edge:*:Bitwarden' state=floating
