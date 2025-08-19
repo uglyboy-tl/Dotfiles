@@ -28,8 +28,8 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
-[http "https://github.com"]
-	proxy = http://192.168.0.100:50172
 [alias]
 	lg = log --oneline --graph --decorate --all
 	st = status -sb
+[url "https://xget.xi-xu.me/gh/"]
+	insteadOf = https://github.com/
