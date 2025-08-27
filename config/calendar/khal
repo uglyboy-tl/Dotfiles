@@ -1,0 +1,34 @@
+[calendars]
+
+[[sleep]]
+path = ~/.local/share/calendars/home
+readonly = True
+
+[[work]]
+path = ~/.local/share/calendars/E3AEFF57-77D5-4174-AA12-ECEBB7C4E12A
+
+[[sport]]
+path = ~/.local/share/calendars/F8F48C44-405A-441A-9102-5E1BFC259C55
+readonly = True
+
+[[fun]]
+path = ~/.local/share/calendars/E8776245-84A1-4BD4-98A1-4DA64CA079E8
+readonly = True
+
+[[read]]
+path = ~/.local/share/calendars/C37A9848-55A6-436D-9DA7-93184A9DD678
+readonly = True
+
+[locale]
+timeformat = %H:%M
+dateformat = %Y-%m-%d
+longdateformat = %Y-%m-%d
+datetimeformat = %Y-%m-%d %H:%M
+longdatetimeformat = %Y-%m-%d %H:%M
+
+firstweekday = 1
+
+[default]
+default_calendar = work
+highlight_event_days = True  # the default is False
+enable_mouse = True  # mouse is enabled by default in interactive mode

@@ -4,6 +4,10 @@ export XDG_CONFIG_HOME=$HOME/.config
 export XDG_STATE_HOME=$HOME/.local/state
 export XDG_CACHE_HOME=$HOME/.cache
 
+# [X11]
+export USRRESOURCES="$XDG_CONFIG_HOME/X11/Xresources"
+export ERRFILE="$XDG_CACHE_HOME/X11/xsession-errors"
+
 # [CUDA]
 export CUDA_CACHE_PATH="$XDG_CACHE_HOME"/nv
 
