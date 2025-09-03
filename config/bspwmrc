@@ -73,7 +73,7 @@ for i in ${files[@]}; do
 done
 
 ## media
-declare -a media=(melonDS GStreamer Io.github.celluloid_player.Celluloid mpv)
+declare -a media=(melonDS GStreamer Io.github.celluloid_player.Celluloid mpv wemeetapp)
 for i in ${media[@]}; do
 	_r $i desktop='^4' follow=on
 done

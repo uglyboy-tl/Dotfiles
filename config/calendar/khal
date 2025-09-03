@@ -1,7 +1,7 @@
 [calendars]
 
 [[sleep]]
-path = ~/.local/share/calendars/home
+path = ~/.local/share/calendars/11952937-F217-42FB-8B99-69CE0FB37EB8
 readonly = True
 
 [[work]]
