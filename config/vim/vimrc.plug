@@ -13,8 +13,5 @@ Plug 'itchyny/lightline.vim'
 Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
 
-" 代码操作
-Plug 'tpope/vim-commentary'
-
 " 效率统计
 Plug 'wakatime/vim-wakatime'

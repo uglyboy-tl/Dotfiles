@@ -36,7 +36,7 @@
     ~/.config/zsh/zgen: config/zsh/zgen
 
     # bash
-    ~/.bashrc: config/bashrc
+    #~/.bashrc: config/bashrc
 
     # Scripts
     ~/.local/bin/:
@@ -57,5 +57,5 @@
 
 - crontab:
   - time: 0 0 * * *
-    command: env PATH=/usr/local/bin:/usr/bin:/home/uglyboy/.local/bin pg-back
+    command: pg-back > /tmp/pg.log 2>&1
     platform: linux
