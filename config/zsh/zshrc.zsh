@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export PATH="$HOME/.local/bin:$PATH"
 [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/environment" ] && source "${XDG_CONFIG_HOME:-$HOME/.config}/environment"
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
@@ -51,6 +53,33 @@ fi
 compinit -d "$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
 alias duf='duf --only local'
 alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
+
+__ZSHPROXY_HTTP="${__ZSHPROXY_HTTP:-nas.uglyboy.cn:50172}"
+
+proxy () {
+	# http_proxy
+	export http_proxy="${__ZSHPROXY_HTTP}"
+	export HTTP_PROXY="${__ZSHPROXY_HTTP}"
+	# https_proxy
+	export https_proxy="${__ZSHPROXY_HTTP}"
+	export HTTPS_PROXY="${__ZSHPROXY_HTTP}"
+    echo "HTTP Proxy On."
+}
+
+# cmd: unset proxy
+noproxy () {
+	unset http_proxy
+	unset HTTP_PROXY
+	unset https_proxy
+	unset HTTPS_PROXY
+    echo "HTTP Proxy Off."
+}
+
+# cmd: show proxy
+show_proxy () {
+    echo "http_proxy: $__ZSHPROXY_HTTP"
+    echo "https_proxy: $__ZSHPROXY_HTTP"
+}
 
 [ -f "$ZDOTDIR/zshrc.alias" ] && source "$ZDOTDIR/zshrc.alias"
 [ -f "$ZLOCAL/zshrc.after" ] && source "$ZLOCAL/zshrc.after"
