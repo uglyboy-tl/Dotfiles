@@ -14,7 +14,7 @@
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
     - [git submodule sync, Syncing submodule remotes]
-    - [git submodule foreach git pull origin master, Updating submodule contents]
+    - [git submodule foreach git pull, Updating submodule contents]
 
 - link:
     # BASH
@@ -98,6 +98,16 @@
 
     ## Dynamic wallpaper
     $XDG_DATA_HOME/dynamic-wallpaper: data/dynamic-wallpaper
+
+    ## MPV
+    $XDG_CONFIG_HOME/mpv/mpv.conf: config/mpv/mpv.conf
+    $XDG_CONFIG_HOME/mpv/scripts/thumbfast.lua: config/mpv/thumbfast/thumbfast.lua
+    $XDG_CONFIG_HOME/mpv/fonts: config/mpv/uosc/src/fonts
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/char-conv: config/mpv/uosc/src/uosc/char-conv
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/elements: config/mpv/uosc/src/uosc/elements
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/intl: config/mpv/uosc/src/uosc/intl
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/lib: config/mpv/uosc/src/uosc/lib
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/main.lua: config/mpv/uosc/src/uosc/main.lua
 
 - crontab:
   - time: 0 * * * *

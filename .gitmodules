@@ -14,3 +14,9 @@
 [submodule "dotbot-plugins/crontab"]
 	path = dotbot-plugins/crontab
 	url = git@github.com:codekansas/dotbot-crontab.git
+[submodule "config/mpv/thumbfast"]
+	path = config/mpv/thumbfast
+	url = https://github.com/po5/thumbfast
+[submodule "config/mpv/uosc"]
+	path = config/mpv/uosc
+	url = https://github.com/tomasklaen/uosc
