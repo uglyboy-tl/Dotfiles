@@ -1,115 +1,123 @@
+# Dotbot 配置文件 - 用于自动化 dotfiles 安装
+# 默认配置选项
 - defaults:
     link:
-        create: true
-        relink: true
+        create: true    # 如果目标目录不存在则创建
+        relink: true    # 如果符号链接已存在则重新链接
 
+# 清理阶段 - 删除旧的符号链接
 - clean:
-    ~/:
+    ~/:                 # 清理家目录下的符号链接
+        force: true     # 强制删除
+    ~/.local/bin:       # 清理本地二进制目录
         force: true
-    ~/.local/bin:
-        force: true
-    $XDG_CONFIG_HOME:
-        recursive: true
+    $XDG_CONFIG_HOME:   # 清理 XDG 配置目录
+        recursive: true # 递归清理
 
+# Shell 命令执行阶段
 - shell:
-    - [git submodule update --init --recursive, Installing submodules]
-    - [git submodule sync, Syncing submodule remotes]
-    - [git submodule foreach git pull, Updating submodule contents]
+    - [git submodule update --init --recursive, 初始化并更新所有子模块]
+    - [git submodule sync, 同步子模块远程仓库]
+    - [git submodule foreach git pull, 更新所有子模块内容]
 
+# 符号链接创建阶段
 - link:
-    # BASH
+    # BASH 配置 (已注释)
     #~/.bashrc: config/bashrc
 
-    # Scripts
+    # 脚本文件
+    # 将 scripts/ 目录下的所有文件链接到 ~/.local/bin/
     ~/.local/bin/:
-        create: true
-        glob: true
-        path: scripts/*
-        relink: true
+        create: true    # 创建目标目录
+        glob: true      # 使用通配符匹配
+        path: scripts/* # 源文件路径
+        relink: true    # 允许重新链接
 
-    # VIM
-    $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc
-    $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug
-    $XDG_CONFIG_HOME/vim/plug.vim: config/vim/vim-plug/plug.vim
+    # VIM 配置
+    $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc          # Vim 主配置文件
+    $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug # 插件配置文件
+    $XDG_CONFIG_HOME/vim/plug.vim: config/vim/vim-plug/plug.vim # Vim-plug 插件管理器
 
-    ~/.xsessionrc: config/environment
-    $XDG_CONFIG_HOME/environment: config/environment
+    # 环境变量配置
+    ~/.xsessionrc: config/environment                    # X session 环境变量
+    $XDG_CONFIG_HOME/environment: config/environment     # XDG 环境变量配置
 
-    # ZSH
-    $XDG_CONFIG_HOME/zsh/.zshrc:
+    # ZSH 配置
+    $XDG_CONFIG_HOME/zsh/.zshrc:                         # Zsh 主配置文件
         path: config/zsh/zshrc.zsh
-        force: true
-    $XDG_CONFIG_HOME/zsh/zshrc.alias: config/zsh/aliases.zsh
-    $XDG_CONFIG_HOME/starship.toml: config/starship.toml
-    $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen
+        force: true                                      # 强制覆盖
+    $XDG_CONFIG_HOME/zsh/zshrc.alias: config/zsh/aliases.zsh # 别名配置
+    $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
+    $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen           # Zgen 插件管理器
 
-    # SYSTEM
-    ## GIT
-    $XDG_CONFIG_HOME/git/config: config/git/config
-    ## Fontconfig
-    $XDG_CONFIG_HOME/fontconfig/fonts.conf: config/fonts.conf
-    ## FastFetch
+    # 系统工具配置
+    ## GIT 配置
+    $XDG_CONFIG_HOME/git/config: config/git/config       # Git 配置文件
+    ## 字体配置
+    $XDG_CONFIG_HOME/fontconfig/fonts.conf: config/fonts.conf # 字体配置文件
+    ## FastFetch 系统信息工具
     $XDG_CONFIG_HOME/fastfetch/config.jsonc: config/fastfetch/config.jsonc
 
-    # OTHERS
-    ## LF
+    # 其他应用程序配置
+    ## LF 文件管理器
     $XDG_CONFIG_HOME/lf: config/lf
-    ## Newsboat
+    ## Newsboat RSS 阅读器
     $XDG_CONFIG_HOME/newsboat/config: config/newsboat/config
-    ## Zathura
+    ## Zathura PDF 阅读器
     $XDG_CONFIG_HOME/zathura/zathurarc: config/zathurarc
-    ## MUTT
-    $XDG_CONFIG_HOME/offlineimap/config: config/mutt/offlineimaprc
-    $XDG_CONFIG_HOME/mutt/muttrc: config/mutt/muttrc
-    $XDG_CONFIG_HOME/mutt/mailboxes: config/mutt/mailboxes
-    $XDG_CONFIG_HOME/mutt/mailcap: config/mutt/mailcap
-    ## Calendar
-    ### vdirsyncer
+    ## MUTT 邮件客户端
+    $XDG_CONFIG_HOME/offlineimap/config: config/mutt/offlineimaprc # 邮件同步
+    $XDG_CONFIG_HOME/mutt/muttrc: config/mutt/muttrc              # Mutt 主配置
+    $XDG_CONFIG_HOME/mutt/mailboxes: config/mutt/mailboxes        # 邮箱配置
+    $XDG_CONFIG_HOME/mutt/mailcap: config/mutt/mailcap            # MIME 类型处理
+    ## 日历同步
+    ### vdirsyncer 日历同步工具
     $XDG_CONFIG_HOME/vdirsyncer/config: config/calendar/vdirsyncer
-    ### khal
+    ### khal 日历客户端
     $XDG_CONFIG_HOME/khal/config: config/calendar/khal
 
-    ## PIP
-    $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf
-    ## UV
-    $XDG_CONFIG_HOME/uv/uv.toml: config/sources/uv.toml
+    ## Python 包管理配置
+    $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf # PIP 镜像源配置
+    ## UV Python 包管理器
+    $XDG_CONFIG_HOME/uv/uv.toml: config/sources/uv.toml    # UV 配置
 
-    # X
-    ## Xresources
-    $XDG_CONFIG_HOME/X11/Xresources: config/X11/Xresources
-    $XDG_CONFIG_HOME/X11/Xresources.d/rxvt-unicode: config/X11/rxvt-unicode
+    # X Window 系统配置
+    ## Xresources 资源文件
+    $XDG_CONFIG_HOME/X11/Xresources: config/X11/Xresources          # X 资源定义
+    $XDG_CONFIG_HOME/X11/Xresources.d/rxvt-unicode: config/X11/rxvt-unicode # URxvt 终端配置
 
-    ## BSPWM
-    $XDG_CONFIG_HOME/bspwm/bspwmrc: config/bspwmrc
-    $XDG_CONFIG_HOME/sxhkd/sxhkdrc: config/sxhkdrc
-    $XDG_CONFIG_HOME/picom/picom.conf: config/picom.conf
-    $XDG_CONFIG_HOME/polybar: config/polybar
-    $XDG_CONFIG_HOME/rofi: config/rofi
-    $XDG_CONFIG_HOME/dunst/dunstrc: config/dunstrc
+    ## BSPWM 窗口管理器生态
+    $XDG_CONFIG_HOME/bspwm/bspwmrc: config/bspwmrc                  # BSPWM 主配置
+    $XDG_CONFIG_HOME/sxhkd/sxhkdrc: config/sxhkdrc                  # 快捷键配置
+    $XDG_CONFIG_HOME/picom/picom.conf: config/picom.conf            # 合成器配置
+    $XDG_CONFIG_HOME/polybar: config/polybar                        # 状态栏配置
+    $XDG_CONFIG_HOME/rofi: config/rofi                              # 应用启动器
+    $XDG_CONFIG_HOME/dunst/dunstrc: config/dunstrc                  # 桌面通知
 
-    ## FCITX5-RIME
-    $XDG_DATA_HOME/fcitx5/rime/default.custom.yaml: config/fcitx5-rime/default.custom.yaml
-    $XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml: config/fcitx5-rime/luna_pinyin.custom.yaml
+    ## FCITX5-RIME 输入法
+    $XDG_DATA_HOME/fcitx5/rime/default.custom.yaml: config/fcitx5-rime/default.custom.yaml # 默认输入方案
+    $XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml: config/fcitx5-rime/luna_pinyin.custom.yaml # 拼音输入方案
 
-    ## Alacritty
-    $XDG_CONFIG_HOME/alacritty/alacritty.toml: config/alacritty/alacritty.toml
-    $XDG_CONFIG_HOME/alacritty/Nord.toml: config/alacritty/nord.toml
-    $XDG_CONFIG_HOME/alacritty/keybindings.toml: config/alacritty/keybindings.toml
+    ## Alacritty 终端模拟器
+    $XDG_CONFIG_HOME/alacritty/alacritty.toml: config/alacritty/alacritty.toml # 主配置
+    $XDG_CONFIG_HOME/alacritty/Nord.toml: config/alacritty/nord.toml           # Nord 主题
+    $XDG_CONFIG_HOME/alacritty/keybindings.toml: config/alacritty/keybindings.toml # 键位绑定
 
-    ## Dynamic wallpaper
-    $XDG_DATA_HOME/dynamic-wallpaper: data/dynamic-wallpaper
+    ## 动态壁纸
+    $XDG_DATA_HOME/dynamic-wallpaper: data/dynamic-wallpaper        # 动态壁纸资源
 
-    ## MPV
-    $XDG_CONFIG_HOME/mpv/mpv.conf: config/mpv/mpv.conf
-    $XDG_CONFIG_HOME/mpv/scripts/thumbfast.lua: config/mpv/thumbfast/thumbfast.lua
-    $XDG_CONFIG_HOME/mpv/fonts: config/mpv/uosc/src/fonts
-    $XDG_CONFIG_HOME/mpv/scripts/uosc/char-conv: config/mpv/uosc/src/uosc/char-conv
-    $XDG_CONFIG_HOME/mpv/scripts/uosc/elements: config/mpv/uosc/src/uosc/elements
-    $XDG_CONFIG_HOME/mpv/scripts/uosc/intl: config/mpv/uosc/src/uosc/intl
-    $XDG_CONFIG_HOME/mpv/scripts/uosc/lib: config/mpv/uosc/src/uosc/lib
-    $XDG_CONFIG_HOME/mpv/scripts/uosc/main.lua: config/mpv/uosc/src/uosc/main.lua
+    ## MPV 媒体播放器
+    $XDG_CONFIG_HOME/mpv/mpv.conf: config/mpv/mpv.conf              # MPV 主配置
+    $XDG_CONFIG_HOME/mpv/scripts/thumbfast.lua: config/mpv/thumbfast/thumbfast.lua # 缩略图预览脚本
+    $XDG_CONFIG_HOME/mpv/fonts: config/mpv/uosc/src/fonts           # uosc 界面字体
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/char-conv: config/mpv/uosc/src/uosc/char-conv # 字符转换
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/elements: config/mpv/uosc/src/uosc/elements   # 界面元素
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/intl: config/mpv/uosc/src/uosc/intl           # 国际化
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/lib: config/mpv/uosc/src/uosc/lib             # 库文件
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/main.lua: config/mpv/uosc/src/uosc/main.lua   # uosc 主脚本
 
+# Crontab 定时任务配置
 - crontab:
-  - time: 0 * * * *
+  - time: 0 * * * *  # 每小时执行一次
     command: env PATH=/usr/local/bin:/usr/bin:/home/uglyboy/.local/bin DISPLAY=:0 DESKTOP_SESSION=lightdm-xsession DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus" dwall.sh -s lakeside
-    platform: linux
+    platform: linux  # 仅限 Linux 平台
