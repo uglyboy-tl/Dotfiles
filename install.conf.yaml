@@ -18,7 +18,7 @@
 - shell:
     - [git submodule update --init --recursive, 初始化并更新所有子模块]
     - [git submodule sync, 同步子模块远程仓库]
-    - [git submodule foreach git pull, 更新所有子模块内容]
+    #- [git submodule foreach git pull, 更新所有子模块内容]
 
 # 符号链接创建阶段
 - link:
@@ -32,6 +32,12 @@
         glob: true      # 使用通配符匹配
         path: scripts/* # 源文件路径
         relink: true    # 允许重新链接
+
+    ~/.local/share/applications/:
+        create: true
+        glob: true
+        path: applications/hidden/*
+        relink: true
 
     # VIM 配置
     $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc          # Vim 主配置文件
@@ -55,6 +61,8 @@
     $XDG_CONFIG_HOME/git/config: config/git/config       # Git 配置文件
     ## 字体配置
     $XDG_CONFIG_HOME/fontconfig/fonts.conf: config/fonts.conf # 字体配置文件
+    ## BTOP 配置
+    $XDG_CONFIG_HOME/btop/btop.conf: config/btop/btop.conf
     ## FastFetch 系统信息工具
     $XDG_CONFIG_HOME/fastfetch/config.jsonc: config/fastfetch/config.jsonc
 

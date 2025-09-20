@@ -1,16 +1,21 @@
+[env]
+TERM = "xterm-256color"
+
 [general]
 live_config_reload = true
 import = ["~/.config/alacritty/Nord.toml","~/.config/alacritty/keybindings.toml"]
 
 [window]
 padding = { x = 10, y = 5 }
-decorations = "none"
+decorations = "None"
 dynamic_padding = false
 opacity = 0.9
 blur = true
 
 [font]
 normal = { family = "Maple Mono SC NF", style = "Regular" }
+bold = { family = "Maple Mono SC NF", style = "Bold" }
+italic = { family = "Maple Mono SC NF", style = "Italic" }
 size = 11
 
 [selection]

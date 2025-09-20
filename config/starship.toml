@@ -2,10 +2,10 @@
 
 # 目录模块配置
 [directory]
-format = "[  $path ]($style)" # 目录格式，显示文件夹图标和路径
-truncation_length = 4         # 路径截断长度
-truncation_symbol = "…/"      # 截断符号
-home_symbol = '~'             # 家目录符号
+truncation_length = 4
+truncation_symbol = "…/"
+repo_root_style = "bold cyan"
+repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 
 # 目录替换规则
 [directory.substitutions]
@@ -92,9 +92,20 @@ format = '\[[$symbol$account(@$domain)(\($region\))]($style)\]' # GCloud 账户�
 [git_branch]
 format = '\[[$symbol$branch]($style)\]' # Git 分支显示格式
 
-# Git 状态模块配置
 [git_status]
-format = '([\[$all_status$ahead_behind\]]($style))' # Git 状态显示格式，包括所有状态和超前/落后信息
+format     = '([\[$all_status$ahead_behind\]]($style))' # Git 状态显示格式，包括所有状态和超前/落后信息
+style      = "cyan"
+ahead      = "⇡${count} "
+diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
+behind     = "⇣${count} "
+conflicted = " "
+up_to_date = " "
+untracked  = "? "
+modified   = " "
+stashed    = ""
+staged     = ""
+renamed    = ""
+deleted    = ""
 
 # Golang 模块配置
 [golang]

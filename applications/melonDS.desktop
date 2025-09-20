@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=melonDS
+Exec=/home/uglyboy/Downloads/melonDS/melonDS
+Icon=/home/uglyboy/Downloads/melonDS/melon.png
+Type=Application
+StartupNotify=false
+NoDisplay=true
+Hidden=false
+Terminal=false
