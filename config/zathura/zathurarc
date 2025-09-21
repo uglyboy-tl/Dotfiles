@@ -1,3 +1,6 @@
+# Theme
+#include catppuccin-latte
+
 #粘贴版，鼠标选中即复制
 set selection-clipboard clipboard
 

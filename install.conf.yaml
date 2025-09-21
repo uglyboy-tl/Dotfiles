@@ -61,8 +61,12 @@
     $XDG_CONFIG_HOME/git/config: config/git/config       # Git 配置文件
     ## 字体配置
     $XDG_CONFIG_HOME/fontconfig/fonts.conf: config/fonts.conf # 字体配置文件
+    ## BAT 配置
+    $XDG_CONFIG_HOME/bat/config: config/bat/config
+    $XDG_CONFIG_HOME/bat/themes: config/bat/themes
     ## BTOP 配置
     $XDG_CONFIG_HOME/btop/btop.conf: config/btop/btop.conf
+    $XDG_CONFIG_HOME/btop/themes: config/btop/themes
     ## FastFetch 系统信息工具
     $XDG_CONFIG_HOME/fastfetch/config.jsonc: config/fastfetch/config.jsonc
 
@@ -72,7 +76,7 @@
     ## Newsboat RSS 阅读器
     $XDG_CONFIG_HOME/newsboat/config: config/newsboat/config
     ## Zathura PDF 阅读器
-    $XDG_CONFIG_HOME/zathura/zathurarc: config/zathurarc
+    $XDG_CONFIG_HOME/zathura: config/zathura
     ## MUTT 邮件客户端
     $XDG_CONFIG_HOME/offlineimap/config: config/mutt/offlineimaprc # 邮件同步
     $XDG_CONFIG_HOME/mutt/muttrc: config/mutt/muttrc              # Mutt 主配置
@@ -107,9 +111,7 @@
     $XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml: config/fcitx5-rime/luna_pinyin.custom.yaml # 拼音输入方案
 
     ## Alacritty 终端模拟器
-    $XDG_CONFIG_HOME/alacritty/alacritty.toml: config/alacritty/alacritty.toml # 主配置
-    $XDG_CONFIG_HOME/alacritty/Nord.toml: config/alacritty/nord.toml           # Nord 主题
-    $XDG_CONFIG_HOME/alacritty/keybindings.toml: config/alacritty/keybindings.toml # 键位绑定
+    $XDG_CONFIG_HOME/alacritty: config/alacritty
 
     ## 动态壁纸
     $XDG_DATA_HOME/dynamic-wallpaper: data/dynamic-wallpaper        # 动态壁纸资源
