@@ -47,7 +47,11 @@
 
     # Other Configs
     ~/.config/git/config: config/git/config
-    ~/.config/pip/pip.conf: config/pip/pip.conf
+
+    ## Python 包管理配置
+    $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf # PIP 镜像源配置
+    ## UV Python 包管理器
+    $XDG_CONFIG_HOME/uv/uv.toml: config/sources/uv.toml    # UV 配置
 
     # lf
     ~/.config/lf: config/lf
