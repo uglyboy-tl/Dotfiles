@@ -149,13 +149,16 @@ case "$(file -Lb --mime-type -- "$file")" in
         exit 5
         ;;
     */pdf )
-        CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/lf/thumb.$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$(readlink -f "$file")" | sha256sum | cut -d' ' -f1).jpg"
-        if [ ! -f "$CACHE" ] || [ "$(stat --printf '%Y' -- "$file")" -gt "$(stat --printf '%Y' -- "$CACHE")" ]; then
+        # 获取文件的元数据并生成缓存路径
+        CACHE_KEY=$(stat --printf '%n\0%i\0%F\0%s\0%W\0%Y' -- "$file" | sha256sum | cut -d' ' -f1)
+        CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/lf/thumb.$CACHE_KEY"
+        cache="$CACHE.jpg"
+        if [ ! -f "$cache" ] || [ "$(stat --printf '%Y' -- "$file")" -gt "$(stat --printf '%Y' -- "$cache")" ]; then
             if ! pdftoppm -jpeg -f 1 -singlefile -tiffcompression jpeg "$file" "$CACHE"; then
                 handle_error "生成 PDF 缩略图失败"
             fi
         fi
-        if ! draw_image "$CACHE" "$@"; then
+        if ! draw_image "$cache" "$@"; then
             handle_error "绘制图片失败"
         fi
 		;;
