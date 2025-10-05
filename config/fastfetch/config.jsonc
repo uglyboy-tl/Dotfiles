@@ -1,25 +1,35 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
-  "logo": {
-    "type": "file",
-    "source": "~/.config/omarchy/branding/about.txt",
-    "color": { "1": "green" },
-    "padding": {
-      "top": 2,
-      "right": 6,
-      "left": 2
+	"logo": {
+		"source": "ganyu.txt",
+		"height": 20,
+		"padding": {
+			"top": 1
+		}
+	},
+  "display": {
+    "separator": " ➜ ",
+    "bar": {
+        "char": {
+            "elapsed": "=",
+            "total": "-"
+        },
+        "width": 13
+    },
+    "percent": {
+        "type": 2
     }
   },
   "modules": [
-    "break",
     {
       "type": "custom",
-      "format": "\u001b[90m┌──────────────────────Hardware──────────────────────┐"
+      "format": "\u001b[90m┌────────────────────── Hardware ──────────────────────┐"
     },
     {
       "type": "host",
-      "key": " PC",
-      "keyColor": "green"
+      "key": " PC",
+      "keyColor": "green",
+      "format": "{5} {1} Type {2}"
     },
     {
       "type": "cpu",
@@ -29,13 +39,8 @@
     },
     {
       "type": "gpu",
-      "key": "│ ├",
+      "key": "│ ├󰢮",
       "detectionMethod": "pci",
-      "keyColor": "green"
-    },
-    {
-      "type": "display",
-      "key": "│ ├󱄄",
       "keyColor": "green"
     },
     {
@@ -45,53 +50,37 @@
     },
     {
       "type": "memory",
-      "key": "│ ├",
+      "key": "│ ├",
       "keyColor": "green"
     },
     {
       "type": "swap",
-      "key": "└ └󰓡 ",
+      "key": "│ ├󰓡",
+      "keyColor": "green"
+    },
+      {
+      "type": "display",
+      "key": "│ ├󱄄",
+      "keyColor": "green"
+    },
+    {
+      "type": "sound",
+      "key": "│ └󰝚",
       "keyColor": "green"
     },
     {
       "type": "custom",
-      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
-    },
-    "break",
-    {
-      "type": "custom",
-      "format": "\u001b[90m┌──────────────────────Software──────────────────────┐"
+      "format": "\u001b[90m├────────────────────── Software ──────────────────────┤"
     },
     {
-      "type": "command",
-      "key": "\ue900 OS",
+      "type": "os",
+      "key": " OS",
       "keyColor": "blue",
-      "text": "version=$(omarchy-version); echo \"Omarchy $version\""
-    },
-    {
-      "type": "command",
-      "key": "│ ├󰘬",
-      "keyColor": "blue",
-      "text": "branch=$(omarchy-version-branch); echo \"$branch\""
+      "format": "{name} ({codename}) {version} {arch}"
     },
     {
       "type": "kernel",
       "key": "│ ├",
-      "keyColor": "blue"
-    },
-    {
-      "type": "wm",
-      "key": "│ ├",
-      "keyColor": "blue"
-    },
-    {
-      "type": "de",
-      "key": " DE",
-      "keyColor": "blue"
-    },
-    {
-      "type": "terminal",
-      "key": "│ ├",
       "keyColor": "blue"
     },
     {
@@ -100,29 +89,59 @@
       "keyColor": "blue"
     },
     {
+      "type": "shell",
+      "key": "│ └",
+      "keyColor": "blue"
+    },
+    {
+      "type": "de",
+      "key": " DE",
+      "keyColor": "blue"
+    },
+    {
+      "type": "lm",
+      "key": "│ ├󰧨",
+      "keyColor": "blue"
+    },
+    {
+      "type": "wm",
+      "key": "│ ├",
+      "keyColor": "blue"
+    },
+    {
       "type": "wmtheme",
       "key": "│ ├󰉼",
       "keyColor": "blue"
     },
     {
-      "type": "command",
-      "key": "│ ├󰸌",
-      "keyColor": "blue",
-      "text": "theme=$(omarchy-theme-current); echo -e \"$theme \\e[38m●\\e[37m●\\e[36m●\\e[35m●\\e[34m●\\e[33m●\\e[32m●\\e[31m●\""
-    },
-    {
-      "type": "terminalfont",
-      "key": "└ └",
+      "type": "icons",
+      "key": "│ ├󰀻",
       "keyColor": "blue"
     },
     {
-      "type": "custom",
-      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
+      "type": "cursor",
+      "key": "│ ├",
+      "keyColor": "blue"
     },
-    "break",
+    {
+      "type": "terminal",
+      "key": "│ ├",
+      "keyColor": "blue"
+    },
+    {
+      "type": "wallpaper",
+      "key": "│ └󰸉",
+      "keyColor": "blue"
+    },
+    {
+      "type":"colors",
+      "key": "│ └󰸌",
+      "keyColor": "blue",
+      "symbol": "circle"
+    },
     {
       "type": "custom",
-      "format": "\u001b[90m┌────────────────────Uptime / Age────────────────────┐"
+      "format": "\u001b[90m├──────────────────── Uptime / Age ────────────────────┤"
     },
     {
       "type": "command",
@@ -137,7 +156,7 @@
     },
     {
       "type": "custom",
-      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
+      "format": "\u001b[90m└──────────────────────────────────────────────────────┘"
     },
     "break"
   ]

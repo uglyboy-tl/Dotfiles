@@ -33,3 +33,5 @@
 	st = status -sb
 [url "https://xget.uglyboy.cn/gh/"]
 	insteadOf = https://github.com/
+[init]
+	defaultBranch = main

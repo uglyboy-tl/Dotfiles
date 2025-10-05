@@ -69,6 +69,8 @@
     $XDG_CONFIG_HOME/btop/themes: config/btop/themes
     ## FastFetch 系统信息工具
     $XDG_CONFIG_HOME/fastfetch/config.jsonc: config/fastfetch/config.jsonc
+    $XDG_DATA_HOME/fastfetch/presets: config/fastfetch/presets
+    $XDG_DATA_HOME/fastfetch/logos: config/fastfetch/logos
 
     # 其他应用程序配置
     ## LF 文件管理器
