@@ -2,21 +2,24 @@
 	path = dotbot
 	url = https://github.com/anishathalye/dotbot
 	ignore = dirty
+[submodule "dotbot-plugins/crontab"]
+	path = dotbot-plugins/crontab
+	url = git@github.com:codekansas/dotbot-crontab.git
+[submodule "dotbot-plugins/apt"]
+	path = dotbot-plugins/apt
+	url = https://github.com/bryant1410/dotbot-apt
 [submodule "config/vim/vim-plug"]
 	path = config/vim/vim-plug
 	url = https://github.com/junegunn/vim-plug.git
 [submodule "config/zsh/zgen"]
 	path = config/zsh/zgen
 	url = https://github.com/tarjoilija/zgen.git
-[submodule "data/dynamic-wallpaper"]
-	path = data/dynamic-wallpaper
-	url = https://github.com/adi1090x/dynamic-wallpaper
-[submodule "dotbot-plugins/crontab"]
-	path = dotbot-plugins/crontab
-	url = git@github.com:codekansas/dotbot-crontab.git
 [submodule "config/mpv/thumbfast"]
 	path = config/mpv/thumbfast
 	url = https://github.com/po5/thumbfast
 [submodule "config/mpv/uosc"]
 	path = config/mpv/uosc
 	url = https://github.com/tomasklaen/uosc
+[submodule "data/dynamic-wallpaper"]
+	path = data/dynamic-wallpaper
+	url = https://github.com/adi1090x/dynamic-wallpaper

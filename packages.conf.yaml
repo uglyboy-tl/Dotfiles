@@ -1,0 +1,24 @@
+# APT 插件默认安装
+- apt:
+  - vim
+  - git
+  - zoxide
+  - ripgrep
+  - bat
+  - duf
+  - starship
+  - fzf
+  - fastfetch
+  - git-delta
+  - ncmpcpp
+  - newsboat
+  - file
+  - ueberzug
+  - trash-cli
+  - poppler-utils
+  - libarchive-tools
+  - ffmpegthumbnailer
+  - zathura
+  - mutt
+  - offlineimap
+  - lynx

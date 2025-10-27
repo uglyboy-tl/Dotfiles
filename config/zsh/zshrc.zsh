@@ -27,10 +27,11 @@ export FZF_ALT_C_COMMAND="rg --sort-files --files --null 2> /dev/null | xargs -0
 export ZGEN_DIR="$ZDOTDIR/zgen"
 source "$ZGEN_DIR/zgen.zsh"
 
+export ZSH_WAKATIME_PROJECT_DETECTION=true
+
 # Generate zgen init.sh if it doesn't exist
 if ! zgen saved; then
     zgen oh-my-zsh
-    zgen oh-my-zsh plugins/git
     zgen oh-my-zsh plugins/git-auto-fetch
     zgen oh-my-zsh plugins/extract
     case "$OS_RELEASE" in
@@ -44,11 +45,8 @@ if ! zgen saved; then
             ;;
         esac
 
-    zgen oh-my-zsh plugins/cp
-    zgen oh-my-zsh plugins/zoxide
     zgen oh-my-zsh plugins/fzf
     zgen load zsh-users/zsh-syntax-highlighting
-    zgen load wbingli/zsh-wakatime
 
     [ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
 

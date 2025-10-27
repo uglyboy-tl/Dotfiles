@@ -31,7 +31,7 @@
 [alias]
 	lg = log --oneline --graph --decorate --all
 	st = status -sb
-[url "https://xget.uglyboy.cn/gh/"]
+[url "https://xget.xi-xu.me/gh/"]
 	insteadOf = https://github.com/
 [init]
 	defaultBranch = main
