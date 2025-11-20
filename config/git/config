@@ -31,7 +31,10 @@
 [alias]
 	lg = log --oneline --graph --decorate --all
 	st = status -sb
-[url "https://xget.xi-xu.me/gh/"]
+[url "https://xget.uglyboy.cn/gh/"]
 	insteadOf = https://github.com/
 [init]
 	defaultBranch = main
+[http]
+	postBuffer = 524288000
+	maxRequests = 10
