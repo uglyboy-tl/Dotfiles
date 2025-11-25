@@ -78,7 +78,7 @@ for i in ${office[@]}; do
 done
 
 ## 文件管理器规则
-declare -a files=(lf) # 定义文件管理器数组
+declare -a files=(lf steam Lutris) # 定义文件管理器数组
 for i in ${files[@]}; do
 	bspc rule -a $i desktop='^3' follow=on focus=on # 将文件管理器分配到桌面 3
 done

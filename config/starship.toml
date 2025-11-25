@@ -1,5 +1,6 @@
 # Starship 提示符的自定义配置
 palette = "catppuccin_mocha"
+command_timeout = 3600
 
 # 目录模块配置
 [directory]
