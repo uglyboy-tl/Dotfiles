@@ -84,7 +84,7 @@ for i in ${files[@]}; do
 done
 
 ## 媒体应用规则
-declare -a media=(melonDS GStreamer Io.github.celluloid_player.Celluloid mpv wemeetapp) # 定义媒体应用数组
+declare -a media=(melonDS GStreamer Io.github.celluloid_player.Celluloid mpv wemeetapp steam_proton steam_app_489830) # 定义媒体应用数组
 for i in ${media[@]}; do
 	_r $i desktop='^4' follow=on # 将媒体应用分配到桌面 4
 done

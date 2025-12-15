@@ -39,6 +39,12 @@
         path: applications/hidden/*
         relink: true
 
+    ~/.local/share/applications/:
+        create: true
+        glob: true
+        path: applications/keep/*
+        relink: true
+
     # VIM 配置
     $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc          # Vim 主配置文件
     $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug # 插件配置文件
