@@ -29,3 +29,8 @@
 	required = true
 [url "https://xget.uglyboy.cn/gh/"]
 	insteadOf = https://github.com/
+[init]
+	defaultBranch = main
+[http]
+	postBuffer = 524288000
+	maxRequests = 10
