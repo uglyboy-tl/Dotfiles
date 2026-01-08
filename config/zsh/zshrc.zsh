@@ -45,8 +45,10 @@ if ! zgen saved; then
             ;;
         esac
 
+    zgen oh-my-zsh plugins/zoxide
     zgen oh-my-zsh plugins/fzf
     zgen load zsh-users/zsh-syntax-highlighting
+    zgen load wbingli/zsh-wakatime
 
     [ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
 
@@ -54,35 +56,6 @@ if ! zgen saved; then
 fi
 
 compinit -d "$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
-alias duf='duf --only local'
-alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
-
-__ZSHPROXY_HTTP="${__ZSHPROXY_HTTP:-nas.uglyboy.cn:50172}"
-
-proxy () {
-	# http_proxy
-	export http_proxy="${__ZSHPROXY_HTTP}"
-	export HTTP_PROXY="${__ZSHPROXY_HTTP}"
-	# https_proxy
-	export https_proxy="${__ZSHPROXY_HTTP}"
-	export HTTPS_PROXY="${__ZSHPROXY_HTTP}"
-    echo "HTTP Proxy On."
-}
-
-# cmd: unset proxy
-noproxy () {
-	unset http_proxy
-	unset HTTP_PROXY
-	unset https_proxy
-	unset HTTPS_PROXY
-    echo "HTTP Proxy Off."
-}
-
-# cmd: show proxy
-show_proxy () {
-    echo "http_proxy: $__ZSHPROXY_HTTP"
-    echo "https_proxy: $__ZSHPROXY_HTTP"
-}
 
 [ -f "$ZDOTDIR/zshrc.alias" ] && source "$ZDOTDIR/zshrc.alias"
 [ -f "$ZLOCAL/zshrc.after" ] && source "$ZLOCAL/zshrc.after"
@@ -90,6 +63,4 @@ show_proxy () {
 setopt no_nomatch
 
 eval "$(starship init zsh)"
-
-
 

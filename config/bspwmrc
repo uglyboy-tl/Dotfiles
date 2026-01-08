@@ -72,25 +72,25 @@ for i in ${web[@]}; do
 done
 
 ## 办公软件规则
-declare -a office=(obsidian Typora Zotero) # 定义办公软件数组
+declare -a office=(obsidian Typora Zotero steam_app_489830) # 定义办公软件数组
 for i in ${office[@]}; do
 	_r $i desktop='^2' follow=on # 将办公软件分配到桌面 2
 done
 
 ## 文件管理器规则
-declare -a files=(lf steam Lutris) # 定义文件管理器数组
+declare -a files=(lf WeRead steam Lutris) # 定义文件管理器数组
 for i in ${files[@]}; do
 	bspc rule -a $i desktop='^3' follow=on focus=on # 将文件管理器分配到桌面 3
 done
 
 ## 媒体应用规则
-declare -a media=(melonDS GStreamer Io.github.celluloid_player.Celluloid mpv wemeetapp steam_proton steam_app_489830) # 定义媒体应用数组
+declare -a media=(melonDS GStreamer Io.github.celluloid_player.Celluloid mpv steam_proton) # 定义媒体应用数组
 for i in ${media[@]}; do
 	_r $i desktop='^4' follow=on # 将媒体应用分配到桌面 4
 done
 
 ## 聊天应用规则
-declare -a chat=(wechat Bytedance-feishu TDAppDesktop) # 定义聊天应用数组
+declare -a chat=(wechat Bytedance-feishu TDAppDesktop wemeetapp) # 定义聊天应用数组
 for i in ${chat[@]}; do
 	_r $i desktop='^5' follow=on focus=on # 将聊天应用分配到桌面 5
 done
