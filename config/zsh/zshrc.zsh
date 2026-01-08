@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export PATH="$HOME/.local/bin:$PATH"
 [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/environment" ] && source "${XDG_CONFIG_HOME:-$HOME/.config}/environment"
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
@@ -23,7 +25,6 @@ source "$ZGEN_DIR/zgen.zsh"
 # Generate zgen init.sh if it doesn't exist
 if ! zgen saved; then
     zgen oh-my-zsh
-    zgen oh-my-zsh plugins/git
     zgen oh-my-zsh plugins/git-auto-fetch
     zgen oh-my-zsh plugins/extract
     case "$OS_RELEASE" in
@@ -37,7 +38,6 @@ if ! zgen saved; then
             ;;
         esac
 
-    zgen oh-my-zsh plugins/cp
     zgen oh-my-zsh plugins/zoxide
     zgen oh-my-zsh plugins/fzf
     zgen load zsh-users/zsh-syntax-highlighting
@@ -49,8 +49,6 @@ if ! zgen saved; then
 fi
 
 compinit -d "$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
-alias duf='duf --only local'
-alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
 
 [ -f "$ZDOTDIR/zshrc.alias" ] && source "$ZDOTDIR/zshrc.alias"
 [ -f "$ZLOCAL/zshrc.after" ] && source "$ZLOCAL/zshrc.after"
@@ -58,6 +56,3 @@ alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
 setopt no_nomatch
 
 eval "$(starship init zsh)"
-
-
-
