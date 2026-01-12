@@ -37,13 +37,11 @@
     $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug # 插件配置文件
     $XDG_CONFIG_HOME/vim/plug.vim: config/vim/vim-plug/plug.vim # Vim-plug 插件管理器
 
-    # 环境变量配置
-    $XDG_CONFIG_HOME/environment: config/environment # XDG 环境变量配置
-
     # ZSH 配置
     $XDG_CONFIG_HOME/zsh/.zshrc: # Zsh 主配置文件
       path: config/zsh/zshrc.zsh
       force: true # 强制覆盖
+    $XDG_CONFIG_HOME/zsh/.zshenv: config/environment # ZSH 环境变量
     $XDG_CONFIG_HOME/zsh/zshrc.alias: config/zsh/aliases.zsh # 别名配置
     $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
     $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen # Zgen 插件管理器

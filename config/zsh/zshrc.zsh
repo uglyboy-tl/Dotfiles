@@ -1,7 +1,6 @@
 #!/bin/bash
 
 export PATH="$HOME/.local/bin:$PATH"
-[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/environment" ] && source "${XDG_CONFIG_HOME:-$HOME/.config}/environment"
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 export ZLOCAL="${XDG_CONFIG_HOME:-$HOME/.config}/local"
 export HISTFILE=$XDG_STATE_HOME/zsh/history
