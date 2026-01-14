@@ -40,7 +40,7 @@
 	# The geometry of the message window.
 	#geometry = "325x50-25+50"
 	width = 325
-	height = 120
+	height = (0, 120)
 
 	# Show how many messages are currently hidden (because of geometry).
 	indicate_hidden = yes

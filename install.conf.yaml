@@ -52,13 +52,13 @@
 
     # 环境变量配置
     ~/.xsessionrc: config/environment                    # X session 环境变量
-    $XDG_CONFIG_HOME/environment: config/environment     # XDG 环境变量配置
 
     # ZSH 配置
     $XDG_CONFIG_HOME/zsh/.zshrc:                         # Zsh 主配置文件
         path: config/zsh/zshrc.zsh
         force: true                                      # 强制覆盖
     $XDG_CONFIG_HOME/zsh/zshrc.alias: config/zsh/aliases.zsh # 别名配置
+    $XDG_CONFIG_HOME/zsh/.zshenv: config/environment # ZSH 环境变量
     $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
     $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen           # Zgen 插件管理器
 
@@ -133,6 +133,7 @@
     $XDG_CONFIG_HOME/mpv/scripts/uosc/intl: config/mpv/uosc/src/uosc/intl           # 国际化
     $XDG_CONFIG_HOME/mpv/scripts/uosc/lib: config/mpv/uosc/src/uosc/lib             # 库文件
     $XDG_CONFIG_HOME/mpv/scripts/uosc/main.lua: config/mpv/uosc/src/uosc/main.lua   # uosc 主脚本
+    $XDG_CONFIG_HOME/mpv/script-opts/uosc.conf: config/mpv/uosc.conf   # uosc 配置文件
 
 # Crontab 定时任务配置
 - crontab:
