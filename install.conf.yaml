@@ -2,17 +2,17 @@
 # 默认配置选项
 - defaults:
     link:
-      create: true # 如果目标目录不存在则创建
-      relink: true # 如果符号链接已存在则重新链接
+        create: true    # 如果目标目录不存在则创建
+        relink: true    # 如果符号链接已存在则重新链接
 
 # 清理阶段 - 删除旧的符号链接
 - clean:
-    ~/: # 清理家目录下的符号链接
-      force: true # 强制删除
-    ~/.local/bin: # 清理本地二进制目录
-      force: true
-    $XDG_CONFIG_HOME: # 清理 XDG 配置目录
-      recursive: true # 递归清理
+    ~/:                 # 清理家目录下的符号链接
+        force: true     # 强制删除
+    ~/.local/bin:       # 清理本地二进制目录
+        force: true
+    $XDG_CONFIG_HOME:   # 清理 XDG 配置目录
+        recursive: true # 递归清理
 
 # Shell 命令执行阶段
 - shell:
@@ -27,10 +27,10 @@
     # 脚本文件
     # 将 scripts/ 目录下的所有文件链接到 ~/.local/bin/
     ~/.local/bin/:
-      create: true # 创建目标目录
-      glob: true # 使用通配符匹配
-      path: scripts/* # 源文件路径
-      relink: true # 允许重新链接
+        create: true    # 创建目标目录
+        glob: true      # 使用通配符匹配
+        path: scripts/* # 源文件路径
+        relink: true    # 允许重新链接
 
     # VIM 配置
     $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc # Vim 主配置文件
@@ -38,13 +38,13 @@
     $XDG_CONFIG_HOME/vim/plug.vim: config/vim/vim-plug/plug.vim # Vim-plug 插件管理器
 
     # ZSH 配置
-    $XDG_CONFIG_HOME/zsh/.zshrc: # Zsh 主配置文件
-      path: config/zsh/zshrc.zsh
-      force: true # 强制覆盖
-    $XDG_CONFIG_HOME/zsh/.zshenv: config/environment # ZSH 环境变量
+    $XDG_CONFIG_HOME/zsh/.zshrc:                         # Zsh 主配置文件
+        path: config/zsh/zshrc.zsh
+        force: true                                      # 强制覆盖
+    $XDG_CONFIG_HOME/zsh/.zshenv: config/environment     # ZSH 环境变量
     $XDG_CONFIG_HOME/zsh/zshrc.alias: config/zsh/aliases.zsh # 别名配置
     $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
-    $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen # Zgen 插件管理器
+    $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen           # Zgen 插件管理器
 
     # tmux
     ~/.config/tmux/tmux.conf: config/tmux/tmux.conf

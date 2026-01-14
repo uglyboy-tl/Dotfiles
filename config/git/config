@@ -1,6 +1,7 @@
 [user]
-	email = uglyboy@uglyboy.cn
-	name = uglyboy
+	email = 25730357+uglyboy-tl@users.noreply.github.com
+	name = Uglyboy
+	username = Uglyboy
 [credential]
 	helper = store
 [pull]
@@ -27,6 +28,9 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 	required = true
+[alias]
+	lg = log --oneline --graph --decorate --all
+	st = status -sb
 [url "https://xget.uglyboy.cn/gh/"]
 	insteadOf = https://github.com/
 [init]
