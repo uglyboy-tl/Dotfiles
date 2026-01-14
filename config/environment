@@ -36,6 +36,9 @@ export NPM_CONFIG_TMP="$XDG_RUNTIME_DIR"/npm
 # [openjdk]
 export _JAVA_OPTIONS=-Djava.util.prefs.userRoot="$XDG_CONFIG_HOME"/java
 
+# [python]
+export PYTHONSTARTUP="$XDG_CONFIG_HOME"/python/pythonrc
+
 # [sqlite]
 export SQLITE_HISTORY="$XDG_CACHE_HOME"/sqlite_history
 
