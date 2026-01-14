@@ -93,6 +93,47 @@ hatch fmt --check
 hatch build
 ```
 
+### 项目启动更新流程
+每次项目启动时，AI代理应优先检查并更新远端代码和子模块：
+
+```bash
+# 1. 检查远端更新
+git fetch --all
+
+# 2. 更新当前分支（如果存在上游分支）
+git pull --rebase
+
+# 3. 更新所有子模块
+git submodule update --init --recursive
+
+# 4. 同步子模块配置
+git submodule sync --recursive
+
+# 5. 更新子模块内容
+git submodule foreach --recursive git pull origin main
+
+# 完整的启动更新脚本示例
+#!/usr/bin/env bash
+set -e
+
+echo "🔍 检查远端更新..."
+git fetch --all
+
+echo "📥 更新当前分支..."
+if git rev-parse --abbrev-ref @{u} >/dev/null 2>&1; then
+    git pull --rebase
+else
+    echo "⚠️  当前分支没有设置上游分支，跳过pull"
+fi
+
+echo "🔄 更新子模块..."
+git submodule update --init --recursive
+git submodule sync --recursive
+git submodule foreach --recursive git pull origin main
+
+echo "✅ 项目更新完成"
+```
+
 ### 测试脚本
 ```bash
 # 运行动态壁纸测试脚本
@@ -496,6 +537,7 @@ cat dotbot.log
 9. **配置验证**: 修改后验证 YAML 语法和链接正确性
 10. **渐进式更改**: 一次只做一个小的更改，验证后再继续
 11. **跨分支同步**: 通用配置应添加到 main 分支，然后合并到 PC 分支
+12. **项目启动更新**: 每次项目启动时，优先检查并更新远端代码和子模块，确保工作在最新代码基础上
 
 ---
 
