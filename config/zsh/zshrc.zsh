@@ -62,7 +62,3 @@ compinit -d "$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
 setopt no_nomatch
 
 eval "$(starship init zsh)"
-
-
-# opencode
-export PATH=/home/uglyboy/.opencode/bin:$PATH
