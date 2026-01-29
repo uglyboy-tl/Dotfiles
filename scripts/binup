@@ -1,0 +1,1532 @@
+#!/usr/bin/env bash
+# 自动生成 - 2026-01-23T12:13:49+08:00
+set -euo pipefail
+
+# 脚本配置 (构建时指定: SCRIPT_NAME=BinUp)
+SCRIPT_NAME="BinUp"
+VERSION="0.1.0"
+
+
+##### BEGIN: lib/config.sh #####
+
+
+# Global configuration variables (export for subshells)
+# SCRIPT_NAME 从前文继承，未设置时默认为 BinUp
+: "${SCRIPT_NAME:=BinUp}"
+CONFIG_FILE=""
+SETTINGS_DOWNLOAD_DIR="downloads"
+SETTINGS_PROXY_PREFIX=""
+SETTINGS_LOG_LEVEL="info"
+SETTINGS_GITHUB_TOKEN=""
+CONFIG_LOADED=false
+
+# Find configuration file path (priority order):
+# 1. BIN_UPDATER_CONFIG environment variable
+# 2. XDG_CONFIG_HOME/{script_name_lowercase}/config.toml
+# 3. ~/.config/{script_name_lower}/config.toml
+# 4. config.toml (local directory)
+# Returns the path on success, nothing on failure
+find_config_file() {
+    local script_name_lower="${SCRIPT_NAME,,}"
+
+    if [[ -n "${BIN_UPDATER_CONFIG:-}" && -f "$BIN_UPDATER_CONFIG" ]]; then
+        echo "$BIN_UPDATER_CONFIG"
+        return 0
+    elif [[ -n "${XDG_CONFIG_HOME:-}" && -f "${XDG_CONFIG_HOME}/${script_name_lower}/config.toml" ]]; then
+        echo "${XDG_CONFIG_HOME}/${script_name_lower}/config.toml"
+        return 0
+    elif [[ -f "$HOME/.config/${script_name_lower}/config.toml" ]]; then
+        echo "$HOME/.config/${script_name_lower}/config.toml"
+        return 0
+    elif [[ -f "config.toml" ]]; then
+        echo "config.toml"
+        return 0
+    fi
+
+    return 1
+}
+
+# Get config file path to edit (creates if doesn't exist)
+get_edit_config_path() {
+    local script_name_lower="${SCRIPT_NAME,,}"
+
+    # Try to find existing config first
+    if find_config_file >/dev/null 2>&1; then
+        find_config_file
+        return 0
+    fi
+
+    # No existing config, determine where to create
+    if [[ -n "${BIN_UPDATER_CONFIG:-}" ]]; then
+        echo "$BIN_UPDATER_CONFIG"
+    else
+        echo "${XDG_CONFIG_HOME:-$HOME/.config}/${script_name_lower}/config.toml"
+    fi
+}
+
+# Create empty config file with default template
+create_default_config() {
+    local config_path="$1"
+    local config_dir
+    config_dir=$(dirname "$config_path")
+
+    # Create parent directory if needed
+    if [[ ! -d "$config_dir" ]]; then
+        mkdir -p "$config_dir"
+        log_info "Created config directory: $config_dir"
+    fi
+
+    log_info "Creating default config: $config_path"
+    cat > "$config_path" << 'EOF'
+# Bin Updater Configuration
+# Edit this file to configure package sources and settings
+
+[settings]
+# download_dir = "downloads"
+# proxy_prefix = ""
+# log_level = "info"  # debug, info, warn, error, none
+# github_token = ""
+
+# [[packages.<name>]]
+# repo = "owner/repo"
+# file_pattern = "<name>-{os}-{arch}.tar.gz"
+# file_extension = "tar.gz"
+# version_type = "release"  # release or tag
+# binary_name = "<binary>"
+
+# Example configuration:
+# [packages.ripgrep]
+# repo = "BurntSushi/ripgrep"
+# file_pattern = "ripgrep-{os}-{arch}.tar.gz"
+# file_extension = "tar.gz"
+# version_type = "release"
+# binary_name = "rg"
+EOF
+}
+
+# Load configuration from TOML file
+load_config() {
+    local config_file
+
+    # Find config file
+    config_file=$(find_config_file) || {
+        # No existing config, create one automatically
+        local new_config_path
+        new_config_path=$(get_edit_config_path)
+        create_default_config "$new_config_path"
+        config_file="$new_config_path"
+        log_info "Config file created. Edit it with: $0 edit"
+    }
+
+    log_debug "Loading config from: $config_file"
+    CONFIG_FILE="$config_file"
+
+    # Parse [settings] section with improved TOML parsing
+    if grep -q '^\[settings\]' "$config_file"; then
+        local in_settings=false
+        while IFS= read -r line; do
+            # Remove inline comments and trim trailing whitespace
+            line="${line%%#*}"
+            line="${line%"${line##*[![:space:]]}"}"
+
+            if [[ -z "$line" ]]; then
+                continue  # Skip empty lines
+            fi
+
+            if [[ "$line" == "[settings]" ]]; then
+                in_settings=true
+            elif [[ "$line" == "["* ]] && [[ "$in_settings" == true ]]; then
+                break
+            elif [[ "$in_settings" == true ]]; then
+                # Match key = value with optional quotes and spaces
+                if [[ "$line" =~ ^[[:space:]]*([a-zA-Z_][a-zA-Z0-9_]*)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
+                    local key="${BASH_REMATCH[1]}"
+                    local value="${BASH_REMATCH[2]}"
+
+                    # Remove surrounding quotes if present
+                    if [[ "$value" =~ ^\"(.*)\"$ ]]; then
+                        value="${BASH_REMATCH[1]}"
+                    elif [[ "$value" =~ ^\'(.*)\'$ ]]; then
+                        value="${BASH_REMATCH[1]}"
+                    fi
+
+                    case "$key" in
+                        download_dir)
+                            SETTINGS_DOWNLOAD_DIR="$value"
+                            ;;
+                        proxy_prefix)
+                            SETTINGS_PROXY_PREFIX="$value"
+                            ;;
+                        log_level)
+                            SETTINGS_LOG_LEVEL="$value"
+                            ;;
+                        github_token)
+                            SETTINGS_GITHUB_TOKEN="$value"
+                            # Also set as environment variable for GitHub API
+                            if [[ -n "$value" ]]; then
+                                export GITHUB_TOKEN="$value"
+                            fi
+                            ;;
+                    esac
+                fi
+            fi
+        done < "$config_file"
+    fi
+
+    # Apply environment variable overrides
+    if [[ -n "${BIN_UPDATER_DOWNLOAD_DIR:-}" ]]; then
+        SETTINGS_DOWNLOAD_DIR="$BIN_UPDATER_DOWNLOAD_DIR"
+        log_debug "Using download dir from environment: $SETTINGS_DOWNLOAD_DIR"
+    fi
+
+    # Validate and secure download directory path
+    if [[ -n "$SETTINGS_DOWNLOAD_DIR" ]]; then
+        # Get absolute path and canonicalize (resolve symlinks, remove .., etc.)
+        local abs_download_dir
+        abs_download_dir="$(realpath --canonicalize-missing "$SETTINGS_DOWNLOAD_DIR")"
+
+        # If it's an absolute path outside current directory, allow it
+        # (this is useful for external download directories)
+        if [[ "$abs_download_dir" != /* ]]; then
+            # Relative path - ensure it's within the current directory tree for security
+            local current_dir
+            current_dir="$(pwd)"
+            if [[ "$abs_download_dir" != "$current_dir"/* ]] && [[ "$abs_download_dir" != "$current_dir" ]]; then
+                log_error "Download directory path traversal detected: $SETTINGS_DOWNLOAD_DIR"
+                exit 1
+            fi
+        fi
+
+        SETTINGS_DOWNLOAD_DIR="$abs_download_dir"
+    fi
+
+    # 解析包配置
+    if [[ -f "_NONE_/lib/packages.sh" ]]; then
+        source "_NONE_/lib/packages.sh"
+    fi
+
+    if ! declare -f init_logging >/dev/null 2>&1; then
+        log_error "Connot load lib/packages.sh";
+    else
+        parse_packages
+    fi
+
+    # Create necessary directories with error handling
+    mkdir -p "$SETTINGS_DOWNLOAD_DIR" || {
+        log_error "Failed to create download directory: $SETTINGS_DOWNLOAD_DIR"
+        exit 1
+    }
+}
+
+##### END: lib/config.sh #####
+
+##### BEGIN: lib/deps.sh #####
+
+
+# Dependency check utilities
+
+# Check required dependencies
+check_dependencies() {
+    local missing_deps=()
+
+    # Check for required commands (jq and tar are strictly required)
+    command -v jq >/dev/null 2>&1 || missing_deps+=("jq")
+    command -v tar >/dev/null 2>&1 || missing_deps+=("tar")
+
+    # Check for download tools (curl or wget, at least one required)
+    local has_download_tool=false
+    command -v curl >/dev/null 2>&1 && has_download_tool=true
+    command -v wget >/dev/null 2>&1 && has_download_tool=true
+
+    if [[ "$has_download_tool" == "false" ]]; then
+        missing_deps+=("curl or wget")
+    fi
+
+    if [[ ${#missing_deps[@]} -gt 0 ]]; then
+        log_error "Missing required dependencies: ${missing_deps[*]}"
+        echo "Error: Missing required dependencies: ${missing_deps[*]}"
+        echo "Please install them and try again."
+        return 1
+    fi
+
+    # Check for optional but recommended commands
+    local optional_missing=()
+    command -v curl >/dev/null 2>&1 || optional_missing+=("curl")
+    command -v wget >/dev/null 2>&1 || optional_missing+=("wget")
+    command -v unzip >/dev/null 2>&1 || optional_missing+=("unzip")
+    command -v gzip >/dev/null 2>&1 || optional_missing+=("gzip")
+
+    if [[ ${#optional_missing[@]} -gt 0 ]]; then
+        log_warn "Missing optional dependencies: ${optional_missing[*]}"
+        echo "Warning: Missing optional dependencies: ${optional_missing[*]}"
+        echo "  Download tools (curl/wget) and archive tools (unzip/gzip) are recommended."
+    fi
+
+    log_info "All required dependencies are available"
+
+    return 0
+}
+
+# Print dependency status
+print_dependency_status() {
+    echo "Dependency Status:"
+    echo "=================="
+
+    # Required dependencies
+    local deps=("jq" "tar")
+    for dep in "${deps[@]}"; do
+        if command -v "$dep" >/dev/null 2>&1; then
+            local version
+            version=$($dep --version 2>/dev/null | head -1 || echo "unknown")
+            echo "  $dep: ✓ ($version)"
+        else
+            echo "  $dep: ✗ (missing, required)"
+        fi
+    done
+
+    # Download tools (at least one required)
+    echo ""
+    echo "Download tools (need at least one):"
+    local download_tools=("curl" "wget")
+    local has_tool=false
+    for dep in "${download_tools[@]}"; do
+        if command -v "$dep" >/dev/null 2>&1; then
+            local version
+            version=$($dep --version 2>/dev/null | head -1 || echo "unknown")
+            echo "  $dep: ✓ ($version)"
+            has_tool=true
+        else
+            echo "  $dep: ✗ (missing, recommended)"
+        fi
+    done
+    if [[ "$has_tool" == "false" ]]; then
+        echo "  ⚠️  No download tool found! Install curl or wget."
+    fi
+
+    echo ""
+    echo "Optional:"
+    local optional_deps=("unzip" "gzip")
+    for dep in "${optional_deps[@]}"; do
+        if command -v "$dep" >/dev/null 2>&1; then
+            local version
+            version=$($dep --version 2>/dev/null | head -1 || echo "unknown")
+            echo "  $dep: ✓ ($version)"
+        else
+            echo "  $dep: ✗ (missing, optional)"
+        fi
+    done
+}
+
+##### END: lib/deps.sh #####
+
+##### BEGIN: lib/download.sh #####
+
+
+# 下载工具选择（优先级: curl > wget）
+_DOWNLOAD_TOOL=""
+_DOWNLOAD_TOOL_SELECTED=false
+
+# 获取下载工具名称
+_get_download_tool() {
+    if [[ "$_DOWNLOAD_TOOL_SELECTED" == "false" ]]; then
+        if command -v curl >/dev/null 2>&1; then
+            _DOWNLOAD_TOOL="curl"
+        elif command -v wget >/dev/null 2>&1; then
+            _DOWNLOAD_TOOL="wget"
+        else
+            _DOWNLOAD_TOOL=""
+        fi
+        _DOWNLOAD_TOOL_SELECTED=true
+    fi
+    echo "$_DOWNLOAD_TOOL"
+}
+
+# 使用 curl 下载
+_download_with_curl() {
+    local url="$1"
+    local output_file="$2"
+    # -L: 跟踪重定向
+    # -#: 显示进度条
+    # -C -: 断点续传
+    curl -4 -L -C - -o "$output_file" "$url"
+}
+
+# 使用 wget 下载
+_download_with_wget() {
+    local url="$1"
+    local output_file="$2"
+    # -c: 断点续传
+    # --progress=dot: 使用点状进度条（更简洁）
+    # -O: 输出到文件
+    wget -c --progress=dot -O "$output_file" "$url"
+}
+
+# 下载文件（支持代理前缀，自动选择工具）
+download_file() {
+    local url="$1"
+    local output_file="$2"
+
+    # 如果配置了代理前缀，修改 URL
+    local actual_url="$url"
+    if [[ -n "$SETTINGS_PROXY_PREFIX" ]]; then
+        actual_url="${url#https://github.com/}"
+        actual_url="${SETTINGS_PROXY_PREFIX}${actual_url}"
+    fi
+
+    # 输出下载 URL
+    echo "  [URL] $actual_url"
+
+    # 选择下载工具
+    local tool
+    tool=$(_get_download_tool)
+
+    if [[ -z "$tool" ]]; then
+        echo "  [错误] 未找到 curl 或 wget，无法下载"
+        return 1
+    fi
+
+    echo "  [工具] 使用 $tool 下载"
+
+    # 执行下载
+    case "$tool" in
+        curl)
+            _download_with_curl "$actual_url" "$output_file"
+            ;;
+        wget)
+            _download_with_wget "$actual_url" "$output_file"
+            ;;
+    esac
+}
+
+# 检查下载工具是否可用
+check_download_tool() {
+    local tool
+    tool=$(_get_download_tool)
+    if [[ -n "$tool" ]]; then
+        return 0
+    fi
+    return 1
+}
+
+# 备份文件到 downloads/backups 目录（使用移动而非复制）
+backup_file() {
+    local package="$1"
+    local version="$2"
+    local filename="$3"
+
+    local source_file="$SETTINGS_DOWNLOAD_DIR/$filename"
+    local backup_dir="$SETTINGS_DOWNLOAD_DIR/backups"
+    local timestamp=$(date +%Y%m%d-%H%M%S)
+    
+    # 检查文件名是否有后缀
+    if [[ "$filename" =~ \. ]]; then
+        local backup_file="${backup_dir}/${package}-${version}-${timestamp}.${filename##*.}"
+    else
+        # 无后缀文件
+        local backup_file="${backup_dir}/${package}-${version}-${timestamp}"
+    fi
+
+    mkdir -p "$backup_dir"
+    mv "$source_file" "$backup_file"
+    echo "$backup_file"
+}
+
+# 解压文件
+extract_file() {
+    local filename="$1"
+    local extract_dir="$2"
+
+    local file_path="$SETTINGS_DOWNLOAD_DIR/$filename"
+    mkdir -p "$extract_dir"
+
+    # 检查是否是无后缀的二进制文件（直接提供的可执行文件）
+    if [[ ! "$filename" =~ \. ]]; then
+        # 无后缀文件，直接复制到解压目录
+        cp "$file_path" "$extract_dir/"
+        chmod +x "$extract_dir/$(basename "$filename")"
+        return 0
+    fi
+
+    # 根据文件扩展名选择解压方式
+    if [[ "$filename" == *.zip ]]; then
+        unzip -q "$file_path" -d "$extract_dir"
+    elif [[ "$filename" == *.tar.gz ]] || [[ "$filename" == *.tgz ]]; then
+        tar -xzf "$file_path" -C "$extract_dir"
+    elif [[ "$filename" == *.tar.xz ]] || [[ "$filename" == *.txz ]]; then
+        tar -xJf "$file_path" -C "$extract_dir"
+    elif [[ "$filename" == *.tar.bz2 ]] || [[ "$filename" == *.tbz2 ]]; then
+        tar -xjf "$file_path" -C "$extract_dir"
+    else
+        return 1
+    fi
+}
+
+# 清理旧版本文件（保留最新N个）
+cleanup_old_versions() {
+    local package="$1"
+    local keep="${2:-3}"
+
+    # 保留最新的 keep 个文件
+    ls -t "$SETTINGS_DOWNLOAD_DIR"/${package}-* 2>/dev/null | tail -n +$((keep + 1)) | xargs -r rm -f
+}
+
+##### END: lib/download.sh #####
+
+##### BEGIN: lib/github.sh #####
+
+
+# ============================================
+# GitHub Releases API - 精简版
+# 仅用于 update 命令获取云端信息
+# ============================================
+
+_github_fetch_release() {
+    local repo="$1"
+    local version_type="${2:-release}"
+
+    local api_url="https://api.github.com/repos/$repo/releases"
+    local response
+
+    local curl_args=("-s" "-4")
+
+    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        curl_args+=("-H" "Authorization: token $GITHUB_TOKEN")
+    fi
+
+    response=$(curl "${curl_args[@]}" "$api_url")
+
+    if [[ -z "$response" ]]; then
+        log_error "Failed to fetch releases for $repo"
+        return 1
+    fi
+
+    if echo "$response" | grep -q "rate limit"; then
+        log_error "GitHub API rate limit exceeded"
+        return 1
+    fi
+
+    if [[ "$version_type" == "release" ]]; then
+        echo "$response" | jq -r '[.[] | select(.prerelease == false)][0]'
+    else
+        echo "$response" | jq -r '.[0]'
+    fi
+}
+
+# 在 assets 中查找匹配的下载 URL
+_find_matching_asset_url() {
+    local assets="$1"
+    local full_pattern="$2"
+
+    echo "$assets" | jq -r ".[] | select(.name | test(\"$full_pattern\"; \"i\")) | .browser_download_url" | head -1
+}
+
+# 清理版本号：去掉任意前缀，只保留数字版本
+_clean_version() {
+    local version="$1"
+    # 匹配类似 1.2.3, 1.2 这样的版本号格式，并去掉前缀
+    if [[ "$version" =~ ([0-9]+\.[0-9]+(\.[0-9]+)?) ]]; then
+        echo "${BASH_REMATCH[1]}"
+    else
+        echo "$version"
+    fi
+}
+
+# 获取最新版本和下载 URL
+# 参数: $1=仓库名, $2=版本类型, $3=file_pattern, $4=file_extension
+# 输出: VERSION|||URL
+get_latest_version_and_url() {
+    local repo="$1"
+    local version_type="${2:-release}"
+    local file_pattern="$3"
+    local file_extension="$4"
+
+    local latest
+    latest=$(_github_fetch_release "$repo" "$version_type") || return 1
+
+    [[ "$latest" == "null" ]] && return 1
+
+    local version
+    version=$(echo "$latest" | jq -r '.tag_name // .name')
+    version=$(_clean_version "$version")
+    [[ -z "$version" || "$version" == "null" ]] && return 1
+
+    local assets
+    assets=$(echo "$latest" | jq -r '.assets')
+
+    # 使用 platform.sh 的函数构建正则表达式，一次匹配所有变体
+    local pattern
+    pattern=$(build_pattern_with_placeholders "$file_pattern")
+    pattern="${pattern//\*/.*}"
+    pattern="${pattern//\?/.}"
+
+    # 构建完整的正则表达式用于匹配
+    local full_pattern="$pattern"
+    if [[ -n "$file_extension" ]]; then
+        full_pattern="${pattern}[.][^.]*${file_extension}$"
+    else
+        # 无后缀文件，匹配到文件末尾
+        full_pattern="${pattern}$"
+    fi
+
+    log_debug "Matching regex: $full_pattern"
+
+    local download_url
+    download_url=$(_find_matching_asset_url "$assets" "$full_pattern")
+
+    [[ -z "$download_url" || "$download_url" == "null" ]] && return 1
+
+    echo "${version}|||${download_url}"
+}
+
+##### END: lib/github.sh #####
+
+##### BEGIN: lib/log.sh #####
+
+
+# Comprehensive logging module for bin-updater
+# Features: timestamped log files, auto-cleanup, silent terminal for log functions
+
+
+readonly LOG_LEVEL_DEBUG=0
+readonly LOG_LEVEL_INFO=1
+readonly LOG_LEVEL_WARN=2
+readonly LOG_LEVEL_ERROR=3
+readonly LOG_LEVEL_NONE=4
+
+SETTINGS_LOG_LEVEL="${SETTINGS_LOG_LEVEL:-info}"
+
+# 从 config.sh 读取脚本名称
+SCRIPT_NAME_LOWER="${SCRIPT_NAME,,}"
+
+# XDG 数据目录：$XDG_DATA_HOME/{script_name_lower}/logs
+# 默认回退：~/.local/share/{script_name_lower}/logs
+if [[ -n "${XDG_DATA_HOME:-}" ]]; then
+    LOG_DIR="${XDG_DATA_HOME}/${SCRIPT_NAME_LOWER}/logs"
+else
+    LOG_DIR="${HOME}/.local/share/${SCRIPT_NAME_LOWER}/logs"
+fi
+
+LOG_FILE=""
+LOG_MAX_FILES=10
+
+LOG_FD=""
+
+_cleanup_old_logs() {
+    local count=0
+    for log in "$LOG_DIR"/${SCRIPT_NAME_LOWER}-*.log; do
+        [[ -f "$log" ]] || continue
+        ((count++)) || true
+    done
+
+    if [[ $count -gt $LOG_MAX_FILES ]]; then
+        local to_delete=$((count - LOG_MAX_FILES))
+        for log in "$LOG_DIR"/${SCRIPT_NAME_LOWER}-*.log; do
+            [[ -f "$log" ]] || continue
+            rm -f "$log"
+            ((to_delete--)) || true
+            [[ $to_delete -eq 0 ]] && break
+        done
+    fi
+}
+
+init_logging() {
+    if [[ ! -d "$LOG_DIR" ]]; then
+        mkdir -p "$LOG_DIR" || {
+            echo "[ERROR] Failed to create log directory: $LOG_DIR" >&2
+            return 1
+        }
+    fi
+
+    _cleanup_old_logs
+
+    local timestamp
+    timestamp=$(date +"%Y%m%d-%H%M%S")
+    LOG_FILE="$LOG_DIR/${SCRIPT_NAME_LOWER}-${timestamp}.log"
+
+    exec 3>>"$LOG_FILE" || {
+        echo "[ERROR] Failed to open log file: $LOG_FILE" >&2
+        return 1
+    }
+    LOG_FD=3
+
+    _log_file_only "INFO" "Logging initialized. Log file: $LOG_FILE"
+}
+
+log_level_to_number() {
+    local level="${1:-info}"
+    case "${level,,}" in
+        debug) echo $LOG_LEVEL_DEBUG ;;
+        info)  echo $LOG_LEVEL_INFO ;;
+        warn|warning) echo $LOG_LEVEL_WARN ;;
+        error) echo $LOG_LEVEL_ERROR ;;
+        none)  echo $LOG_LEVEL_NONE ;;
+        *)     echo $LOG_LEVEL_INFO ;;
+    esac
+}
+
+should_log() {
+    local message_level="$1"
+    local current_level_num=$(log_level_to_number "$SETTINGS_LOG_LEVEL")
+    local message_level_num=$(log_level_to_number "$message_level")
+
+    [[ $message_level_num -ge $current_level_num ]]
+}
+
+_get_timestamp() {
+    date +"%Y-%m-%d %H:%M:%S"
+}
+
+_log_file_only() {
+    local level="$1"
+    local message="$2"
+    local timestamp=$(_get_timestamp)
+
+    if [[ -n "${LOG_FD:-}" ]]; then
+        echo "[$timestamp] [$level] $message" >&3
+    fi
+}
+
+# 用户界面输出 - 输出到终端，同时记录带时间戳的日志（去掉缩进）
+log_output() {
+    local command="${1:-OUTPUT}"
+    local message="$2"
+
+    echo "$message"
+
+    if [[ -n "${LOG_FD:-}" ]]; then
+        # 去掉缩进（两空格前缀）后写入日志
+        local log_message="${message#  }"
+        log_message="${log_message#  }"
+        echo "[$(_get_timestamp)] [$command] $log_message" >&3
+    fi
+}
+
+# 日志信息 - 只写入日志文件
+log_info() {
+    _log_file_only "INFO" "$1"
+}
+
+# 日志调试 - 只写入日志文件
+log_debug() {
+    if ! should_log "debug"; then
+        return 0
+    fi
+    _log_file_only "DEBUG" "$1"
+}
+
+# 日志警告 - 只写入日志文件
+log_warn() {
+    _log_file_only "WARN" "$1"
+}
+
+# 日志错误 - 只写入日志文件
+log_error() {
+    _log_file_only "ERROR" "$1"
+}
+
+set_log_level() {
+    local level="$1"
+    if [[ -n "$level" ]]; then
+        SETTINGS_LOG_LEVEL="$level"
+        log_info "Log level set to: $level"
+    fi
+}
+
+get_log_level() {
+    echo "$SETTINGS_LOG_LEVEL"
+}
+
+get_log_tail() {
+    local lines="${1:-50}"
+    if [[ -f "$LOG_FILE" ]]; then
+        tail -n "$lines" "$LOG_FILE"
+    fi
+}
+
+search_logs() {
+    local pattern="$1"
+    if [[ -f "$LOG_FILE" ]]; then
+        grep -E "$pattern" "$LOG_FILE"
+    fi
+}
+
+get_log_stats() {
+    local total_lines=0
+    local error_count=0
+    local warn_count=0
+
+    if [[ -f "$LOG_FILE" ]]; then
+        total_lines=$(wc -l < "$LOG_FILE")
+        error_count=$(grep -c "\[ERROR\]" "$LOG_FILE" || echo 0)
+        warn_count=$(grep -c "\[WARN\]" "$LOG_FILE" || echo 0)
+    fi
+
+    echo "Log Statistics:"
+    echo "  Total lines: $total_lines"
+    echo "  Errors: $error_count"
+    echo "  Warnings: $warn_count"
+    echo "  Log file: $LOG_FILE"
+}
+
+close_logging() {
+    if [[ -n "${LOG_FD:-}" ]]; then
+        _log_file_only "INFO" "Logging closed"
+        exec 3>&-
+        LOG_FD=""
+    fi
+}
+
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+    export -f log_info log_warn log_error log_debug
+    export -f log_output
+    export -f init_logging close_logging set_log_level get_log_level
+    export -f get_log_tail search_logs get_log_stats
+fi
+
+##### END: lib/log.sh #####
+
+##### BEGIN: lib/packages.sh #####
+
+
+# 包列表数组
+PACKAGES=()
+
+# 包配置变量（动态创建）
+# 格式: PKG_<包名>_<属性名>
+# 例如: PKG_bun_REPO, PKG_bun_FILE_PATTERN, PKG_bun_FILE_EXTENSION, etc.
+
+# 解析包配置
+parse_packages() {
+    local config_file="$CONFIG_FILE"
+    local current_package=""
+
+
+    if declare -f log > /dev/null; then
+        log_debug "Parsing packages from: $config_file"
+    fi
+
+    # 清空包列表
+    PACKAGES=()
+
+    # 解析 [packages.<name>] 部分
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # 检查是否是包配置段的开始
+        if [[ "$line" =~ ^\[packages\.([a-zA-Z0-9_-]+)\]$ ]]; then
+            current_package="${BASH_REMATCH[1]}"
+            PACKAGES+=("$current_package")
+
+            # 初始化该包的变量
+            declare -g "PKG_${current_package}_REPO="
+            declare -g "PKG_${current_package}_FILE_PATTERN="
+            declare -g "PKG_${current_package}_FILE_EXTENSION="
+            declare -g "PKG_${current_package}_VERSION_TYPE=release"
+            declare -g "PKG_${current_package}_BINARY_NAME=$current_package"
+
+        # 在包配置段中，解析属性
+        elif [[ -n "$current_package" ]]; then
+            # 跳过空行和注释
+            [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+
+            # 解析各个属性（支持带引号和不带引号的值）
+            if [[ "$line" =~ ^repo[[:space:]]*=[[:space:]]*\"?([^\"#\"]*)\"?[[:space:]]*(#.*)?$ ]]; then
+                declare -g "PKG_${current_package}_REPO=${BASH_REMATCH[1]}"
+            elif [[ "$line" =~ ^file_pattern[[:space:]]*=[[:space:]]*\"([^\"]+)\" ]]; then
+                declare -g "PKG_${current_package}_FILE_PATTERN=${BASH_REMATCH[1]}"
+            elif [[ "$line" =~ ^file_extension[[:space:]]*=[[:space:]]*\"([^\"]+)\" ]]; then
+                declare -g "PKG_${current_package}_FILE_EXTENSION=${BASH_REMATCH[1]}"
+            elif [[ "$line" =~ ^version_type[[:space:]]*=[[:space:]]*\"([^\"]+)\" ]]; then
+                declare -g "PKG_${current_package}_VERSION_TYPE=${BASH_REMATCH[1]}"
+            elif [[ "$line" =~ ^binary_name[[:space:]]*=[[:space:]]*\"([^\"]+)\" ]]; then
+                declare -g "PKG_${current_package}_BINARY_NAME=${BASH_REMATCH[1]}"
+            fi
+        fi
+    done < "$config_file"
+
+    # 输出日志
+    if declare -f log_info > /dev/null; then
+        log_info "Loaded ${#PACKAGES[@]} packages: ${PACKAGES[*]}"
+    fi
+}
+
+# 获取包属性值
+get_package_property() {
+    local package="$1"
+    local property="$2"
+    local var_name="PKG_${package}_${property}"
+
+    # 检查包是否存在
+    if ! printf '%s\n' "${PACKAGES[@]}" | grep -q "^${package}$"; then
+        return 1
+    fi
+
+    # 返回属性值
+    echo "${!var_name}"
+}
+
+# 检查包是否存在
+package_exists() {
+    local package="$1"
+    printf '%s\n' "${PACKAGES[@]}" | grep -q "^${package}$"
+}
+
+# 获取所有包名
+get_packages() {
+    printf '%s\n' "${PACKAGES[@]}"
+}
+
+##### END: lib/packages.sh #####
+
+##### BEGIN: lib/platform.sh #####
+
+
+OS=""
+ARCH=""
+
+detect_platform() {
+    OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+    case "$OS" in
+        darwin)  OS="macos" ;;
+        linux)   OS="linux" ;;
+        mingw*|msys*|cygwin*) OS="windows" ;;
+    esac
+
+    ARCH="$(uname -m)"
+    case "$ARCH" in
+        x86_64|x64|amd64) ARCH="x86_64" ;;
+        aarch64|arm64)    ARCH="aarch64" ;;
+        armv7l|armhf)     ARCH="armv7l" ;;
+        i686|i386|i586)   ARCH="i686" ;;
+    esac
+
+    log_debug "Detected platform: $OS-$ARCH"
+}
+
+# Get regex pattern for architecture (includes all known variants)
+_get_arch_regex() {
+    [[ -z "$ARCH" ]] && detect_platform
+
+    case "$ARCH" in
+        x86_64)  echo "(x86_64|x64|amd64)" ;;
+        aarch64) echo "(aarch64|arm64)" ;;
+        armv7l)  echo "(armv7l|armhf|armv7hl|armv7l-unknown)" ;;
+        i686)    echo "(i686|i386|i586)" ;;
+        *)       echo "$ARCH" ;;
+    esac
+}
+
+# Replace {os} and {arch} placeholders
+build_pattern_with_placeholders() {
+    local pattern="$1"
+
+    [[ -z "$OS" || -z "$ARCH" ]] && detect_platform
+
+    [[ "$pattern" == *"{os}"* ]] && pattern="${pattern//\{os\}/$OS}"
+    [[ "$pattern" == *"{arch}"* ]] && pattern="${pattern//\{arch\}/$(_get_arch_regex)}"
+
+    echo "$pattern"
+}
+
+##### END: lib/platform.sh #####
+
+##### BEGIN: lib/versions.sh #####
+
+
+# 版本信息缓存（从 versions.toml 读取）
+VERSIONS_FILE=""
+VERSIONS_LOADED=false
+declare -gA VERSIONS        # current_version
+declare -gA DOWNLOADED     # downloaded (true/false)
+declare -gA LATEST_VERSIONS # latest_version (update 时保存)
+declare -gA DOWNLOAD_URLS  # download_url (update 时保存)
+
+# 加载版本信息
+load_versions() {
+    VERSIONS_FILE="$SETTINGS_DOWNLOAD_DIR/versions.toml"
+
+    # 初始化
+    VERSIONS=()
+    DOWNLOADED=()
+    LATEST_VERSIONS=()
+    DOWNLOAD_URLS=()
+
+    [[ -f "$VERSIONS_FILE" ]] || { mkdir -p "$SETTINGS_DOWNLOAD_DIR" && touch "$VERSIONS_FILE"; }
+
+    local current_package=""
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%%#*}" line="${line%"${line##*[![:space:]]}"}"
+        [[ -z "$line" ]] && continue
+
+        # 检测包配置段 [packages.<name>]
+        if [[ "$line" =~ ^\[packages\.([a-zA-Z0-9_-]+)\]$ ]]; then
+            current_package="${BASH_REMATCH[1]}"
+            continue
+        fi
+
+        # 解析键值对
+        if [[ "$line" =~ ^[[:space:]]*([a-zA-Z0-9_]+)[[:space:]]*=[[:space:]]*(.*)$ ]]; then
+            local key="${BASH_REMATCH[1]}"
+            local value="${BASH_REMATCH[2]}"
+            value="${value#\"}" value="${value%\"}"
+            value="${value#\'}" value="${value%\'}"
+
+            [[ -z "$current_package" ]] && continue
+
+            case "$key" in
+                current_version) VERSIONS["$current_package"]="$value" ;;
+                latest_version) LATEST_VERSIONS["$current_package"]="$value" ;;
+                download_url) DOWNLOAD_URLS["$current_package"]="$value" ;;
+                downloaded) DOWNLOADED["$current_package"]="$value" ;;
+            esac
+        fi
+    done < "$VERSIONS_FILE"
+
+    VERSIONS_LOADED=true
+}
+
+# 保存当前版本信息
+save_version_info() {
+    local package="$1" version="$2" downloaded="${3:-false}"
+    [[ -z "$package" ]] && return 1
+
+    [[ "$VERSIONS_LOADED" != true ]] && load_versions
+    VERSIONS["$package"]="$version"
+    DOWNLOADED["$package"]="$downloaded"
+    _save_versions_to_file
+}
+
+# 保存云端最新信息（update 命令使用）
+save_latest_info() {
+    local package="$1" version="$2" url="$3"
+    [[ -z "$package" ]] && return 1
+
+    [[ "$VERSIONS_LOADED" != true ]] && load_versions
+    LATEST_VERSIONS["$package"]="$version"
+    DOWNLOAD_URLS["$package"]="$url"
+    _save_versions_to_file
+}
+
+# 内部函数：保存到文件
+_save_versions_to_file() {
+    {
+        echo "# Version tracking for bin-updater"
+        echo "# Auto-generated, do not edit manually"
+        echo ""
+
+        # 获取所有包名
+        local all_packages=()
+        for pkg in "${!LATEST_VERSIONS[@]}"; do all_packages+=("$pkg"); done
+        for pkg in "${!VERSIONS[@]}"; do
+            [[ " ${all_packages[*]} " != *" $pkg "* ]] && all_packages+=("$pkg")
+        done
+
+        # 输出每个包的信息
+        for pkg in "${all_packages[@]}"; do
+            echo "[packages.$pkg]"
+            [[ -n "${VERSIONS[$pkg]:-}" ]] && echo "current_version = \"${VERSIONS[$pkg]}\""
+            [[ -n "${LATEST_VERSIONS[$pkg]:-}" ]] && echo "latest_version = \"${LATEST_VERSIONS[$pkg]}\""
+            [[ -n "${DOWNLOAD_URLS[$pkg]:-}" ]] && echo "download_url = \"${DOWNLOAD_URLS[$pkg]}\""
+            echo "downloaded = ${DOWNLOADED[$pkg]:-false}"
+            echo ""
+        done
+    } > "$VERSIONS_FILE"
+}
+
+# 读取函数
+get_current_version() { local package="$1"; [[ -z "$package" ]] && return 1; [[ "$VERSIONS_LOADED" != true ]] && load_versions; echo "${VERSIONS[$package]:-}"; }
+get_latest_version() { local package="$1"; [[ -z "$package" ]] && return 1; [[ "$VERSIONS_LOADED" != true ]] && load_versions; echo "${LATEST_VERSIONS[$package]:-}"; }
+get_download_url() { local package="$1"; [[ -z "$package" ]] && return 1; [[ "$VERSIONS_LOADED" != true ]] && load_versions; echo "${DOWNLOAD_URLS[$package]:-}"; }
+is_package_downloaded() { local package="$1"; [[ -z "$package" ]] && return 1; [[ "$VERSIONS_LOADED" != true ]] && load_versions; [[ "${DOWNLOADED[$package]:-}" == "true" ]]; }
+has_new_version() { local package="$1"; local cur=$(get_current_version "$package"); local latest=$(get_latest_version "$package"); [[ -z "$cur" || "$cur" != "$latest" ]]; }
+
+##### END: lib/versions.sh #####
+
+##### BEGIN: main.sh #####
+
+
+
+VERSION="0.1.0"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -f "_NONE_/lib/config.sh" ]]; then
+    source "_NONE_/lib/config.sh"
+fi
+
+# Source logging library (after config.sh to read SCRIPT_NAME)
+if [[ -f "_NONE_/lib/log.sh" ]]; then
+    source "_NONE_/lib/log.sh"
+fi
+
+# 如果 myfunc 函数尚未定义，则定义它
+if ! declare -f init_logging >/dev/null 2>&1; then
+    echo "Connot load lib/packages.sh";
+else
+    init_logging
+fi
+
+
+# Source platform detection library
+if [[ -f "_NONE_/lib/platform.sh" ]]; then
+    source "_NONE_/lib/platform.sh"
+fi
+
+# Source GitHub API library
+if [[ -f "_NONE_/lib/github.sh" ]]; then
+    source "_NONE_/lib/github.sh"
+fi
+
+# Source version tracking library
+if [[ -f "_NONE_/lib/versions.sh" ]]; then
+    source "_NONE_/lib/versions.sh"
+fi
+
+# Source download and backup library
+if [[ -f "_NONE_/lib/download.sh" ]]; then
+    source "_NONE_/lib/download.sh"
+fi
+
+# Source dependency check library
+if [[ -f "_NONE_/lib/deps.sh" ]]; then
+    source "_NONE_/lib/deps.sh"
+fi
+
+# Command: list - 列出已下载的包和更新状态
+cmd_list() {
+    log_output "LIST" "已下载的包:"
+    log_output "LIST" "============"
+
+    for package in "${PACKAGES[@]}"; do
+        current_version=$(get_current_version "$package" 2>/dev/null || echo "")
+        latest_version=$(get_latest_version "$package" 2>/dev/null || echo "")
+        downloaded=$(is_package_downloaded "$package" 2>/dev/null && echo true || echo false)
+
+        if [[ -n "$current_version" && "$downloaded" == "true" ]]; then
+            log_output "LIST" "  $package:"
+            log_output "LIST" "    当前版本: $current_version"
+
+            file_extension=$(get_package_property "$package" FILE_EXTENSION)
+            if [[ -n "$file_extension" ]]; then
+                file_pattern="$SETTINGS_DOWNLOAD_DIR/${package}-*.$file_extension"
+                matching_files=($file_pattern)
+            else
+                # 无后缀文件，查找精确匹配
+                matching_files=("$SETTINGS_DOWNLOAD_DIR/${package}-${current_version}")
+            fi
+            if [[ ${#matching_files[@]} -gt 0 && -f "${matching_files[0]}" ]]; then
+                latest_file="${matching_files[0]}"
+                download_time=$(stat -c "%y" "$latest_file" | cut -d'.' -f1 | sed 's/ /T/')
+                log_output "LIST" "    下载时间: $download_time"
+                log_output "LIST" "    文件: $(basename "$latest_file")"
+            fi
+
+            if [[ -n "$latest_version" ]]; then
+                if [[ "$current_version" != "$latest_version" ]]; then
+                    log_output "LIST" "    状态: 🆕 有新版本 $latest_version"
+                else
+                    log_output "LIST" "    状态: ✓ 已是最新"
+                fi
+            else
+                log_output "LIST" "    状态: ℹ️  运行 'update' 获取版本信息"
+            fi
+        elif [[ -n "$latest_version" ]]; then
+            log_output "LIST" "  $package:"
+            log_output "LIST" "    状态: 📦 未下载 (最新: $latest_version)"
+            log_output "LIST" "    运行 'upgrade $package' 下载"
+        else
+            log_output "LIST" "  $package:"
+            log_output "LIST" "    状态: ℹ️  运行 'update' 获取版本信息"
+        fi
+    done
+}
+
+# Command: update - 检查更新并保存云端信息
+cmd_update() {
+    log_output "UPDATE" "检查更新:"
+    log_output "UPDATE" "=========="
+
+    local has_updates=false
+
+    for package in "${PACKAGES[@]}"; do
+        repo=$(get_package_property "$package" REPO)
+        version_type=$(get_package_property "$package" VERSION_TYPE)
+        file_pattern=$(get_package_property "$package" FILE_PATTERN)
+        file_extension=$(get_package_property "$package" FILE_EXTENSION)
+
+        current_version=$(get_current_version "$package" 2>/dev/null)
+        downloaded=$(is_package_downloaded "$package" 2>/dev/null && echo true || echo false)
+
+        # 获取云端最新信息并保存
+        latest_info=$(get_latest_version_and_url "$repo" "$version_type" "$file_pattern" "$file_extension") || {
+            log_output "UPDATE" "  $package: 获取版本失败"
+            continue
+        }
+
+        latest_version="${latest_info%%|||*}"
+        download_url="${latest_info#*|||}"
+
+        if [[ -z "$latest_version" || -z "$download_url" ]]; then
+            log_output "UPDATE" "  $package: 获取版本信息失败"
+            continue
+        fi
+
+        # 保存云端信息到本地
+        save_latest_info "$package" "$latest_version" "$download_url"
+
+        # 显示更新状态
+        if [[ "$downloaded" != "true" ]]; then
+            log_output "UPDATE" "  $package: 未下载 (最新: $latest_version)"
+            has_updates=true
+        elif [[ -z "$current_version" ]]; then
+            log_output "UPDATE" "  $package: 最新版本 $latest_version"
+        elif [[ "$current_version" != "$latest_version" ]]; then
+            log_output "UPDATE" "  $package: 有新版本 $current_version -> $latest_version"
+            has_updates=true
+        else
+            log_output "UPDATE" "  $package: 已是最新版本 $current_version"
+        fi
+    done
+
+    if [[ "$has_updates" == "true" ]]; then
+        log_output "UPDATE" ""
+        log_output "UPDATE" "运行 './bin-updater.sh upgrade' 下载更新"
+    fi
+}
+
+# Command: upgrade - 下载更新（使用本地保存的信息）
+cmd_upgrade() {
+    local target_packages=("$@")
+
+    if [[ ${#target_packages[@]} -eq 0 ]]; then
+        target_packages=("${PACKAGES[@]}")
+    fi
+
+    local packages_to_upgrade=()
+    local packages_skipped=0
+
+    for package in "${target_packages[@]}"; do
+        if ! printf '%s\n' "${PACKAGES[@]}" | grep -q "^${package}$"; then
+            log_error "Unknown package: $package"
+            log_error "Available packages: ${PACKAGES[*]}"
+            exit 1
+        fi
+        packages_to_upgrade+=("$package")
+    done
+
+    log_output "UPGRADE" "下载更新:"
+    log_output "UPGRADE" "========="
+
+    for package in "${packages_to_upgrade[@]}"; do
+        file_extension=$(get_package_property "$package" FILE_EXTENSION)
+
+        local current_version=$(get_current_version "$package" 2>/dev/null)
+        local latest_version=$(get_latest_version "$package" 2>/dev/null)
+        local download_url=$(get_download_url "$package" 2>/dev/null)
+        local downloaded=$(is_package_downloaded "$package" 2>/dev/null && echo true || echo false)
+
+        if [[ -z "$latest_version" ]]; then
+            log_output "UPGRADE" "  $package: 没有云端信息，请先运行 'update'"
+            continue
+        fi
+
+        if [[ -z "$download_url" ]]; then
+            log_output "UPGRADE" "  $package: 没有下载链接，请先运行 'update'"
+            continue
+        fi
+
+        local needs_download=false
+        local msg=""
+        if [[ "$downloaded" != "true" ]]; then
+            needs_download=true
+            msg="未下载，将下载 $latest_version"
+        elif [[ -z "$current_version" ]]; then
+            needs_download=true
+            msg="无版本记录，将下载 $latest_version"
+        elif [[ "$current_version" != "$latest_version" ]]; then
+            needs_download=true
+            msg="有新版本 $current_version -> $latest_version"
+        else
+            log_output "UPGRADE" "  $package: 已是最新版本 $current_version"
+            ((packages_skipped++)) || true
+            continue
+        fi
+
+        log_output "UPGRADE" "  $package: $msg"
+
+        if [[ "$needs_download" == "true" ]]; then
+            if [[ "$downloaded" == "true" && -n "$current_version" ]]; then
+                if [[ -n "$file_extension" ]]; then
+                    old_file="${package}-${current_version}.${file_extension}"
+                else
+                    old_file="${package}-${current_version}"
+                fi
+                if [[ -f "$SETTINGS_DOWNLOAD_DIR/$old_file" ]]; then
+                    backup_file "$package" "$current_version" "$old_file" > /dev/null
+                fi
+            fi
+
+            if [[ -n "$file_extension" ]]; then
+                filename="${package}-${latest_version}.${file_extension}"
+            else
+                filename="${package}-${latest_version}"
+            fi
+            output_file="$SETTINGS_DOWNLOAD_DIR/$filename"
+
+            log_output "UPGRADE" "  [下载] $filename"
+            if download_file "$download_url" "$output_file"; then
+                log_output "UPGRADE" "  [完成] 下载成功"
+                save_version_info "$package" "$latest_version" "true"
+            else
+                log_output "UPGRADE" "  $package: 下载失败"
+                rm -f "$output_file"
+            fi
+        fi
+    done
+
+    log_output "UPGRADE" "========="
+    local total=${#packages_to_upgrade[@]}
+    local updated=$((total - packages_skipped))
+    if [[ $total -gt 0 ]]; then
+        log_output "UPGRADE" "共 $total 个包，$updated 个已更新，$packages_skipped 个跳过"
+    fi
+}
+
+# 安装单个包的内部函数
+_do_install_package() {
+    local package="$1"
+    local show_header="${2:-true}"
+
+    current_version=$(get_current_version "$package" 2>/dev/null)
+    if [[ -z "$current_version" ]]; then
+        log_output "INSTALL" "  $package: 未下载，请先运行 upgrade"
+        return 1
+    fi
+
+    file_extension=$(get_package_property "$package" FILE_EXTENSION)
+    binary_name=$(get_package_property "$package" BINARY_NAME)
+
+    if [[ "$show_header" == "true" ]]; then
+        log_output "INSTALL" "  安装 $package (版本: $current_version)..."
+    fi
+
+    # 构建文件名（无后缀时直接用包名-版本）
+    if [[ -n "$file_extension" ]]; then
+        filename="${package}-${current_version}.${file_extension}"
+    else
+        filename="${package}-${current_version}"
+    fi
+    archive_file="$SETTINGS_DOWNLOAD_DIR/$filename"
+
+    if [[ ! -f "$archive_file" ]]; then
+        log_output "INSTALL" "  $package: 文件不存在: $archive_file"
+        return 1
+    fi
+
+    # 确定安装目录
+    system_bin="/usr/local/bin"
+    user_bin="$HOME/.local/bin"
+
+    if [[ -w "$system_bin" ]]; then
+        install_dir="$system_bin"
+        log_output "INSTALL" "  [检测] 有系统目录写入权限，使用系统目录"
+    else
+        install_dir="$user_bin"
+        log_output "INSTALL" "  [检测] 无系统目录写入权限，使用用户目录"
+    fi
+    mkdir -p "$install_dir"
+
+    # 无后缀名二进制文件，直接安装
+    if [[ -z "$file_extension" ]]; then
+        local target_file="$install_dir/$binary_name"
+        log_output "INSTALL" "  [安装] $binary_name"
+        cp "$archive_file" "$target_file"
+        chmod +x "$target_file"
+        log_output "INSTALL" "  [完成] 安装成功"
+        log_output "INSTALL" "  [路径] $install_dir 已添加到 PATH"
+        return 0
+    fi
+
+    extract_dir="$SETTINGS_DOWNLOAD_DIR/${package}-${current_version}"
+    rm -rf "$extract_dir"
+    log_output "INSTALL" "  [解压] $filename"
+    if ! extract_file "$filename" "$extract_dir"; then
+        log_output "INSTALL" "  $package: 解压失败"
+        rm -rf "$extract_dir"
+        return 1
+    fi
+
+    local binary_files=()
+    while IFS= read -r -d '' binary_file; do
+        binary_files+=("$binary_file")
+    done < <(find "$extract_dir" -type f -executable -print0 2>/dev/null)
+
+    if [[ ${#binary_files[@]} -eq 0 ]]; then
+        while IFS= read -r -d '' binary_file; do
+            binary_files+=("$binary_file")
+        done < <(find "$extract_dir" -type f -perm /111 -print0 2>/dev/null)
+    fi
+
+    if [[ ${#binary_files[@]} -gt 0 ]]; then
+        local installed_count=0
+        for binary_file in "${binary_files[@]}"; do
+            local target_file="$install_dir/$(basename "$binary_file")"
+            log_output "INSTALL" "  [安装] 到 $target_file"
+            cp "$binary_file" "$target_file"
+            chmod +x "$target_file"
+            ((installed_count++)) || true
+        done
+        rm -rf "$extract_dir"
+        log_output "INSTALL" "  [完成] 安装成功 ($installed_count 个文件)"
+        log_output "INSTALL" "  [路径] $install_dir 已添加到 PATH"
+        return 0
+    else
+        log_output "INSTALL" "  $package: 未找到可执行文件"
+        rm -rf "$extract_dir"
+        return 1
+    fi
+}
+
+# Command: install - 安装已下载的包
+cmd_install() {
+    local target_packages=("$@")
+
+    if [[ ${#target_packages[@]} -eq 0 ]]; then
+        log_error "Usage: $0 install <package> [package2] ..."
+        log_error "Available packages: ${PACKAGES[*]}"
+        log_output "INSTALL" ""
+        log_output "INSTALL" "示例:"
+        log_output "INSTALL" "  $0 install ripgrep          # 安装单个包"
+        log_output "INSTALL" "  $0 install ripgrep uv       # 安装多个包"
+        exit 1
+    fi
+
+    for package in "${target_packages[@]}"; do
+        if ! printf '%s\n' "${PACKAGES[@]}" | grep -q "^${package}$"; then
+            log_error "Unknown package: $package"
+            log_error "Available packages: ${PACKAGES[*]}"
+            exit 1
+        fi
+    done
+
+    log_output "INSTALL" "安装包:"
+    log_output "INSTALL" "========="
+
+    local success_count=0
+    local fail_count=0
+
+    for package in "${target_packages[@]}"; do
+        if _do_install_package "$package" "true"; then
+            ((success_count++)) || true
+        else
+            ((fail_count++)) || true
+        fi
+        log_output "INSTALL" ""
+    done
+
+    log_output "INSTALL" "========="
+    log_output "INSTALL" "共 ${#target_packages[@]} 个包，$success_count 个成功，$fail_count 个失败"
+}
+
+# Command: edit - 使用系统编辑器编辑配置文件
+cmd_edit() {
+    if ! declare -f get_edit_config_path >/dev/null 2>&1; then
+        log_error "无法加载配置库"
+        exit 1
+    fi
+
+    if ! declare -f create_default_config >/dev/null 2>&1; then
+        log_error "无法加载配置库"
+        exit 1
+    fi
+
+    local config_path
+    config_path=$(get_edit_config_path)
+
+    # Determine the editor to use (default: vim)
+    local editor="${EDITOR:-${VISUAL:-vim}}"
+
+    # Check if editor exists
+    if ! command -v "$editor" >/dev/null 2>&1; then
+        log_error "未找到编辑器: $editor，请设置 EDITOR 环境变量"
+        exit 1
+    fi
+
+    # Create default config if it doesn't exist
+    if [[ ! -f "$config_path" ]]; then
+        create_default_config "$config_path"
+    fi
+
+    log_output "EDIT" "正在打开配置: $config_path"
+    log_output "EDIT" "编辑器: $editor"
+
+    # Open the editor
+    if ! "$editor" "$config_path"; then
+        log_error "编辑器打开失败: $editor"
+        exit 1
+    fi
+
+    log_output "EDIT" "配置文件已保存: $config_path"
+
+    # Optionally reload the config
+    log_info "配置已更新，可能需要重启工具或执行 source 重新加载"
+}
+
+# Main entry point
+main() {
+    if [[ $# -eq 0 ]]; then
+        log_error "Usage: $0 <command>"
+        log_error "Commands: list, update, upgrade, install, edit"
+        exit 1
+    fi
+
+    # Check dependencies first
+    if declare -f check_dependencies > /dev/null; then
+        check_dependencies || exit 1
+    fi
+
+    # Load configuration
+    if declare -f load_config > /dev/null; then
+        load_config
+    fi
+
+    # Detect platform
+    if declare -f detect_platform > /dev/null; then
+        detect_platform
+    fi
+
+    local command="$1"
+    shift
+
+    case "$command" in
+        list)
+            cmd_list
+            ;;
+        update)
+            cmd_update
+            ;;
+        upgrade)
+            cmd_upgrade "$@"
+            ;;
+        install)
+            cmd_install "$@"
+            ;;
+        edit)
+            cmd_edit
+            ;;
+        *)
+            log_error "Unknown command: $command"
+            exit 1
+            ;;
+    esac
+
+    # Close logging before exit
+    if declare -f close_logging > /dev/null; then
+        close_logging
+    fi
+}
+
+# Only run main if script is executed directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
+
+##### END: main.sh #####
