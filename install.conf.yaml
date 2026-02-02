@@ -36,14 +36,9 @@
     ~/.local/share/applications/:
         create: true
         glob: true
-        path: applications/hidden/*
+        path: applications/*
         relink: true
 
-    ~/.local/share/applications/:
-        create: true
-        glob: true
-        path: applications/keep/*
-        relink: true
 
     # VIM 配置
     $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc          # Vim 主配置文件
