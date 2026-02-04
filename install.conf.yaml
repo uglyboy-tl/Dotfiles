@@ -63,6 +63,9 @@
     # 其他应用程序配置
     ## LF 文件管理器
     $XDG_CONFIG_HOME/lf: config/lf
+    ## OpenCode & OMO
+    $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/opencode.json
+    $XDG_CONFIG_HOME/opencode/oh-my-opencode.json: config/opencode/oh-my-opencode.json
 
     ## Python 包管理配置
     $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf # PIP 镜像源配置
