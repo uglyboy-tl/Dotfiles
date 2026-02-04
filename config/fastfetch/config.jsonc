@@ -28,8 +28,7 @@
     {
       "type": "host",
       "key": " PC",
-      "keyColor": "green",
-      "format": "{5} {1} Type {2}"
+      "keyColor": "green"
     },
     {
       "type": "cpu",
