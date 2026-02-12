@@ -1,7 +1,5 @@
-[settings]
 download_dir = "/srv/Dev/Work/Tools/CMD"
 proxy_prefix = "https://xget.uglyboy.cn/gh/"
-log_level = "debug"
 
 [packages.bun]
 repo = "oven-sh/bun"
@@ -22,3 +20,9 @@ file_extension = "tar.gz"
 repo = "gokcehan/lf"
 file_pattern = "lf-{os}-{arch}"
 file_extension = "tar.gz"
+
+[packages.yq]
+repo = "mikefarah/yq"
+file_pattern = "yq_{os}_{arch}"
+file_extension = "tar.gz"
+binary_name = "yq"
