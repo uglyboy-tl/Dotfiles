@@ -1,8 +1,14 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "deepseek/deepseek-chat",
   "plugin": [
     "oh-my-opencode@latest"
   ],
+  "lsp": {
+    "bash": {
+      "disabled": true
+    }
+  },
   "provider": {
     "volcengine": {
       "npm": "@ai-sdk/openai-compatible",
@@ -13,6 +19,33 @@
       "models": {
         "ark-code-latest": {
           "name": "ark-code-latest"
+        }
+      }
+    },
+    "n1n": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "n1n",
+      "options": {
+        "baseURL": "https://api.n1n.ai/v1"
+      },
+      "models": {
+        "gpt-5-nano": {
+          "name": "gpt-5-nano"
+        },
+        "gemini-3-flash": {
+          "name": "gemini-3-flash-preview"
+        },
+        "minimax-m2.1":{
+          "name": "minimax-m2.1"
+        },
+        "gpt-5-codex": {
+          "name": "gpt-5.2-codex"
+        },
+        "gpt-5.2": {
+          "name": "gpt-5.2"
+        },
+        "claude-opus-4-6": {
+          "name": "claude-opus-4-6"
         }
       }
     }
