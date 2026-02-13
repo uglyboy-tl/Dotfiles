@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_NAME="BinUp"
-VERSION="2.1.0"
 ANSI_ESC=$'\033'
 ANSI_CSI="${ANSI_ESC}["
 ansi.Color.IsAvailable() {
@@ -133,8 +132,8 @@ ansi.disable.powerline() {
 	POWERLINE_STAR="*"
 }
 ansi.enable() {
-	[[ -n "${BASHLET_ANSI_FORCE_DISABLE-}" ]] && return 0
-	ansi.Color.IsAvailable && ansi.enable.color && ansi.enable.style || (ansi.disable.color && ansi.disable.style)
+	[[ -n "${_ANSI_FORCE_DISABLE-}" ]] && ansi.disable && return 0
+	ansi.Color.IsAvailable && ansi.enable.color && ansi.enable.style || { ansi.disable.color && ansi.disable.style; }
 	ansi.Powerline.IsAvailable && ansi.enable.powerline || ansi.disable.powerline
 }
 ansi.disable() {
@@ -301,7 +300,7 @@ map.get() {
 }
 
 _USAGE_SCRIPT_FILENAME=${0##*/}
-: ${_USAGE_SCRIPT_NAME:=$_USAGE_SCRIPT_FILENAME}
+_USAGE_SCRIPT_NAME=${SCRIPT_NAME:-$_USAGE_SCRIPT_FILENAME}
 _USAGE_SCRIPT_DESC=""
 usage.name.set() { _USAGE_SCRIPT_NAME="$1"; }
 usage.description.set() { [[ -n "$1" ]] && _USAGE_SCRIPT_DESC="$1"; }
@@ -509,6 +508,21 @@ fs.insert() { sed -i "/$2/a\\$3" "$1" 2>/dev/null; }
 fs.rmline() { [[ -n "$4" ]] && sed -i "${4},/$2/{/$2/d}" "$1" 2>/dev/null || sed -i "/$2/d" "$1" 2>/dev/null; }
 fs.cleanup() { ls -t ${1}* 2>/dev/null | tail -n +$((${2:-3} + 1)) | xargs -r rm -f; }
 fs.mktemp() { mktemp ${1:-} 2>/dev/null || { log.error "Failed to create temporary file" && return 1; }; }
+fs.file.extract() {
+	local path=$(realpath "$1") base=$(basename "$1")
+	builtin cd "$2" >/dev/null
+	case "${base,,}" in
+	*.zip | *.war | *.jar | *.ear | *.sublime-package | *.ipa | *.ipsw | *.xpi | *.apk | *.aar | *.whl | *.vsix | *.crx | *.pk3 | *.pk4) unzip -q "$path" ;;
+	*.tar.gz | *.tgz) tar -zxf "$path" ;;
+	*.tar.bz2 | *.tbz | *.tbz2 | *.tar.bz) tar -jxf "$path" ;;
+	*.tar.xz | *.txz) tar -xJf "$path" ;;
+	*.tar) tar -xf "$path" ;;
+	*.gz) gzip -dc "$path" >"${base%.gz}" ;;
+	*.bz2) bzip2 -dc "$path" >"${base%.bz2}" ;;
+	*.xz) xz -dc "$path" >"${base%.xz}" ;;
+	*) cp "$path" "./" ;;
+	esac
+}
 
 : ${XDG_CONFIG_HOME:=$HOME/.config}
 : ${XDG_DATA_HOME:=$HOME/.local/share}
@@ -676,6 +690,7 @@ config.save() {
 }
 
 system.command.exist() { command -v "$1" >/dev/null 2>&1; }
+system.command.required() { ! system.command.exist "$1" && log.error "This module required \`$1\` command." && exit 1 || return 0; }
 system.os() {
   [[ ! -z ${_SYSTEM_OS+x} ]] && echo "$_SYSTEM_OS" && return 0
   case "$OSTYPE" in
@@ -686,8 +701,8 @@ system.os() {
     solaris*) echo "solaris" ;;
     *)  echo"unknown" ;;
   esac
-  log.debug "OS: $OSTYPE"
 }
+_SYSTEM_OS="$(system.os)"
 system.arch() {
   [[ ! -z ${_SYSTEM_ARCH+x} ]] && echo "$_SYSTEM_ARCH" && return 0
   local -r arch="$(uname -m)"
@@ -697,10 +712,8 @@ system.arch() {
     armv7l|armhf)     echo "armhf" ;;
     i686|i386|i586)   echo "i386" ;;
   esac
-  log.debug "Arch: $arch"
 }
-system.os.init() { _SYSTEM_OS="$(system.os)"; }
-system.arch.init() { _SYSTEM_ARCH="$(system.arch)"; }
+_SYSTEM_ARCH="$(system.arch)"
 
 UNDERLINE_CACHE=$(console.repeat "=" 20)
 title.format() {
@@ -741,8 +754,8 @@ declare -gA _REQUESTS_AUTH=()
 declare -g _REQUESTS_CURL=""
 declare -g _REQUESTS_JQ=""
 requests.init() {
-	! system.command.exist "curl" && log.error "This module required \`curl\` command." && exit 1 || _REQUESTS_CURL="$(command -v curl)"
-	! system.command.exist "jq" && log.error "This module required \`jq\` command." && exit 1 || _REQUESTS_JQ="$(command -v jq)"
+	system.command.required "curl" && _REQUESTS_CURL="$(command -v curl)"
+	system.command.required "jq" && _REQUESTS_JQ="$(command -v jq)"
 	_REQUESTS_HEADERS=(
 		["Accept"]="*/*"
 		["Accept-Encoding"]="gzip, deflate"
@@ -904,12 +917,10 @@ requests.headers.append() {
 	done
 }
 requests.base_url() { _REQUESTS_BASE_URL="$1"; }
-requests.headers_clear() { _REQUESTS_HEADERS=(); }
+requests.headers.clear() { _REQUESTS_HEADERS=(); }
 requests.auth() { _REQUESTS_AUTH["Authorization"]="Basic $(jq -nr --arg c "$1:$2" '$c | @base64')"; }
 requests.auth_bearer() { _REQUESTS_AUTH["Authorization"]="Bearer $1"; }
 
-system.os.init
-system.arch.init
 requests.init 2>/dev/null || { log.error "Failed to initialize requests module" && exit 1; }
 [[ -n "${GITHUB_TOKEN:-}" ]] && requests.headers.append "Authorization" "token $GITHUB_TOKEN"
 _get_arch_regex() {
@@ -1007,11 +1018,10 @@ download_file() {
 	requests.download "${url:-$1}" "$2"
 }
 backup_file() {
-	local package="$1" version="$2" filename="$3"
+	local package="$1" version="$2" filename="$3" ext="${4:-${3##*.}}"
 	local source_file="$SETTINGS_DOWNLOAD_DIR/$filename"
 	local backup_dir="$SETTINGS_DOWNLOAD_DIR/backups"
 	local timestamp=$(date +%Y.%m.%d)
-	local ext="${filename##*.}"
 	local backup_file="${backup_dir}/${package}-${version}-${timestamp}${ext:+.${ext}}"
 	mkdir -p "$backup_dir"
 	mv "$source_file" "$backup_file"
@@ -1067,7 +1077,7 @@ cmd_upgrade() {
 		fi
 		if [[ -n "$current_version" ]]; then
 			local old_file=$(build_filename "$package" "$current_version" "$file_extension")
-			[[ -f "$SETTINGS_DOWNLOAD_DIR/$old_file" ]] && backup_file "$package" "$current_version" "$old_file" >/dev/null
+			[[ -f "$SETTINGS_DOWNLOAD_DIR/$old_file" ]] && backup_file "$package" "$current_version" "$old_file" "$file_extension" >/dev/null
 		fi
 		local filename=$(build_filename "$package" "$latest_version" "$file_extension")
 		local output_file="$SETTINGS_DOWNLOAD_DIR/$filename"
@@ -1086,20 +1096,6 @@ cmd_upgrade() {
 	((total > 0)) && console.stdout "共 $total 个包，$updated 个已更新，$packages_skipped 个跳过"
 }
 
-extract_file() {
-	local filename="$1" extract_dir="$2"
-	local file_path="$SETTINGS_DOWNLOAD_DIR/$filename"
-	case "$filename" in
-	*.zip) unzip -q "$file_path" -d "$extract_dir" ;;
-	*.tar.gz | *.tgz) tar -xzf "$file_path" -C "$extract_dir" ;;
-	*.tar.xz | *.txz) tar -xJf "$file_path" -C "$extract_dir" ;;
-	*.tar.bz2 | *.tbz2) tar -xjf "$file_path" -C "$extract_dir" ;;
-	*)
-		cp "$file_path" "$extract_dir/"
-		chmod +x "$extract_dir/$(basename "$filename")"
-		;;
-	esac
-}
 _get_install_dir() {
 	local system_bin="/usr/local/bin" user_bin="$HOME/.local/bin"
 	if [[ -w "$system_bin" ]]; then
@@ -1125,10 +1121,12 @@ _do_install_package() {
 	local work_dir="$(fs.mktemp "-d")" || return 1
 	trap 'rm -rf "${work_dir:-}"' RETURN
 	item.format 1 "[解压] $filename"
-	if ! extract_file "$filename" "$work_dir"; then
+	if ! fs.file.extract "$SETTINGS_DOWNLOAD_DIR/$filename" "$work_dir"; then
 		item.format 1 "$package: 解压失败"
 		return 1
 	fi
+	local no_ext_files=($(find "$work_dir" -maxdepth 1 -type f ! -name "*.*" 2>/dev/null))
+	[[ ${#no_ext_files[@]} -eq 1 ]] && chmod +x "${no_ext_files[0]}"
 	binary_files=()
 	while IFS= read -r -d '' file; do
 		binary_files+=("$file")
@@ -1198,9 +1196,9 @@ cmd_edit() {
 	"${EDITOR:-vi}" "$config_path" || ( log.error "编辑器打开失败: ${EDITOR:-vi} $config_path" && exit 1 )
 }
 
+VERSION="2.1.1"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 main() {
-	args.name "${SCRIPT_NAME:-Demo}"
 	args.init 命令行程序下载管理器
 	args.add_options "version" "v" "显示版本信息"
 	args.add_subcommand "list" "列出项目" "cmd_list"
