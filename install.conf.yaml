@@ -11,6 +11,8 @@
         force: true     # 强制删除
     ~/.local/bin:       # 清理本地二进制目录
         force: true
+    ~/.local/share/applications/:
+        force: true
     $XDG_CONFIG_HOME:   # 清理 XDG 配置目录
         recursive: true # 递归清理
 
@@ -88,11 +90,6 @@
     $XDG_CONFIG_HOME/mutt/muttrc: config/mutt/muttrc              # Mutt 主配置
     $XDG_CONFIG_HOME/mutt/mailboxes: config/mutt/mailboxes        # 邮箱配置
     $XDG_CONFIG_HOME/mutt/mailcap: config/mutt/mailcap            # MIME 类型处理
-    ## 日历同步
-    ### vdirsyncer 日历同步工具
-    $XDG_CONFIG_HOME/vdirsyncer/config: config/calendar/vdirsyncer
-    ### khal 日历客户端
-    $XDG_CONFIG_HOME/khal/config: config/calendar/khal
 
     ## Python 包管理配置
     $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf # PIP 镜像源配置

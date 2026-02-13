@@ -4,7 +4,7 @@ export PATH="$HOME/.local/bin:$PATH"
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 export ZLOCAL="${XDG_CONFIG_HOME:-$HOME/.config}/local"
 export HISTFILE=$XDG_STATE_HOME/zsh/history
-export ZSH_DISABLE_COMPFIX=true
+export SAVEHIST=50000
 
 [ -f "$ZLOCAL/zshrc.before" ] && source "$ZLOCAL/zshrc.before"
 
@@ -62,3 +62,7 @@ compinit -d "$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
 setopt no_nomatch
 
 eval "$(starship init zsh)"
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# opencode
+export PATH=/home/uglyboy/.opencode/bin:$PATH
