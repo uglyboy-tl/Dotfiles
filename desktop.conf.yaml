@@ -1,0 +1,62 @@
+- clean:
+    ~/.local/share/applications/:
+        force: true
+
+- link:
+    ~/.local/share/applications/:
+        create: true
+        glob: true
+        path: applications/*
+        relink: true
+
+    ## Zathura PDF 阅读器
+    $XDG_CONFIG_HOME/zathura: config/zathura
+    ## MUTT 邮件客户端
+    $XDG_CONFIG_HOME/offlineimap/config: config/mutt/offlineimaprc # 邮件同步
+    $XDG_CONFIG_HOME/mutt/muttrc: config/mutt/muttrc              # Mutt 主配置
+    $XDG_CONFIG_HOME/mutt/mailboxes: config/mutt/mailboxes        # 邮箱配置
+    $XDG_CONFIG_HOME/mutt/mailcap: config/mutt/mailcap            # MIME 类型处理
+
+    # X Window 系统配置
+    # 环境变量配置
+    ~/.xsessionrc: config/environment                    # X session 环境变量
+    ## Xresources 资源文件
+    $XDG_CONFIG_HOME/X11/Xresources: config/X11/Xresources          # X 资源定义
+    $XDG_CONFIG_HOME/X11/Xresources.d/rxvt-unicode: config/X11/rxvt-unicode # URxvt 终端配置
+    ## 字体配置
+    $XDG_CONFIG_HOME/fontconfig/fonts.conf: config/fonts.conf # 字体配置文件
+    ## BSPWM 窗口管理器生态
+    $XDG_CONFIG_HOME/bspwm/bspwmrc: config/bspwmrc                  # BSPWM 主配置
+    $XDG_CONFIG_HOME/sxhkd/sxhkdrc: config/sxhkdrc                  # 快捷键配置
+    $XDG_CONFIG_HOME/picom/picom.conf: config/picom.conf            # 合成器配置
+    $XDG_CONFIG_HOME/polybar: config/polybar                        # 状态栏配置
+    $XDG_CONFIG_HOME/rofi: config/rofi                              # 应用启动器
+    $XDG_CONFIG_HOME/dunst/dunstrc: config/dunstrc                  # 桌面通知
+
+    ## 动态壁纸
+    $XDG_DATA_HOME/dynamic-wallpaper: data/dynamic-wallpaper        # 动态壁纸资源
+
+    ## Alacritty 终端模拟器
+    $XDG_CONFIG_HOME/alacritty: config/alacritty
+
+    ## FCITX5-RIME 输入法
+    $XDG_DATA_HOME/fcitx5/rime/default.custom.yaml: config/fcitx5-rime/default.custom.yaml # 默认输入方案
+    $XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml: config/fcitx5-rime/luna_pinyin.custom.yaml # 拼音输入方案
+
+    ## MPV 媒体播放器
+    $XDG_CONFIG_HOME/mpv/mpv.conf: config/mpv/mpv.conf              # MPV 主配置
+    $XDG_CONFIG_HOME/mpv/scripts/thumbfast.lua: config/mpv/thumbfast/thumbfast.lua # 缩略图预览脚本
+    $XDG_CONFIG_HOME/mpv/fonts: config/mpv/uosc/src/fonts           # uosc 界面字体
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/char-conv: config/mpv/uosc/src/uosc/char-conv # 字符转换
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/elements: config/mpv/uosc/src/uosc/elements   # 界面元素
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/intl: config/mpv/uosc/src/uosc/intl           # 国际化
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/lib: config/mpv/uosc/src/uosc/lib             # 库文件
+    $XDG_CONFIG_HOME/mpv/scripts/uosc/main.lua: config/mpv/uosc/src/uosc/main.lua   # uosc 主脚本
+    $XDG_CONFIG_HOME/mpv/script-opts/uosc.conf: config/mpv/uosc.conf   # uosc 配置文件
+
+
+# Crontab 定时任务配置
+- crontab:
+  - time: 0 * * * *  # 每小时执行一次
+    command: env PATH=/usr/local/bin:/usr/bin:/home/uglyboy/.local/bin DISPLAY=:0 DESKTOP_SESSION=lightdm-xsession DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus" dwall.sh -s lakeside
+    platform: linux  # 仅限 Linux 平台

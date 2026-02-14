@@ -1,0 +1,74 @@
+# Dotbot 配置文件 - 用于自动化 dotfiles 安装
+# 默认配置选项
+- defaults:
+    link:
+        create: true    # 如果目标目录不存在则创建
+        relink: true    # 如果符号链接已存在则重新链接
+
+# 清理阶段 - 删除旧的符号链接
+- clean:
+    ~/:                 # 清理家目录下的符号链接
+        force: true     # 强制删除
+    ~/.local/bin:       # 清理本地二进制目录
+        force: true
+    $XDG_CONFIG_HOME:   # 清理 XDG 配置目录
+        recursive: true # 递归清理
+
+# Shell 命令执行阶段
+- shell:
+    - [git submodule update --init --recursive, 初始化并更新所有子模块]
+    - [git submodule sync, 同步子模块远程仓库]
+    #- [git submodule foreach git pull, 更新所有子模块内容]
+
+# 符号链接创建阶段
+- link:
+    # BASH 配置 (已注释)
+    #~/.bashrc: config/bashrc
+
+    # 脚本文件
+    # 将 scripts/ 目录下的所有文件链接到 ~/.local/bin/
+    ~/.local/bin/:
+        create: true    # 创建目标目录
+        glob: true      # 使用通配符匹配
+        path: scripts/* # 源文件路径
+        relink: true    # 允许重新链接
+
+    # ZSH 配置
+    $XDG_CONFIG_HOME/zsh/.zshrc:                         # Zsh 主配置文件
+        path: config/zsh/zshrc.zsh
+        force: true                                      # 强制覆盖
+    $XDG_CONFIG_HOME/zsh/zshrc.alias: config/zsh/aliases.zsh # 别名配置
+    $XDG_CONFIG_HOME/zsh/.zshenv: config/environment # ZSH 环境变量
+    $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
+    $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen           # Zgen 插件管理器
+
+    # VIM 配置
+    $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc          # Vim 主配置文件
+    $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug # 插件配置文件
+    $XDG_CONFIG_HOME/vim/plug.vim: config/vim/vim-plug/plug.vim # Vim-plug 插件管理器
+
+    # 系统工具配置
+    ## GIT 配置
+    $XDG_CONFIG_HOME/git/config: config/git/config       # Git 配置文件
+    ## BAT 配置
+    $XDG_CONFIG_HOME/bat/config: config/bat/config
+    $XDG_CONFIG_HOME/bat/themes: config/bat/themes
+    ## FastFetch 系统信息工具
+    $XDG_CONFIG_HOME/fastfetch/config.jsonc: config/fastfetch/config.jsonc
+    $XDG_DATA_HOME/fastfetch/presets: config/fastfetch/presets
+    $XDG_DATA_HOME/fastfetch/logos: config/fastfetch/logos
+
+    # 其他应用程序配置
+    ## LF 文件管理器
+    $XDG_CONFIG_HOME/lf: config/lf
+    ## OpenCode & OMO
+    $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/opencode.json
+    $XDG_CONFIG_HOME/opencode/oh-my-opencode.json: config/opencode/oh-my-opencode.json
+    ## Newsboat RSS 阅读器
+    $XDG_CONFIG_HOME/newsboat/config: config/newsboat/config
+
+    # 开发环境配置
+    ## Python 包管理配置
+    $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf # PIP 镜像源配置
+    ## UV Python 包管理器
+    $XDG_CONFIG_HOME/uv/uv.toml: config/sources/uv.toml    # UV 配置
