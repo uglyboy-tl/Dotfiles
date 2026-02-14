@@ -32,11 +32,6 @@
         path: scripts/* # 源文件路径
         relink: true    # 允许重新链接
 
-    # VIM 配置
-    $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc # Vim 主配置文件
-    $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug # 插件配置文件
-    $XDG_CONFIG_HOME/vim/plug.vim: config/vim/vim-plug/plug.vim # Vim-plug 插件管理器
-
     # ZSH 配置
     $XDG_CONFIG_HOME/zsh/.zshrc:                         # Zsh 主配置文件
         path: config/zsh/zshrc.zsh
@@ -46,12 +41,14 @@
     $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
     $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen           # Zgen 插件管理器
 
-    # tmux
-    ~/.config/tmux/tmux.conf: config/tmux/tmux.conf
+    # VIM 配置
+    $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc          # Vim 主配置文件
+    $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug # 插件配置文件
+    $XDG_CONFIG_HOME/vim/plug.vim: config/vim/vim-plug/plug.vim # Vim-plug 插件管理器
 
     # 系统工具配置
     ## GIT 配置
-    $XDG_CONFIG_HOME/git/config: config/git/config # Git 配置文件
+    $XDG_CONFIG_HOME/git/config: config/git/config       # Git 配置文件
     ## BAT 配置
     $XDG_CONFIG_HOME/bat/config: config/bat/config
     $XDG_CONFIG_HOME/bat/themes: config/bat/themes
@@ -67,16 +64,8 @@
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/opencode.json
     $XDG_CONFIG_HOME/opencode/oh-my-opencode.json: config/opencode/oh-my-opencode.json
 
+    # 开发环境配置
     ## Python 包管理配置
     $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf # PIP 镜像源配置
     ## UV Python 包管理器
-    $XDG_CONFIG_HOME/uv/uv.toml: config/sources/uv.toml # UV 配置
-
-    # Built-in
-    $XDG_CONFIG_HOME/binup/config.toml: config/builtin/binup.toml # UV 配置
-
-# Crontab 定时任务配置
-- crontab:
-    - time: 0 0 * * * # 每天执行一次
-      command: pg-back > /tmp/pg.log 2>&1
-      platform: linux # 仅限 Linux 平台
+    $XDG_CONFIG_HOME/uv/uv.toml: config/sources/uv.toml    # UV 配置
