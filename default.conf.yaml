@@ -18,7 +18,6 @@
 - shell:
     - [git submodule update --init --recursive, 初始化并更新所有子模块]
     - [git submodule sync, 同步子模块远程仓库]
-    #- [git submodule foreach git pull, 更新所有子模块内容]
 
 # 符号链接创建阶段
 - link:
@@ -37,8 +36,8 @@
     $XDG_CONFIG_HOME/zsh/.zshrc:                         # Zsh 主配置文件
         path: config/zsh/zshrc.zsh
         force: true                                      # 强制覆盖
+    $XDG_CONFIG_HOME/zsh/.zshenv: config/environment     # ZSH 环境变量
     $XDG_CONFIG_HOME/zsh/zshrc.alias: config/zsh/aliases.zsh # 别名配置
-    $XDG_CONFIG_HOME/zsh/.zshenv: config/environment # ZSH 环境变量
     $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
     $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen           # Zgen 插件管理器
 
@@ -64,8 +63,6 @@
     ## OpenCode & OMO
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/opencode.json
     $XDG_CONFIG_HOME/opencode/oh-my-opencode.json: config/opencode/oh-my-opencode.json
-    ## Newsboat RSS 阅读器
-    $XDG_CONFIG_HOME/newsboat/config: config/newsboat/config
 
     # 开发环境配置
     ## Python 包管理配置

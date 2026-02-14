@@ -14,11 +14,11 @@
 [submodule "config/zsh/zgen"]
 	path = config/zsh/zgen
 	url = https://github.com/tarjoilija/zgen.git
-[submodule "config/mpv/thumbfast"]
-	path = config/mpv/thumbfast
+[submodule "desktop/mpv/thumbfast"]
+	path = desktop/mpv/thumbfast
 	url = https://github.com/po5/thumbfast
-[submodule "config/mpv/uosc"]
-	path = config/mpv/uosc
+[submodule "desktop/mpv/uosc"]
+	path = desktop/mpv/uosc
 	url = https://github.com/tomasklaen/uosc
 [submodule "data/dynamic-wallpaper"]
 	path = data/dynamic-wallpaper
