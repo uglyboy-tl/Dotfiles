@@ -5,6 +5,9 @@
       path: rpi/scripts/* # 源文件路径
       relink: true # 允许重新链接
 
+    # Built-in
+    $XDG_CONFIG_HOME/binup/config.toml: rpi/builtin/binup.toml # UV 配置
+
 # Crontab 定时任务配置
 - crontab:
     - time: 0 0 * * * # 每天执行一次

@@ -21,6 +21,9 @@
       path: desktop/applications/*
       relink: true
 
+    # Built-in
+    $XDG_CONFIG_HOME/binup/config.toml: desktop/builtin/binup.toml # UV 配置
+
     ## Newsboat RSS 阅读器
     $XDG_CONFIG_HOME/newsboat/config: desktop/newsboat/config
     ## Zathura PDF 阅读器

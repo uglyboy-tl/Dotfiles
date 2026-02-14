@@ -4,6 +4,7 @@ set -e
 
 DEFAULT_CONFIG_PREFIX="default"
 CONFIG_SUFFIX=".conf.yaml"
+CONFIG_DIR="conf.d"
 DOTBOT_DIR="dotbot"
 
 DOTBOT_BIN="bin/dotbot"
@@ -14,5 +15,5 @@ git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
 git submodule update --init --recursive "${DOTBOT_DIR}"
 
 for conf in ${DEFAULT_CONFIG_PREFIX} ${@}; do
-    "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${conf}${CONFIG_SUFFIX}" --plugin-dir dotbot-plugins/crontab
+    "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${CONFIG_DIR}/${conf}${CONFIG_SUFFIX}" --plugin-dir dotbot-plugins/crontab
 done

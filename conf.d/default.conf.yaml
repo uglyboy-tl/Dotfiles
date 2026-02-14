@@ -70,6 +70,3 @@
     $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf # PIP 镜像源配置
     ## UV Python 包管理器
     $XDG_CONFIG_HOME/uv/uv.toml: config/sources/uv.toml # UV 配置
-
-    # Built-in
-    $XDG_CONFIG_HOME/binup/config.toml: config/builtin/binup.toml # UV 配置
