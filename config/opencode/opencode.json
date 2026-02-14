@@ -4,11 +4,6 @@
   "plugin": [
     "oh-my-opencode@latest"
   ],
-  "lsp": {
-    "bash": {
-      "disabled": true
-    }
-  },
   "provider": {
     "volcengine": {
       "npm": "@ai-sdk/openai-compatible",
@@ -32,22 +27,48 @@
         "gpt-5-nano": {
           "name": "gpt-5-nano"
         },
-        "gemini-3-flash": {
-          "name": "gemini-3-flash-preview"
+        "gemini-3-flash-preview": {
+          "name": "gemini-3-flash"
         },
-        "minimax-m2.1":{
+        "minimax-m2.1": {
           "name": "minimax-m2.1"
-        },
-        "gpt-5-codex": {
-          "name": "gpt-5.2-codex"
         },
         "gpt-5.2": {
           "name": "gpt-5.2"
+        },
+        "gpt-5.3-codex": {
+          "name": "gpt-5.3-codex"
         },
         "claude-opus-4-6": {
           "name": "claude-opus-4-6"
         }
       }
+    }
+  },
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      ".git/**",
+      "*.lock",
+      "**/*.log",
+      ".cache/**",
+      "build/**",
+      "__pycache__/**",
+      ".venv/**",
+      "venv/**",
+      "test/bats/**",
+      "test/test_helper/bats-assert/**",
+      "test/test_helper/bats-support/**"
+    ]
+  },
+  "compaction": {
+    "auto": true, // 上下文满时自动压缩
+    "prune": true // 移除旧的工具输出以节省空间
+  },
+  "lsp": {
+    "bash": {
+      "disabled": true
     }
   }
 }

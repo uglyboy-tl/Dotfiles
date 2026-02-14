@@ -21,9 +21,9 @@
 		},
 		"momus": {
 			"model": "n1n/gpt-5.2"
-        },
-        "atlas": {
-            "model": "opencode/kimi-k2.5-free"
+		},
+		"atlas": {
+			"model": "opencode/kimi-k2.5-free"
 		}
 	},
 	"categories": {
@@ -34,7 +34,7 @@
 			"model": "n1n/gpt-5-codex"
 		},
 		"quick": {
-			"model": "opencode/gpt-5-nano"
+			"model": "deepseek/deepseek-chat"
 		},
 		"writing": {
 			"model": "n1n/gemini-3-flash"
