@@ -4,10 +4,19 @@
 	ignore = dirty
 [submodule "dotbot-plugins/crontab"]
 	path = dotbot-plugins/crontab
-	url = https://github.com/codekansas/dotbot-crontab.git
+	url = git@github.com:codekansas/dotbot-crontab.git
 [submodule "config/vim/vim-plug"]
 	path = config/vim/vim-plug
 	url = https://github.com/junegunn/vim-plug.git
 [submodule "config/zsh/zgen"]
 	path = config/zsh/zgen
 	url = https://github.com/tarjoilija/zgen.git
+[submodule "desktop/mpv/thumbfast"]
+	path = desktop/mpv/thumbfast
+	url = https://github.com/po5/thumbfast
+[submodule "desktop/mpv/uosc"]
+	path = desktop/mpv/uosc
+	url = https://github.com/tomasklaen/uosc
+[submodule "data/dynamic-wallpaper"]
+	path = data/dynamic-wallpaper
+	url = https://github.com/adi1090x/dynamic-wallpaper

@@ -1,0 +1,12 @@
+- link:
+    ~/.local/bin/:
+      create: true # 创建目标目录
+      glob: true # 使用通配符匹配
+      path: rpi/scripts/* # 源文件路径
+      relink: true # 允许重新链接
+
+# Crontab 定时任务配置
+- crontab:
+    - time: 0 0 * * * # 每天执行一次
+      command: pg-back > /tmp/pg.log 2>&1
+      platform: linux # 仅限 Linux 平台

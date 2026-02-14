@@ -1,0 +1,86 @@
+configuration {
+  show-icons:		true;
+  display-drun:		"";
+  icon-theme:			"Numix";
+  /*drun-display-format:	" {name}";*/
+  hover-select: true;
+  me-select-entry: "";
+  me-accept-entry: "MousePrimary";
+  location:			1;
+}
+
+@import "color-nord"
+
+window {
+  transparency:		"real";
+  background-color:		@bg;
+  text-color:			@fg;
+  border-radius:		6px;
+  width:			400px;
+  x-offset:			10px;
+  y-offset:			46px;
+}
+
+mainbox {
+  children: [inputbar, listview];
+}
+
+inputbar {
+  color: @nord6;
+  background-color: @bg-alt;
+
+  border: 1px;
+  border-radius:  6px 6px 0px 0px;
+  border-color: @nord10;
+
+  children: [prompt, entry];
+}
+
+entry, prompt, case-indicator {
+  text-font: inherit;
+  text-color:inherit;
+}
+
+entry {
+  background-color: inherit;
+  padding: 12px 3px;
+}
+
+prompt {
+  background-color: inherit;
+  padding: 12px;
+}
+
+listview {
+  lines: 8;
+  padding: 8px;
+}
+
+element {
+  padding: 3px;
+  border-radius: 6px;
+  background-color: transparent;
+  text-color: rgb(216, 222, 233);
+}
+
+element-icon {
+  background-color: inherit;
+  text-color:       inherit;
+  padding: 8px;
+}
+
+element-text {
+  background-color: inherit;
+  text-color:       inherit;
+  padding: 8px 5px;
+}
+
+element selected {
+  text-color: @nord0;
+  background-color: @nord7;
+}
+
+element-text, element-icon {
+  background-color: inherit;
+  text-color:       inherit;
+}

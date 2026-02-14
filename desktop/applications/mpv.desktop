@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=mpv
+Exec=mpv --player-operation-mode=pseudo-gui %U
+Terminal=false
+NoDisplay=true

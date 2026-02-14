@@ -14,12 +14,13 @@
     $XDG_CONFIG_HOME: # 清理 XDG 配置目录
       recursive: true # 递归清理
 
-      # Shell 命令执行阶段
+# Shell 命令执行阶段
 - shell:
     - [
         git submodule update --init --recursive config dotbot-plugins/crontab,
         更新基础 submodule 模块
       ]
+
 # 符号链接创建阶段
 - link:
     # BASH 配置 (已注释)
@@ -69,3 +70,6 @@
     $XDG_CONFIG_HOME/pip/pip.conf: config/sources/pip.conf # PIP 镜像源配置
     ## UV Python 包管理器
     $XDG_CONFIG_HOME/uv/uv.toml: config/sources/uv.toml # UV 配置
+
+    # Built-in
+    $XDG_CONFIG_HOME/binup/config.toml: config/builtin/binup.toml # UV 配置

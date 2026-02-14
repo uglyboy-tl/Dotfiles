@@ -1,0 +1,118 @@
+#! /bin/bash
+# 设置终端类型
+export TERM=linux
+
+# 检查并启动 sxhkd (快捷键守护进程)
+pgrep -x sxhkd > /dev/null || sxhkd &
+# 加载 Xresources 配置
+xrdb ~/.config/X11/Xresources
+# 设置鼠标光标
+xsetroot -cursor_name left_ptr
+
+# 灵感来源于 gk
+# 定义 bspc config 的简化函数
+_c() { bspc config "$@"; }
+# 定义 bspc monitor 的简化函数
+_m() { bspc monitor "$@"; }
+# 定义 bspc rule -a 的简化函数 (添加窗口规则)
+_r() { bspc rule -a "$@"; }
+# 定义一个函数来停止并重新启动服务
+_s() {
+	pkill -x "$1" # 杀死指定进程
+	{
+		sleep 0.1 # 短暂等待
+		"$@" &    # 在后台重新启动服务
+	}
+}
+
+# 配置显示器和桌面
+_m -d I II III IV V VI # 设置六个桌面
+
+# 窗口管理器基本配置
+_c border_width         0    # 窗口边框宽度
+_c window_gap           10   # 窗口间距
+_c split_ratio          0.52 # 分割比例
+_c borderless_monocle   true # 单窗口模式下无边框
+_c gapless_monocle      true # 单窗口模式下无间距
+
+# 鼠标行为配置
+_c pointer_modifier mod1      # 鼠标修改键 (通常是 Alt)
+_c pointer_action1 resize_side # 鼠标动作1：调整窗口边缘大小
+_c pointer_action2 resize_corner # 鼠标动作1：调整窗口角落大小
+_c pointer_action3 move        # 鼠标动作3：移动窗口
+
+# 边框颜色配置
+_c normal_border_color "#4C566A"    # 普通窗口边框颜色
+_c active_border_color "#434C5E"    # 活动窗口边框颜色
+_c focused_border_color "#2E3440"   # 焦点窗口边框颜色
+_c presel_feedback_color "#3B4252" # 预选反馈颜色
+
+# 启动服务
+# 并行启动常规服务
+(
+    _s picom -b                 # 启动 Picom (合成器)
+    _s redshift                 # 启动 Redshift (色温调节)
+    _s dunst                    # 启动 Dunst (通知守护进程)
+    _s polybar --reload main    # 启动 Polybar (状态栏) 并重新加载配置
+	_s lxpolkit                 # 启动 LXPolkit (策略工具包)
+) &
+
+# 动态壁纸
+#_s ~/.fehbg # 示例：使用 feh 设置壁纸 (当前未启用)
+$HOME/.local/bin/dwall.sh -s lakeside & # 启动动态壁纸脚本，使用 'lakeside' 主题
+
+## 窗口规则 ----------------------------------------------#
+# 首先移除所有现有规则
+bspc rule -r *:*
+
+## web 浏览器规则
+declare -a web=(Microsoft-edge) # 定义 web 应用程序数组
+for i in ${web[@]}; do
+	bspc rule -a $i desktop='^1' follow=on focus=on # 将 web 应用程序分配到桌面 1
+done
+
+## 办公软件规则
+declare -a office=(obsidian Typora Zotero steam_app_489830) # 定义办公软件数组
+for i in ${office[@]}; do
+	_r $i desktop='^2' follow=on # 将办公软件分配到桌面 2
+done
+
+## 文件管理器规则
+declare -a files=(lf WeRead steam Lutris) # 定义文件管理器数组
+for i in ${files[@]}; do
+	bspc rule -a $i desktop='^3' follow=on focus=on # 将文件管理器分配到桌面 3
+done
+
+## 媒体应用规则
+declare -a media=(melonDS GStreamer Io.github.celluloid_player.Celluloid mpv steam_proton) # 定义媒体应用数组
+for i in ${media[@]}; do
+	_r $i desktop='^4' follow=on # 将媒体应用分配到桌面 4
+done
+
+## 聊天应用规则
+declare -a chat=(wechat Bytedance-feishu TDAppDesktop wemeetapp) # 定义聊天应用数组
+for i in ${chat[@]}; do
+	_r $i desktop='^5' follow=on focus=on # 将聊天应用分配到桌面 5
+done
+
+## 代码编辑器规则
+declare -a code=(Code) # 定义代码编辑器数组
+for i in ${code[@]}; do
+	_r $i desktop='^6' follow=on # 将代码编辑器分配到桌面 6
+done
+
+## 浮动窗口规则 (终端)
+declare -a terminal=(Alacritty kitty) # 定义终端模拟器数组
+for i in ${terminal[@]}; do
+	_r $i state=floating rectangle=1280x720+640+100 focus=on # 将终端设置为浮动窗口，并设置大小和位置
+done
+
+## 浮动窗口规则 (其他应用)
+declare -a floating=(rofi feh Zathura) # 定义其他浮动应用数组
+for i in ${floating[@]}; do
+	_r $i state=floating follow=on focus=on # 将这些应用设置为浮动窗口
+done
+
+# 特殊窗口规则
+_r '*:*:画中画' follow=false state=floating sticky=on # 画中画窗口：不跟随，浮动，置顶
+_r 'Microsoft-edge:*:Bitwarden' state=floating       # Bitwarden 窗口：浮动

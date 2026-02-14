@@ -1,0 +1,87 @@
+# sxhkd 配置文件 - 快捷键绑定
+
+#
+# 独立于窗口管理器的快捷键
+#
+
+# 终端模拟器
+super + Return
+	alacritty
+
+# 程序启动器
+super + r
+	rofi -show drun
+
+alt + Tab
+	rofi -show window
+
+#super + r     # Super + r (备用，当前未启用)
+#	rofi -show run # 启动 Rofi 的命令运行器 (run 模式)
+
+# 重新加载 sxhkd 配置文件
+super + Escape
+	pkill -USR1 -x sxhkd
+
+# 蓝牙管理脚本
+super + b
+	~/.local/bin/rofi-bluetooth
+
+# 文件管理器
+super + e
+	alacritty --class lf -e ~/.local/bin/lf.sh
+
+# 终端应用 (音乐、系统监控、新闻阅读)
+super + {m, h, n}
+	alacritty -e {ncmpcpp, btop, newsboat}
+
+#
+# 主音量控制
+#
+XF86AudioRaiseVolume
+	~/.local/bin/barify v i
+
+XF86AudioLowerVolume
+	~/.local/bin/barify v d
+
+XF86AudioMute
+	~/.local/bin/barify v m
+
+#
+# bspwm 快捷键
+#
+
+# 退出/重启 bspwm
+super + alt + {q,r}
+	bspc {quit,wm -r}
+
+# 关闭和杀死窗口
+super + {_, shift + }w
+	bspc node -{c, k}
+
+# 在平铺和单窗口布局之间切换
+super + shift + f
+    bspc desktop -l next
+
+#
+# 窗口状态/标志
+#
+
+# 设置窗口状态
+super + {t, shift + t, s, f}
+	bspc node -t {tiled, pseudo_tiled, floating, fullscreen}
+
+# 在浮动和平铺之间切换
+super + space
+    bspc node -t "~"{floating,tiled}
+
+# 设置节点标志
+super + ctrl + {m, x, y, z}
+        bspc node -g {marked, locked, sticky, private}
+
+#
+# 焦点/交换
+#
+
+# 聚焦或发送到指定桌面
+super + {_, shift + }{1-9, 0}
+	bspc {desktop -f, node -d} '^{1-9, 10}'

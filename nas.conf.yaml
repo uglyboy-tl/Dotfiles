@@ -1,5 +1,0 @@
-# Crontab 定时任务配置
-- crontab:
-    - time: 0 0 * * * # 每天执行一次
-      command: pg-back > /tmp/pg.log 2>&1
-      platform: linux # 仅限 Linux 平台

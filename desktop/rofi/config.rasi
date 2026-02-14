@@ -1,0 +1,12 @@
+configuration {
+  show-icons:	false;
+  modi: "window,drun,run";
+  font: "Sarasa UI SC 12";
+  dpi: 128;
+  display-ssh:    "";
+  display-run:    "";
+  display-drun:   "";
+  display-window: "";
+}
+
+@theme "nord"

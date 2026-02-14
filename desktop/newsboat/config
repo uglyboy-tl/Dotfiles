@@ -1,0 +1,18 @@
+urls-source "miniflux"
+miniflux-url "https://rss.uglyboy.cn"
+miniflux-login "admin"
+miniflux-passwordfile "~/.config/newsboat/miniflux-pw.txt"
+
+# 其他可选配置
+refresh-on-startup yes    # 启动时自动刷新订阅
+auto-reload yes           # 定期自动刷新
+show-read-feeds no        # 仅显示未读消息
+reload-time 30            # 每30分钟刷新一次
+
+# 打开文章
+unbind-key ENTER
+bind-key SPACE open
+# 标记为已读/未读
+bind-key m toggle-article-read
+# 刷新订阅源
+bind-key r reload

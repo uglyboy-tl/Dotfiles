@@ -1,0 +1,33 @@
+[env]
+TERM = "xterm-256color"
+
+[general]
+live_config_reload = true
+import = ["~/.config/alacritty/catppuccin-mocha.toml","~/.config/alacritty/keybindings.toml"]
+
+[window]
+padding = { x = 10, y = 5 }
+decorations = "None"
+dynamic_padding = false
+opacity = 0.9
+blur = true
+
+[font]
+normal = { family = "Maple Mono SC NF", style = "Regular" }
+bold = { family = "Maple Mono SC NF", style = "Bold" }
+italic = { family = "Maple Mono SC NF", style = "Italic" }
+size = 11
+
+[selection]
+save_to_clipboard = true
+semantic_escape_chars = ''',│`|:"' ()[]{}<>\t'''
+
+[cursor.style]
+shape = "Beam"
+
+[[mouse.bindings]]
+action = "PasteSelection"
+mouse = "Right"
+
+[colors]
+draw_bold_text_with_bright_colors = true
