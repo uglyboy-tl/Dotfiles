@@ -64,6 +64,9 @@
     ## OpenCode & OMO
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/opencode.json
     $XDG_CONFIG_HOME/opencode/oh-my-opencode.json: config/opencode/oh-my-opencode.json
+    $XDG_CONFIG_HOME/opencode/AGENTS.md: config/opencode/AGENTS.md
+    $XDG_CONFIG_HOME/opencode/skills: config/opencode/skills
+    $XDG_CONFIG_HOME/opencode/commands: config/opencode/commands
 
     # 开发环境配置
     ## Python 包管理配置
