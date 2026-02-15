@@ -1,8 +1,12 @@
 {
 	"$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+	"google_auth": false,
 	"agents": {
 		"sisyphus": {
 			"model": "opencode/kimi-k2.5-free"
+		},
+		"oracle":{
+			"model": "n1n/gpt-5.2"
 		},
 		"hephaestus": {
 			"model": "n1n/gpt-5-codex"
@@ -44,6 +48,19 @@
 		"enabled": true,
 		"layout": "main-vertical"
 	},
+	"disabled_hooks": [
+		"todo-continuation-enforcer",
+		"anthropic-context-window-limit-recovery",
+		"auto-update-checker",
+		"claude-code-hooks"
+	],
+	"disable_agents":[],
+	"disabled_skills": [
+		"playwright"
+	],
+	"disabled_commands": [
+		"init-deep"
+	],
 	"claude_code": {
 		"mcp": false,
 		"commands": false,
@@ -51,17 +68,5 @@
 		"agents": false,
 		"hooks": false,
 		"plugins": false
-	},
-	"disabled_skills": [
-		"playwright"
-	],
-	"disabled_commands": [
-		"init-deep"
-	],
-	"disabled_hooks": [
-		"todo-continuation-enforcer",
-		"anthropic-context-window-limit-recovery",
-		"auto-update-checker",
-		"claude-code-hooks"
-	]
+	}
 }
