@@ -1,15 +1,11 @@
 download_dir = "/home/uglyboy/Downloads/BinaryArchives"
 proxy_prefix = "https://xget.uglyboy.cn/gh/"
 
-[packages.bun]
-repo = "oven-sh/bun"
-file_pattern = "bun-{os}-{arch}"
-file_extension = "zip"
-
-[packages.uv]
-repo = "astral-sh/uv"
-file_pattern = "uv-{arch}-unknown-{os}-gnu"
+[packages.yq]
+repo = "mikefarah/yq"
+file_pattern = "yq_{os}_{arch}"
 file_extension = "tar.gz"
+binary_name = "yq"
 
 [packages.opencode]
 repo = "anomalyco/opencode"
@@ -21,8 +17,12 @@ repo = "gokcehan/lf"
 file_pattern = "lf-{os}-{arch}"
 file_extension = "tar.gz"
 
-[packages.yq]
-repo = "mikefarah/yq"
-file_pattern = "yq_{os}_{arch}"
+[packages.uv]
+repo = "astral-sh/uv"
+file_pattern = "uv-{arch}-unknown-{os}-gnu"
 file_extension = "tar.gz"
-binary_name = "yq"
+
+[packages.bun]
+repo = "oven-sh/bun"
+file_pattern = "bun-{os}-{arch}"
+file_extension = "zip"

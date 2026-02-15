@@ -4,7 +4,7 @@ alias duf='duf --only local'
 alias wget='wget --hsts-file="$XDG_DATA_HOME/wget-hsts"'
 alias fetch='fastfetch'
 
-__ZSHPROXY_HTTP="${__ZSHPROXY_HTTP:-nas.uglyboy.cn:50172}"
+__ZSHPROXY_HTTP="${__ZSHPROXY_HTTP:-192.168.0.100:50171}"
 
 proxy () {
 	# http_proxy
@@ -13,6 +13,9 @@ proxy () {
 	# https_proxy
 	export https_proxy="${__ZSHPROXY_HTTP}"
 	export HTTPS_PROXY="${__ZSHPROXY_HTTP}"
+	# no_proxy
+	export no_proxy="localhost,127.0.0.1,192.168.*,10.*,::1"
+	export NO_PROXY="localhost,127.0.0.1,192.168.*,10.*,::1"
     echo "HTTP Proxy On."
 }
 
