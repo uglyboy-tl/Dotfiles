@@ -3,31 +3,37 @@
 	"google_auth": false,
 	"agents": {
 		"sisyphus": {
-			"model": "opencode/kimi-k2.5-free"
+			"model": "opencode/glm-5-free"
 		},
-		"oracle":{
+		"oracle": {
 			"model": "n1n/gpt-5.2"
 		},
 		"hephaestus": {
 			"model": "n1n/gpt-5-codex"
 		},
 		"librarian": {
-			"model": "n1n/gemini-3-flash"
+			"model": "opencode/minimax-m2.5-free"
 		},
 		"explore": {
-			"model": "opencode/gpt-5-nano"
+			"model": "opencode/minimax-m2.5-free"
+		},
+		"frontend-ui-ux-engineer": {
+			"model": "google/antigravity-gemini-3-pro"
+		},
+		"document-writer": {
+			"model": "google/antigravity-gemini-3-flash"
 		},
 		"multimodal-looker": {
-			"model": "n1n/gemini-3-flash"
+			"model": "google/antigravity-gemini-3-flash"
 		},
 		"prometheus": {
-			"model": "opencode/kimi-k2.5-free"
+			"model": "n1n/gpt-5.2"
 		},
 		"momus": {
 			"model": "n1n/gpt-5.2"
 		},
 		"atlas": {
-			"model": "opencode/kimi-k2.5-free"
+			"model": "google/antigravity-claude-sonnet-4-6"
 		}
 	},
 	"categories": {
@@ -54,7 +60,7 @@
 		"auto-update-checker",
 		"claude-code-hooks"
 	],
-	"disable_agents":[],
+	"disable_agents": [],
 	"disabled_skills": [
 		"playwright"
 	],
