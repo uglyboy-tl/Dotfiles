@@ -34,6 +34,9 @@
       path: scripts/* # 源文件路径
       relink: true # 允许重新链接
 
+    # environment.d
+    $XDG_CONFIG_HOME/environment.d/60-xdg.conf: config/environment.d/xdg.conf # Systemctl 环境变量
+
     # ZSH 配置
     $XDG_CONFIG_HOME/zsh/.zshrc: # Zsh 主配置文件
       path: config/zsh/zshrc.zsh
