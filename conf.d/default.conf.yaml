@@ -64,13 +64,13 @@
     # 其他应用程序配置
     ## LF 文件管理器
     $XDG_CONFIG_HOME/lf: config/lf
-    ## OpenCode & OMO
+    ## OpenCode
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/opencode.json
-    $XDG_CONFIG_HOME/opencode/oh-my-opencode.json: config/opencode/oh-my-opencode.json
     $XDG_CONFIG_HOME/opencode/antigravity.json: config/opencode/antigravity.json
     $XDG_CONFIG_HOME/opencode/AGENTS.md: config/opencode/AGENTS.md
-    $XDG_CONFIG_HOME/opencode/skills: config/opencode/skills
+    $XDG_CONFIG_HOME/opencode/agents: config/opencode/agents
     $XDG_CONFIG_HOME/opencode/commands: config/opencode/commands
+    $XDG_CONFIG_HOME/opencode/skills: config/opencode/skills
 
     # 开发环境配置
     ## Python 包管理配置
