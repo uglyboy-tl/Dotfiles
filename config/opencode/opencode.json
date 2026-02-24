@@ -4,7 +4,7 @@
     "opencode-antigravity-auth@latest",
     "opencode-hashline",
   ],
-  "model": "deepseek/deepseek-chat",
+  "model": "opencode/minimax-m2.5-free",
   "small_model": "opencode/gpt-5-nano",
   "compaction": {
     "auto": true,
@@ -40,6 +40,10 @@
         "x-api-key": "{env:EXA_API_KEY}"
       }
     },
+    "fetch": {
+      "command": ["uvx", "mcp-server-fetch"],
+      "type": "local"
+    }
   },
   "provider": {
     "n1n": {
