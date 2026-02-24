@@ -1,11 +1,10 @@
 ---
 description: 将想法转化为可执行的工作规划
 mode: primary
-temperature: 0.1
+temperature: 0.8
 tools:
   write: false
   edit: false
-  bash: false
 color: "#FF5722"
 ---
 

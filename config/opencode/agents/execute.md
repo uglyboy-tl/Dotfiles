@@ -1,7 +1,7 @@
 ---
 description: 加载并执行实现计划
 mode: primary
-temperature: 0.1
+temperature: 0.3
 color: "#10B981"
 ---
 
