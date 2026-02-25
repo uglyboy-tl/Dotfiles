@@ -6,11 +6,17 @@
   ],
   "model": "opencode/minimax-m2.5-free",
   "small_model": "opencode/gpt-5-nano",
-  "compaction": {
-    "auto": true,
-    "prune": true
-  },
+  "share": "disabled",
   "autoupdate": false,
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
+      }
+    },
+  },
   "lsp": {
     "bash": {
       "disabled": true
@@ -21,30 +27,6 @@
     "github-copilot-enterprise",
     "github-models"
   ],
-  "mcp": {
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
-      }
-    },
-    "grep_app": {
-      "type": "remote",
-      "url": "https://mcp.grep.app"
-    },
-    "websearch": {
-      "type": "remote",
-      "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
-      "headers": {
-        "x-api-key": "{env:EXA_API_KEY}"
-      }
-    },
-    "fetch": {
-      "command": ["uvx", "mcp-server-fetch"],
-      "type": "local"
-    }
-  },
   "provider": {
     "n1n": {
       "npm": "@ai-sdk/openai-compatible",
