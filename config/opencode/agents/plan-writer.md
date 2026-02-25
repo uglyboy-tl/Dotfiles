@@ -2,6 +2,8 @@
 description: 将规划结果写成可执行计划文档
 mode: subagent
 temperature: 0.1
+tools:
+  bash: false
 ---
 
 # 撰写实现计划
