@@ -66,7 +66,6 @@
     $XDG_CONFIG_HOME/lf: config/lf
     ## OpenCode
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/opencode.json
-    $XDG_CONFIG_HOME/opencode/antigravity.json: config/opencode/antigravity.json
     $XDG_CONFIG_HOME/opencode/AGENTS.md: config/opencode/AGENTS.md
     $XDG_CONFIG_HOME/opencode/agents: config/opencode/agents
     $XDG_CONFIG_HOME/opencode/commands: config/opencode/commands
