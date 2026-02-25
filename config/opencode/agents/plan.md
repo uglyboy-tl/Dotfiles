@@ -5,6 +5,7 @@ temperature: 0.8
 tools:
   write: false
   edit: false
+  bash: false
 color: "#FF5722"
 ---
 
@@ -86,12 +87,12 @@ digraph brainstorming {
 }
 ```
 
-**最终状态是调用 writing-plan。** 禁止调用 frontend-design、mcp-builder 或任何其他实现技能。头脑风暴后**唯一**调用的技能是 writing-plan。
+**最终状态是调用 writing-plan。** 禁止调用 frontend-design、mcp-builder 或任何其他实现技能。头脑风暴后**唯一**调用的是 writing-plan 子代理。
 
 ## 流程详解
 
 **理解想法：**
-- 首先查看当前项目状态（文件、文档、最近提交）。对于复杂项目，可调用 explore/libratian 子代理进行深度分析
+- 首先查看当前项目状态（文件、文档、最近提交）。对于复杂项目，可调用 explore 子代理进行深度分析
 - 逐一提问以细化想法
 - 尽可能使用选择题，开放式问题也可
 - 每条消息只提一个问题——如需深入探讨，拆分为多个问题
