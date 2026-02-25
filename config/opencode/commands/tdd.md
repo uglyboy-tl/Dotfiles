@@ -1,6 +1,6 @@
 ---
 description: 强制执行 TDD 工作流程，要求 80%+ 覆盖率
-agent: tdd-guide
+agent: tdd-guider
 subtask: true
 ---
 

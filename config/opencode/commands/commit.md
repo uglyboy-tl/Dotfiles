@@ -1,7 +1,7 @@
 ---
 description: 提交当前修改
-agent: git-commit
-model: openrouter/stepfun/step-3.5-flash:free
+agent: git-commiter
+model: deepseek/deepseek-chat
 subtask: true
 ---
 $ARGUMENTS
