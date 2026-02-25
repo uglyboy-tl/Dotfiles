@@ -1,5 +1,5 @@
 ---
-description: 执行 Code Review
+description: 审查代码变更 [commit|branch|pr]，默认审查未提交的更改
 agent: code-reviewer
 subtask: true
 ---
