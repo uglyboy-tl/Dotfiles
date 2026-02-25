@@ -26,3 +26,8 @@ file_extension = "tar.gz"
 repo = "oven-sh/bun"
 file_pattern = "bun-{os}-{arch}"
 file_extension = "zip"
+
+[packages.chsrc]
+repo = "RubyMetric/chsrc"
+file_pattern = "chsrc-{arch}-{os}"
+binary_name = "chsrc"
