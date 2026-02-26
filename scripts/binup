@@ -161,26 +161,35 @@ string.is_ascii() { [[ $1 != *[![:ascii:]]* ]]; }
 string.has_ansi() { [[ $1 == *$'\x1b'* ]]; }
 
 console.stdout() { printf "%s\n" "$*"; }
-console.repeat() {
-  local -a line
-  local i=1
-  while true; do
-    [[ $i -gt ${2:-0} ]] && break
-    line+=("$1")
-    i=$((i + 1))
-  done
-  printf "%s" "${line[@]}"
-}
 console.stderr() { printf "%s\n" "$*" >&2; }
+console.repeat() {
+	local repeat=${2:-0}
+	((repeat <= 0)) && return
+	local char="$1"
+	if [[ ${#char} -eq 1 ]]; then
+		printf "%*s" "$repeat" "" | tr ' ' "$char"
+	else
+		local result=""
+		for ((i = 0; i < repeat; i++)); do
+			result+="$char"
+		done
+		printf "%s" "$result"
+	fi
+}
+UNDERLINE_CACHE=$(console.repeat "=" 20)
 console.align() {
-	local padding=$(( $1 - $(console.display_width "$2") ))
-	(( padding > 0 )) && printf "%s%${padding}s%s\n" "$2" "" "${*:3}" || printf "%s%s\n" "$2" "${*:3}"
-} >&2
+	local padding=$(($1 - $(console.display_width "$2")))
+	((padding > 0)) && printf "%s%${padding}s%s\n" "$2" "" "${*:3}" || printf "%s%s\n" "$2" "${*:3}"
+}
+console.indent() { console.align $(($1 * 2)) "" "${*:2}"; }
 console.ansi_width() {
 	local width=0 i=0 len=${#1} flag=0
-	while (( i < len )); do
+	while ((i < len)); do
 		local char="${1:$((i++)):1}"
-		(( flag )) && { [[ $char =~ [a-zA-Z] ]] && flag=0; continue; }
+		((flag)) && {
+			[[ $char =~ [a-zA-Z] ]] && flag=0
+			continue
+		}
 		[[ $char == $'\x1b' ]] && flag=1 && continue
 		((width++))
 	done
@@ -190,22 +199,67 @@ console.mixed_width() {
 	local width=0 flag=0 i=0
 	local hex_bytes=$(printf "%s" "$1" | od -An -tx1 -v | tr -d ' \n')
 	local len=${#hex_bytes}
-	while (( i < len )); do
+	while ((i < len)); do
 		local num=$((0x${hex_bytes:$i:2}))
-		i=$((i+2))
-		(( flag )) && { (( (num >= 0x41 && num <= 0x5A) || (num >= 0x61 && num <= 0x7A) )) && flag=0; continue; }
-		(( num == 0x1b )) && { flag=1; continue; }
-		(( num <= 0x7F )) && { ((width++)); continue; }
-		(( num >= 0xC2 && num <= 0xDF )) && { ((width++)); i=$((i+2)); continue; }
-		(( num >= 0xE0 && num <= 0xEF )) && { ((width+=2)); i=$((i+4)); continue; }
-		(( num >= 0xF0 && num <= 0xF7 )) && { ((width+=2)); i=$((i+6)); }
+		i=$((i + 2))
+		((flag)) && {
+			(((num >= 0x41 && num <= 0x5A) || (num >= 0x61 && num <= 0x7A))) && flag=0
+			continue
+		}
+		((num == 0x1b)) && {
+			flag=1
+			continue
+		}
+		((num <= 0x7F)) && {
+			((width++))
+			continue
+		}
+		((num >= 0xC2 && num <= 0xDF)) && {
+			((width++))
+			i=$((i + 2))
+			continue
+		}
+		((num >= 0xE0 && num <= 0xEF)) && {
+			((width += 2))
+			i=$((i + 4))
+			continue
+		}
+		((num >= 0xF0 && num <= 0xF7)) && {
+			((width += 2))
+			i=$((i + 6))
+		}
 	done
 	echo "$width"
 }
 console.display_width() {
-	[[ $1 ]] || { echo "0"; return; }
+	[[ $1 ]] || {
+		echo "0"
+		return
+	}
 	! string.is_ascii "$1" && console.mixed_width "$1" && return
 	string.has_ansi "$1" && console.ansi_width "$1" || echo "${#1}"
+}
+console.section() {
+	console.stdout "$1:"
+	console.stdout "=${UNDERLINE_CACHE:0:$(console.mixed_width $1)}"
+}
+console.item.title() {
+	console.indent $1 "${*:2}"
+	_CONSOLE_INDENT_DEPTH=$(($1 + 1))
+}
+console.item.item() {
+	console.indent ${_CONSOLE_INDENT_DEPTH} "${*}"
+}
+console.item.mid() {
+	console.item.item "├─" "${*}"
+}
+console.item.end() {
+	console.item.item "└─" "${*}"
+	echo ""
+}
+console.footer() {
+	console.stdout "========="
+	console.stdout "${*}"
 }
 
 : ${_LOG_USE_EXTRA:=false}
@@ -496,6 +550,7 @@ fs.file.exists() { [[ -f "$1" ]]; }
 fs.dir.exists() { [[ -d "$1" ]]; }
 fs.write() {
 	local _f="$1"
+	mkdir -p $(dirname "$1")
 	shift
 	(($# > 0)) && printf "%s\n" "$@" >"$_f" || : >"$_f"
 }
@@ -507,7 +562,7 @@ fs.replace() {
 fs.insert() { sed -i "/$2/a\\$3" "$1" 2>/dev/null; }
 fs.rmline() { [[ -n "$4" ]] && sed -i "${4},/$2/{/$2/d}" "$1" 2>/dev/null || sed -i "/$2/d" "$1" 2>/dev/null; }
 fs.cleanup() { ls -t ${1}* 2>/dev/null | tail -n +$((${2:-3} + 1)) | xargs -r rm -f; }
-fs.mktemp() { mktemp ${1:-} 2>/dev/null || { log.error "Failed to create temporary file" && return 1; }; }
+fs.mktemp() { mktemp "$@" 2>/dev/null || { log.error "Failed to create temporary file" && return 1; }; }
 fs.file.extract() {
 	local path=$(realpath "$1") base=$(basename "$1")
 	builtin cd "$2" >/dev/null
@@ -520,7 +575,10 @@ fs.file.extract() {
 	*.gz) gzip -dc "$path" >"${base%.gz}" ;;
 	*.bz2) bzip2 -dc "$path" >"${base%.bz2}" ;;
 	*.xz) xz -dc "$path" >"${base%.xz}" ;;
-	*) chmod +x "$path";cp "$path" "${base%%.*}" ;;
+	*)
+		chmod +x "$path"
+		cp "$path" "${base%%.*}"
+		;;
 	esac
 }
 
@@ -689,8 +747,43 @@ config.save() {
 	fs.write "$_f" "${_o[@]}"
 }
 
+get_package_property() { echo "$(config.array.get "packages" "$1" "$2")"; }
+
+cmd_list() {
+	args.init
+	args.process "$@"
+	console.section "已下载的包"
+	for package in $(config.array.items "packages"); do
+		current_version=$(get_package_property "$package" "current_version")
+		latest_version=$(get_package_property "$package" "latest_version")
+		file_extension=$(get_package_property "$package" "file_extension")
+		file_path="$SETTINGS_DOWNLOAD_DIR/${package}-${current_version}${file_extension:+.$file_extension}"
+		console.item.title 0 "$POWERLINE_STAR $package"
+		[[ ! -n "$latest_version" ]] && console.item.end "状态: $POWERLINE_WARN 运行 \'update\' 获取版本信息" && continue
+		[[ ! -n "$current_version" ]] || [[ ! -f "$file_path" ]] && console.item.mid "状态: $POWERLINE_COG 未下载 (最新: $latest_version)" && console.item.end "运行 \`upgrade $package\` 下载" && continue
+		download_time=$(stat -c "%.19y" "$file_path" 2>/dev/null || stat -c "%y" "$file_path" 2>/dev/null | cut -d'.' -f1)
+		console.item.mid "当前版本: $current_version"
+		console.item.mid "文件: $(basename "$file_path")"
+		console.item.mid "下载时间: $download_time"
+		[[ "$current_version" == "$latest_version" ]] && console.item.end "状态: $POWERLINE_OK 已是最新" || console.item.end "状态: $POWERLINE_STAR 有新版本 $latest_version"
+	done
+}
+
 system.command.exist() { command -v "$1" >/dev/null 2>&1; }
 system.command.required() { ! system.command.exist "$1" && log.error "This module required \`$1\` command." && exit 1 || return 0; }
+system.command.result() {
+  local result
+	result=$(eval "$1" 2>&1) || {
+		local exit_code=$?
+		if [[ $exit_code -eq 1 ]] && [[ "$1" == *grep* ]]; then
+			result=""
+		else
+			result="（命令执行失败，退出码: $exit_code）"
+		fi
+	}
+	[[ -z "$result" ]] && result="（无输出）"
+	echo "$result"
+}
 system.os() {
   [[ ! -z ${_SYSTEM_OS+x} ]] && echo "$_SYSTEM_OS" && return 0
   case "$OSTYPE" in
@@ -714,37 +807,6 @@ system.arch() {
   esac
 }
 _SYSTEM_ARCH="$(system.arch)"
-
-UNDERLINE_CACHE=$(console.repeat "=" 20)
-title.format() {
-	console.stdout "$1:"
-	console.stdout "=${UNDERLINE_CACHE:0:$(console.mixed_width $1)}"
-}
-item.format() {
-	local level=$1
-	console.align $(( ${level}*2 )) "" "${*:2}"
-}
-get_package_property() { echo "$(config.array.get "packages" "$1" "$2")"; }
-
-cmd_list() {
-	args.init
-	args.process "$@"
-	title.format "已下载的包"
-	for package in $(config.array.items "packages"); do
-		current_version=$(get_package_property "$package" "current_version")
-		latest_version=$(get_package_property "$package" "latest_version")
-		file_extension=$(get_package_property "$package" "file_extension")
-		file_path="$SETTINGS_DOWNLOAD_DIR/${package}-${current_version}${file_extension:+.$file_extension}"
-		item.format 1 "$package:"
-		[[ ! -n "$latest_version" ]] && item.format 2 "状态: $POWERLINE_WARN 运行 'update' 获取版本信息" && continue
-		[[ ! -n "$current_version" ]] || [[ ! -f "$file_path" ]] && item.format 2 "状态: $POWERLINE_COG 未下载 (最新: $latest_version)" && item.format 2 "运行 'upgrade $package' 下载" && continue
-		download_time=$(stat -c "%.19y" "$file_path" 2>/dev/null || stat -c "%y" "$file_path" 2>/dev/null | cut -d'.' -f1)
-		item.format 2 "当前版本: $current_version"
-		item.format 2 "文件: $(basename "$file_path")"
-		item.format 2 "下载时间: $download_time"
-		[[ "$current_version" == "$latest_version" ]] && item.format 2 "状态: $POWERLINE_OK 已是最新" || item.format 2 "状态: $POWERLINE_STAR 有新版本 $latest_version"
-	done
-}
 
 declare -g _REQUESTS_TIMEOUT=30
 declare -g _REQUESTS_USER_AGENT="bashlet-requests/1.0"
@@ -971,7 +1033,7 @@ save_latest_info() {
 cmd_update() {
 	args.init
 	args.process "$@"
-	title.format "检查更新"
+	console.section "检查更新"
 	local has_updates=false
 	for package in $(config.array.items "packages"); do
 		local -a props=()
@@ -981,28 +1043,27 @@ cmd_update() {
 		local repo="${props[0]}" version_type="${props[1]}" file_pattern="${props[2]}" \
 			file_extension="${props[3]}" current_version="${props[4]}"
 		local latest_info=$(get_latest_version_and_url "$repo" "$version_type" "$file_pattern" "$file_extension") || {
-			item.format 1 "$package: 获取版本失败"
+			console.item.title 1 "$package: 获取版本失败"
 			continue
 		}
 		local latest_version="${latest_info%%|||*}" download_url="${latest_info#*|||}"
 		[[ -z "$latest_version" || -z "$download_url" ]] && {
-			item.format 1 "$package: 获取版本信息失败"
+			console.item.title 1 "$package: 获取版本信息失败"
 			continue
 		}
 		save_latest_info "$package" "$latest_version" "$download_url"
 		has_updates=true
 		if [[ -z "$current_version" ]]; then
-			item.format 1 "$package: 未下载 (最新: $latest_version)"
+			console.item.title 1 "$package: 未下载 (最新: $latest_version)"
 		elif [[ "$current_version" != "$latest_version" ]]; then
-			item.format 1 "$package: 有新版本 $current_version $POWERLINE_POINTING_ARROW  $latest_version"
+			console.item.title 1 "$package: 有新版本 $current_version $POWERLINE_POINTING_ARROW  $latest_version"
 		else
-			item.format 1 "$package: 已是最新版本 $current_version"
+			console.item.title 1 "$package: 已是最新版本 $current_version"
 			has_updates=false
 		fi
 	done
 	[[ "$has_updates" == "true" ]] && {
-		console.stdout "========="
-		console.stdout "运行 './bin-updater.sh upgrade' 下载更新"
+		console.footer "运行 \`./bin-updater.sh upgrade\` 下载更新"
 	}
 }
 
@@ -1053,7 +1114,7 @@ cmd_upgrade() {
 		done
 	fi
 	local packages_skipped=0
-	title.format "下载更新"
+	console.section "下载更新"
 	for package in "${packages_to_upgrade[@]}"; do
 		local file_extension current_version latest_version download_url
 		file_extension=$(get_package_property "$package" "file_extension")
@@ -1061,19 +1122,19 @@ cmd_upgrade() {
 		latest_version=$(get_package_property "$package" "latest_version")
 		download_url=$(get_package_property "$package" "download_url")
 		if [[ -z "$latest_version" ]]; then
-			item.format 1 "$package: 没有云端信息，请先运行 'update'"
+			console.item.title 1 "$package: 没有云端信息，请先运行 'update'"
 			continue
 		fi
 		if [[ -z "$download_url" ]]; then
-			item.format 1 "$package: 没有下载链接，请先运行 'update'"
+			console.item.title 1 "$package: 没有下载链接，请先运行 'update'"
 			continue
 		fi
 		if [[ -z "$current_version" ]]; then
-			item.format 1 "$package: 未下载，将下载 $latest_version"
+			console.item.title 1 "$package: 未下载，将下载 $latest_version"
 		elif [[ "$current_version" != "$latest_version" ]]; then
-			item.format 1 "$package: 有新版本 $current_version -> $latest_version"
+			console.item.title 1 "$package: 有新版本 $current_version -> $latest_version"
 		else
-			item.format 1 "$package: 已是最新版本 $current_version"
+			console.item.title 1 "$package: 已是最新版本 $current_version"
 			((packages_skipped++)) || true
 			continue
 		fi
@@ -1083,19 +1144,18 @@ cmd_upgrade() {
 		fi
 		local filename=$(build_filename "$package" "$latest_version" "$file_extension")
 		local output_file="$SETTINGS_DOWNLOAD_DIR/$filename"
-		item.format 1 "[下载] $filename"
+		console.item.item "[下载] $filename"
 		if download_file "$download_url" "$output_file"; then
-			item.format 1 "[完成] 下载成功"
+			console.item.item "[完成] 下载成功"
 			save_version_info "$package" "$latest_version"
 		else
-			item.format 1 "$package: 下载失败"
+			console.item.item "$package: 下载失败"
 			rm -f "$output_file"
 		fi
 	done
-	console.stdout "========="
 	local total=${#packages_to_upgrade[@]}
 	local updated=$((total - packages_skipped))
-	((total > 0)) && console.stdout "共 $total 个包，$updated 个已更新，$packages_skipped 个跳过"
+	((total > 0)) && console.footer "共 $total 个包，$updated 个已更新，$packages_skipped 个跳过"
 }
 
 _get_install_dir() {
@@ -1111,20 +1171,20 @@ _get_install_dir() {
 _do_install_package() {
 	local package="$1"
 	current_version=$(get_package_property "$package" "current_version")
-	[[ -z "$current_version" ]] && item.format 1 "$package: 未下载，请先运行 upgrade" && return 1
+	[[ -z "$current_version" ]] && console.item.title 1 "$package: 未下载，请先运行 upgrade" && return 1
 	file_extension=$(get_package_property "$package" "file_extension")
 	binary_name=$(get_package_property "$package" "binary_name")
-	item.format 1 "安装 $package (版本: $current_version)..."
+	console.item.title 1 "$package: 开始安装 (版本: $current_version)..."
 	filename="${package}-${current_version}${file_extension:+.${file_extension}}"
 	archive_file="$SETTINGS_DOWNLOAD_DIR/$filename"
-	[[ ! -f "$archive_file" ]] && item.format 1 "$package: 文件不存在: $archive_file" && return 1
+	[[ ! -f "$archive_file" ]] && console.item.title 1 "$package: 文件不存在: $archive_file" && return 1
 	install_dir=$(_get_install_dir)
 	mkdir -p "$install_dir"
 	local work_dir="$(fs.mktemp "-d")" || return 1
 	trap 'rm -rf "${work_dir:-}"' RETURN
-	item.format 1 "[解压] $filename"
+	console.item.item "[解压] $filename"
 	if ! fs.file.extract "$SETTINGS_DOWNLOAD_DIR/$filename" "$work_dir"; then
-		item.format 1 "$package: 解压失败"
+		console.item.item "$package: 解压失败"
 		return 1
 	fi
 	local no_ext_files=($(find "$work_dir" -maxdepth 1 -type f ! -name "*.*" 2>/dev/null))
@@ -1146,7 +1206,7 @@ _do_install_package() {
 		else
 			target_file="$install_dir/$(basename "$binary_file")"
 		fi
-		item.format 1 "[安装] 到 $target_file"
+		console.item.item "[安装] 到 $target_file"
 		cp "$binary_file" "$target_file" 2>/dev/null || {
 			file_name="$(basename "$binary_file")"
 			log.warn "$file_name: 复制失败"
@@ -1156,11 +1216,11 @@ _do_install_package() {
 		((installed_count++))
 	done
 	if [[ ${#failed_packages[@]} -eq 0 ]]; then
-		item.format 1 "[完成] 安装成功 ($installed_count 个文件)"
-		item.format 1 "[路径] $install_dir 已添加到 PATH"
+		console.item.item "[完成] 安装成功 ($installed_count 个文件)"
+		console.item.item "[路径] $install_dir 已添加到 PATH"
 		return 0
 	else
-		item.format 1 "[失败] 安装 ${failed_packages[@]} 时出现错误"
+		console.item.item "[失败] 安装 ${failed_packages[@]} 时出现错误"
 		return 1
 	fi
 }
@@ -1169,7 +1229,7 @@ cmd_install() {
 	args.add_options "arg" "待安装的二进制包" "可选：指定需要安装的二进制包名，支持多个包名"
 	args.process "$@"
 	local -n target_packages=$(args.args)
-	title.format "安装包"
+	console.section "安装包"
 	local success_count=0 fail_count=0
 	for package in "${target_packages[@]}"; do
 		if ! printf '%s\n' $(config.array.items "packages") | grep -q "^${package}$"; then
@@ -1183,8 +1243,7 @@ cmd_install() {
 		fi
 		console.stdout ""
 	done
-	console.stdout "========="
-	console.stdout "共 ${#target_packages[@]} 个包，$success_count 个成功，$fail_count 个失败"
+	console.footer "共 ${#target_packages[@]} 个包，$success_count 个成功，$fail_count 个失败"
 }
 
 cmd_edit() {
