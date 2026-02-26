@@ -9,8 +9,19 @@ $ARGUMENTS
 ## 当前状态
 !`git status`
 
-## 处理逻辑
-- 根据上方状态决定提交范围
-   - 有暂存文件：只提交暂存内容
-   - 无暂存文件：提交所有修改
-- 遵循原子提交原则和 Conventional Commits 格式
+## 处理流程
+
+### 1. 准备阶段
+根据 `git status` 状态：
+- **混合**（已暂存+未暂存）：`git stash push -m "temp"`
+- **仅已暂存**：`git reset HEAD`  
+- **仅未暂存**：跳过
+
+### 2. 原子分组提交
+按功能分组，每组执行：`git add` → review → `git commit`（Conventional Commits）
+
+### 3. 恢复阶段
+混合状态：`git stash pop`
+
+### 提交前 review
+- 原子性、文件范围、内容正确
