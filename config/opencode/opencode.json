@@ -36,10 +36,10 @@
       },
     },
     "bailian-coding-plan": {
-      "npm": "@ai-sdk/anthropic",
+      "npm": "@ai-sdk/openai-compatible",
       "name": "Coding Plan",
       "options": {
-        "baseURL": "https://coding.dashscope.aliyuncs.com/apps/anthropic/v1",
+        "baseURL": "https://coding.dashscope.aliyuncs.com/v1",
       },
       "models": {
         "qwen3-max-2026-01-23": {
