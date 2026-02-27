@@ -1088,6 +1088,7 @@ backup_file() {
 	local backup_file="${backup_dir}/${package}-${version}-${timestamp}${ext:+.${ext}}"
 	mkdir -p "$backup_dir"
 	mv "$source_file" "$backup_file"
+	fs.cleanup "${backup_dir}/${package}-"
 	log.debug "[Backup] $backup_file"
 }
 build_filename() {
