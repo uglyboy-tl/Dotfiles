@@ -3,28 +3,27 @@ description: 审查代码变更 [commit|branch|pr]，默认审查未提交的更
 agent: code-reviewer
 subtask: true
 ---
-
-Input: $ARGUMENTS
----
+<input>$ARGUMENTS</input>
 
 ## 确定审查范围
 
-根据输入决定审查类型：
+根据 `<input>` 内容判断审查类型：
 
-1. **无参数（默认）**：审查所有未提交的更改
-   - `git diff` 查看未暂存的更改
-   - `git diff --cached` 查看已暂存的更改
-   - `git status --short` 识别未跟踪的新文件
+1. **输入为空**：
+   - 有未提交更改：审查未提交的更改（`git diff`、`git diff --cached`）
+   - 无未提交更改：审查最近提交（`git show HEAD`）
 
-2. **Commit hash**（40位SHA或短哈希）：审查特定提交
-   - `git show $ARGUMENTS`
+2. **输入为 commit hash**（40位SHA或短哈希）：审查特定提交
+   - `git show <input>`
 
-3. **分支名**：将当前分支与指定分支对比
-   - `git diff $ARGUMENTS...HEAD`
+3. **输入为分支名**：将当前分支与指定分支对比
+   - `git diff <input>...HEAD`
 
-4. **PR URL 或编号**（包含 "github.com" 或 "pull" 或类似 PR 编号）：
-   - `gh pr view $ARGUMENTS` 获取 PR 上下文
-   - `gh pr diff $ARGUMENTS` 获取 diff
+4. **输入为 PR URL 或编号**（包含 "github.com" 或 "pull" 或数字）：
+   - `gh pr view <input>` 获取 PR 上下文
+   - `gh pr diff <input>` 获取 diff
+
+5. **输入为具体描述**（非上述类型）：按描述要求进行针对性审查
 
 ## 获取上下文
 
