@@ -5,13 +5,14 @@ agent: build
 
 按以下步骤执行合并流程：
 
-1. **并行获取信息并确保工作区干净**：
-   - 并行执行：`git status`、`git rev-parse --abbrev-ref HEAD`、`git rev-parse --show-toplevel`
+1. **验证环境并获取信息**：
+   - 并行执行：`git status --porcelain`、`git rev-parse --abbrev-ref HEAD`、`git worktree list`、`pwd`
+   - 验证不在主分支（main/master/develop）且当前目录在主仓库的 `.worktrees/` 子目录下，否则停止
    - 若工作区有未提交更改，立即调用内置命令 `/commit` 提交（该命令会自动调用 git-commiter subagent 执行）
 
 2. **切换到 develop 分支并同步**：
-   - 检查 `.worktrees/develop` 目录是否存在
-   - 不存在则使用 `using-git-worktrees` 技能创建：
+   - 检查 develop 工作区是否存在（从 `git worktree list` 结果中查找）
+   - 不存在则切换到主仓库目录（从 `git worktree list` 第一行获取）并使用 `using-git-worktrees` 技能创建：
      - 本地 develop 不存在时：从远程 checkout 或从主干创建
    - 切换到 develop worktree
    - 如果 develop 分支跟踪远程，则执行 `git pull origin develop`
