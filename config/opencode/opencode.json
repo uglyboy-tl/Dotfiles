@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [],
-  "model": "bailian-coding-plan/kimi-k2.5",
+  "model": "bailian-coding-plan/qwen3-max-2026-01-23",
   "small_model": "opencode/gpt-5-nano",
   "share": "disabled",
   "autoupdate": false,
