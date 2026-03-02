@@ -1,5 +1,6 @@
 ---
 description: 从会话中提取学习点，写入 AGENTS.md
+agent: worker
 ---
 
 分析本次会话，提取非显而易见的学习点写入 AGENTS.md。

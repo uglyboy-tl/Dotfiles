@@ -1,6 +1,6 @@
 ---
 description: 将 develop 分支的内容合并到主干分支并清理相关功能分支
-agent: maker
+agent: worker
 ---
 
 按以下步骤执行发布流程：
