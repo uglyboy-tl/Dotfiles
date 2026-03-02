@@ -1,6 +1,6 @@
 ---
 description: 将当前功能分支合并到开发分支并集成到主干
-agent: build
+agent: maker
 ---
 
 按以下步骤执行合并流程：

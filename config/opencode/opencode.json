@@ -29,6 +29,14 @@
       "$HOME/Code/**": "allow"
     }
   },
+  "agent": {
+    "build": {
+      "disable": true
+    },
+    "plan": {
+      "disable": true
+    }
+  },
   "provider": {
     "google": {
       "options": {
