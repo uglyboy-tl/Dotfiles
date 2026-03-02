@@ -20,3 +20,6 @@
 [submodule "data/dynamic-wallpaper"]
 	path = data/dynamic-wallpaper
 	url = https://github.com/adi1090x/dynamic-wallpaper
+[submodule "config/opencode"]
+	path = config/opencode
+	url = git@github.com:uglyboy-tl/everything-open-code.git
