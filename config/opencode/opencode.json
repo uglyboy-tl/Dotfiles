@@ -24,6 +24,11 @@
     "github-copilot-enterprise",
     "github-models"
   ],
+  "permission": {
+    "external_directory": {
+      "$HOME/Code/**": "allow"
+    }
+  },
   "provider": {
     "google": {
       "options": {
