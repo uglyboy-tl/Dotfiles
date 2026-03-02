@@ -30,7 +30,7 @@ ls -d worktrees 2>/dev/null      # 备选
 ### 2. 检查 AGENTS.md
 
 ```bash
-grep -i "worktree.*director" AGENTS.md 2>/dev/null
+grep -i "worktree" AGENTS.md 2>/dev/null
 ```
 
 **如果指定了偏好：** 直接使用，无需询问。
@@ -43,7 +43,7 @@ grep -i "worktree.*director" AGENTS.md 2>/dev/null
 未找到工作区目录。应在何处创建工作区？
 
 1. .worktrees/（项目本地，隐藏）
-2. ~/.config/worktrees/<项目名>/（全局位置）
+2. $XDG_DATA_HOME/worktrees/<项目名>/（全局位置）
 
 您更倾向哪种？
 ```
@@ -68,7 +68,7 @@ git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/d
 
 **为何关键：** 防止意外将工作区内容提交到仓库中。
 
-### 对于全局目录（~/.config/worktrees）
+### 对于全局目录（$XDG_DATA_HOME/worktrees）
 
 无需 .gitignore 验证 —— 完全位于项目外部。
 
@@ -89,7 +89,7 @@ case $LOCATION in
     path="$LOCATION/$BRANCH_NAME"
     ;;
   ~/.config/worktrees/*)
-    path="~/.config/worktrees/$project/$BRANCH_NAME"
+    path="$XDG_DATA_HOME/worktrees/$project/$BRANCH_NAME"
     ;;
 esac
 
@@ -100,7 +100,7 @@ cd "$path"
 
 ### 3. 运行项目设置
 
-自动检测并运行适当的设置：
+自动检测并运行适当的设置(可参考 AGENTS.md)
 
 ```bash
 # Node.js
@@ -117,9 +117,11 @@ if [ -f pyproject.toml ]; then poetry install; fi
 if [ -f go.mod ]; then go mod download; fi
 ```
 
+注: 若项目非代码开发则可跳过此步
+
 ### 4. 验证干净基线
 
-运行测试确保工作区初始状态干净：
+运行测试(可参考 AGENTS.md)确保工作区初始状态干净：
 
 ```bash
 # 示例 - 使用项目适用的命令
@@ -132,6 +134,8 @@ go test ./...
 **如果测试失败：** 报告失败，询问是否继续或调查。
 
 **如果测试通过：** 报告就绪。
+
+注: 若项目非代码开发则可跳过此步
 
 ### 5. 报告位置
 
@@ -198,10 +202,10 @@ go test ./...
 - 跳过基线测试验证
 - 未经询问就在测试失败时继续
 - 在模糊情况下假设目录位置
-- 跳过 CLAUDE.md 检查
+- 跳过 AGENTS.md 检查
 
 **始终：**
-- 遵循目录优先级：现有 > CLAUDE.md > 询问
+- 遵循目录优先级：现有 > AGENTS.md > 询问
 - 为项目本地目录验证忽略状态
 - 自动检测并运行项目设置
 - 验证干净的测试基线
