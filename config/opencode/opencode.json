@@ -37,6 +37,7 @@
       "disable": true
     }
   },
+  "default_agent": "worker",
   "provider": {
     "google": {
       "options": {
