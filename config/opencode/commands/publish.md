@@ -43,7 +43,7 @@ agent: maker
 
 5. **清理已合并功能分支**：
    - 使用第一步收集的已合并分支列表，过滤掉主干和 develop 分支
-   - 对每个功能分支：删除本地分支和对应 worktree（从第一步的 worktree 列表匹配）
+   - 对每个功能分支：删除本地 worktree 目录和对应分支（从第一步的 worktree 列表匹配）
    - 推送 develop 分支的清理：`git push origin develop --prune`
 
 注意事项：
