@@ -269,3 +269,9 @@ npm test path/to/test.test.ts
 ```
 
 未经你的人类伙伴许可，没有例外。
+
+## 集成
+
+**必备的工作流技能：**
+- **using-git-worktrees** - 必须: 启动前创建隔离工作区
+- **code-reviewer**(subagent) - 对修改进行代码审核

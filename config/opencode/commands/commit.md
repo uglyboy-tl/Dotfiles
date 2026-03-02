@@ -4,18 +4,27 @@ agent: git-commiter
 model: deepseek/deepseek-chat
 subtask: true
 ---
-$ARGUMENTS
-
-## GIT 状态
-### GIT STATUS --short
-!`git status --short`
-
-### GIT DIFF --cached
-!`git diff --cached`
-
+执行用户指令: $ARGUMENTS
 
 ## 处理流程
+### 0. 并行上下文收集
+并行（按需）执行以下命令，以最小化延迟
+```bash
+# Group 1: Current state
+git status
+git diff --staged --stat
+git diff --stat
+
+# Group 2: History context
+git log -10 --oneline
+git log -10 --pretty=format:"%s"
+```
+一次性获取如下信息：
+1. 哪些文件发生了改变
+2. 最近10次提交的语言和风格
+
 ### 1. 准备阶段
+#### 判断需要提交的内容
 根据 git status 输出：
 - **混合**（已暂存+未暂存）：执行 `git stash push --keep-index -m "temp" && git reset HEAD`
   - 作用：stash 未暂存更改，取消已暂存内容，以便按功能重新分组
