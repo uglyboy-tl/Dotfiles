@@ -2,6 +2,8 @@
 # 设置终端类型
 export TERM=linux
 
+# 设置刷新率和分辨率
+xrandr --output DP-0 --mode 3440x1440 --rate 120
 # 检查并启动 sxhkd (快捷键守护进程)
 pgrep -x sxhkd > /dev/null || sxhkd &
 # 加载 Xresources 配置
@@ -104,7 +106,7 @@ done
 ## 浮动窗口规则 (终端)
 declare -a terminal=(Alacritty kitty) # 定义终端模拟器数组
 for i in ${terminal[@]}; do
-	_r $i state=floating rectangle=1280x720+640+100 focus=on # 将终端设置为浮动窗口，并设置大小和位置
+	_r $i state=floating rectangle=1600x900+920+100 focus=on # 将终端设置为浮动窗口，并设置大小和位置
 done
 
 ## 浮动窗口规则 (其他应用)
