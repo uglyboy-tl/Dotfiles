@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+offlineimap -q
+
+notmuch new
+
+# 自动为邮件文件夹添加相应标签
+notmuch tag +inbox "folder:\"Aliyun/INBOX\""
+notmuch tag +inbox "folder:\"Exmail/INBOX\""
+
+# 为垃圾邮件添加 junk 标签并移除 inbox 标签
+notmuch tag +junk -inbox "folder:\"Aliyun/Junk\""
+notmuch tag +junk -inbox "folder:\"Exmail/Junk\""
+
+# 为已发送邮件添加 sent 标签并移除 inbox 标签
+notmuch tag +sent "folder:\"Aliyun/Sent\""
+notmuch tag +sent "folder:\"Exmail/Sent\""
