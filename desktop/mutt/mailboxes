@@ -1,2 +1,25 @@
-mailboxes -label 阿里云 "+Aliyun/INBOX"
-mailboxes -label Uglyboy "+Exmail/INBOX"
+# NeoMutt 邮箱配置
+
+# 虚拟邮箱（放在最前面，默认打开）
+virtual-mailboxes \
+  "📩 收件箱"   "notmuch://?query=tag:inbox" \
+  "📅 今日邮件"   "notmuch://?query=date:today..now and not tag:junk" \
+  "⭐ 星标邮件"   "notmuch://?query=tag:flagged" \
+  "📤 发件箱"     "notmuch://?query=tag:sent" \
+  "📧 所有未读"   "notmuch://?query=tag:unread and not tag:junk" \
+  "🗑  垃圾邮件"   "notmuch://?query=tag:junk"
+
+# 实际邮箱
+mailboxes -label "  ──────────────────────" +Empty
+mailboxes -label "🤖 阿里云" +Aliyun/Empty
+mailboxes -label " ├─ 📮 收件箱" +Aliyun/INBOX
+mailboxes -label " ├─ 📤 发件箱" "+Aliyun/Sent"
+mailboxes -label " ├─ 📦 归档" +Aliyun/Archive
+mailboxes -label " ├─ 💰 财务" +Aliyun/财务
+mailboxes -label " ├─ 🔔 通知" +Aliyun/Notify
+mailboxes -label " └─ 🗑  推广" +Aliyun/Junk
+mailboxes -label "🐧 腾讯" +Exmail/Empty
+mailboxes -label " ├─ 📮 收件箱" +Exmail/INBOX
+mailboxes -label " ├─ 📤 发件箱" "+Exmail/Sent"
+mailboxes -label " ├─ 📦 归档" +Exmail/Archive
+mailboxes -label " └─ 🗑  垃圾邮件" +Exmail/Junk
