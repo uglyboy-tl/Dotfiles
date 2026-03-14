@@ -1,0 +1,79 @@
+display-name = "田陆"
+signature = "Regards,\n"
+signature-delim = "-- \n"
+downloads-dir = "~/Downloads"
+
+[accounts.aliyun]
+default = true
+email = "uglyboy@aliyun.com"
+display-name = "田陆"
+signature = "Regards,\n"
+signature-delim = "-- \n"
+downloads-dir = "~/Downloads"
+
+folder.aliases.inbox = "INBOX"
+folder.aliases.sent = "Sent"
+folder.aliases.drafts = "Drafts"
+folder.aliases.trash = "Junk"
+
+envelope.list.datetime-fmt = "%m/%d %H:%M"
+envelope.list.datetime-local-tz = true
+
+message.read.headers = ["From", "To", "Cc", "Subject"]
+message.write.headers = ["From", "To", "In-Reply-To", "Cc", "Subject"]
+message.send.save-copy = true
+message.delete.style = "folder"
+
+template.reply.posting-style = "top"
+template.reply.signature-style = "below-quote"
+template.reply.quote-headline-fmt = "On %d/%m/%Y %H:%M, {senders} wrote:\n"
+template.forward.posting-style = "top"
+template.forward.signature-style = "inlined"
+
+backend.type = "maildir"
+backend.root-dir = "~/.local/share/Mail/Aliyun"
+
+message.send.backend.type = "smtp"
+message.send.backend.host = "smtp.aliyun.com"
+message.send.backend.port = 465
+message.send.backend.encryption.type = "tls"
+message.send.backend.login = "uglyboy@aliyun.com"
+message.send.backend.auth.type = "password"
+message.send.backend.auth.cmd = "pass show email/uglyboy@aliyun.com"
+
+[accounts.exmail]
+email = "uglyboy@uglyboy.cn"
+display-name = "田陆"
+signature = "Regards,\n"
+signature-delim = "-- \n"
+downloads-dir = "~/Downloads"
+
+folder.aliases.inbox = "INBOX"
+folder.aliases.sent = "Sent"
+folder.aliases.drafts = "Drafts"
+folder.aliases.trash = "Junk"
+
+envelope.list.datetime-fmt = "%m/%d %H:%M"
+envelope.list.datetime-local-tz = true
+
+message.read.headers = ["From", "To", "Cc", "Subject"]
+message.write.headers = ["From", "To", "In-Reply-To", "Cc", "Subject"]
+message.send.save-copy = true
+message.delete.style = "folder"
+
+template.reply.posting-style = "top"
+template.reply.signature-style = "below-quote"
+template.reply.quote-headline-fmt = "On %d/%m/%Y %H:%M, {senders} wrote:\n"
+template.forward.posting-style = "top"
+template.forward.signature-style = "inlined"
+
+backend.type = "maildir"
+backend.root-dir = "~/.local/share/Mail/Exmail"
+
+message.send.backend.type = "smtp"
+message.send.backend.host = "smtp.exmail.qq.com"
+message.send.backend.port = 465
+message.send.backend.encryption.type = "tls"
+message.send.backend.login = "uglyboy@uglyboy.cn"
+message.send.backend.auth.type = "password"
+message.send.backend.auth.cmd = "pass show email/uglyboy@uglyboy.cn"

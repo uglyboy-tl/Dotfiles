@@ -58,6 +58,7 @@ set sidebar_short_path = yes
 set sidebar_next_new_wrap = yes
 set sidebar_divider_char = "│"
 set sidebar_format = "%D%*  %?N?%N&?"
+
 # 索引显示
 set date_format = "%m/%d %H:%M"
 # %Z = 邮件状态标识 (新/旧/回复/重要等)
@@ -68,6 +69,12 @@ set use_threads = threads
 set sort_aux = last-date-received
 set strict_threads = no
 
+# 状态栏
+set to_chars=""
+set status_chars = " "
+ifdef crypt_chars set crypt_chars = " "
+set flag_chars = "      "
+
 # 分页器
 set pager_index_lines = 10
 set pager_context = 5
@@ -75,19 +82,13 @@ set pager_stop = yes
 set smart_wrap = yes
 set tilde = yes
 unset markers
-set display_filter="sed -e '/\\[-- Type: text.* --\\]/d' | sed -e '/\\[-- Autoview.* --\\]/d' | sed -e '/\\[-- Type.* --\\]/d' |  sed -e '/\\[-- .*unsupported.* --\\]/d' | sed -e '/\\[-- Attachment #[0-9] --\\]/d' | sed -e 's/Attachment #[0-9]: //g' | sed '/./,/^$/!d'"
+set display_filter="sed -e '/\\[-- 类型: text.* --\\]/d' | sed -e '/\\[-- .*自动显示.* --\\]/d' | sed -e '/\\[-- 类型.* --\\]/d' |  sed -e '/\\[-- .*unsupported.* --\\]/d' | sed -e '/\\[-- 附件 #[0-9] --\\]/d' | sed -e 's/附件 #[0-9]: //g' | sed '/./,/^$/!d'"
 
 # 邮件头部
 set header = yes
 set weed = yes
 unhdr_order *
 hdr_order from: to: cc: date: subject: reply-to:
-
-# 状态栏
-set to_chars=""
-set status_chars = " "
-ifdef crypt_chars set crypt_chars = " "
-set flag_chars = "      "
 
 # =============================================================================
 # 3. Catppuccin for Neomutt: https://github.com/catppuccin/neomutt
@@ -96,9 +97,14 @@ set flag_chars = "      "
 # =============================================================================
 # 4. 快捷键
 # =============================================================================
+bind index G last-entry
+bind index g noop
+bind index gg first-entry
+
 # 侧边栏控制 (Ctrl+方向键)
 macro index,pager <left> "<sidebar-prev><sidebar-open>" "上一个邮箱并打开"
 macro index,pager <right> "<sidebar-next><sidebar-open>" "下一个邮箱并打开"
+bind index,pager \Cb sidebar-toggle-visible
 
 # 搜索
 macro index,pager / "<limit>" "搜索邮件..."
