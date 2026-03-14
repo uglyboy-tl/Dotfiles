@@ -1,508 +1,507 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_NAME="Monitor"
-markdown.escape() { echo "${1//|/\\|}"; }
-markdown.header() {
-  local lvl="${1:-1}"
-  shift
-  local h
-  printf -v h "%*s" "$lvl" ""
-  printf "%s %s\n" "${h// /#}" "$*"
+markdown.escape(){ echo "${1//|/\\|}";}
+markdown.header(){
+local lvl="${1:-1}"
+shift
+local h
+printf -v h "%*s" "$lvl" ""
+printf "%s %s\n" "${h// /#}" "$*"
 }
-markdown.h1() { markdown.header 1 "$@"; }
-markdown.h2() { markdown.header 2 "$@"; }
-markdown.h3() { markdown.header 3 "$@"; }
-markdown.h4() { markdown.header 4 "$@"; }
-markdown.h5() { markdown.header 5 "$@"; }
-markdown.h6() { markdown.header 6 "$@"; }
-markdown.list() { for arg in "$@"; do printf -- "- %s\n" "$arg"; done; }
-markdown.numbered() {
-  local n=1
-  for arg in "$@"; do
-    printf "%d. %s\n" "$n" "$arg"
-    ((n++))
-  done
+markdown.h1(){ markdown.header 1 "$@";}
+markdown.h2(){ markdown.header 2 "$@";}
+markdown.h3(){ markdown.header 3 "$@";}
+markdown.h4(){ markdown.header 4 "$@";}
+markdown.h5(){ markdown.header 5 "$@";}
+markdown.h6(){ markdown.header 6 "$@";}
+markdown.list(){ for arg in "$@";do printf -- "- %s\n" "$arg";done;}
+markdown.numbered(){
+local n=1
+for arg in "$@";do
+printf "%d. %s\n" "$n" "$arg"
+((n++))
+done
 }
-markdown.todo() { printf -- "- [ ] %s\n" "${1}"; }
-markdown.table.header() {
-  local count=0
-  for header in "$@"; do
-    printf "| %s" "$(markdown.escape "$header")"
-    ((count++))
-  done
-  printf "|\n"
-  local i
-  for ((i = 0; i < count; i++)); do
-    printf "|---"
-  done
-  printf "|\n"
+markdown.todo(){ printf -- "- [ ] %s\n" "$1";}
+markdown.table.header(){
+local count=0
+for header in "$@";do
+printf "| %s" "$(markdown.escape "$header")"
+((count++))
+done
+printf "|\n"
+local i
+for ((i=0; i<count; i++));do
+printf "|---"
+done
+printf "|\n"
 }
-markdown.table.row() {
-  for value in "$@"; do
-    printf "| %s " "$(markdown.escape "${value:--}")"
-  done
-  printf "|\n"
+markdown.table.row(){
+for value in "$@";do
+printf "| %s " "$(markdown.escape "${value:--}")"
+done
+printf "|\n"
 }
-markdown.code() {
-  (($# == 2)) && printf "\`\`\`%s\n%s\n\`\`\`\n" "$1" "$2" || printf "\`\`\`\n%s\n\`\`\`\n" "$1"
+markdown.code(){
+(($#==2))&&printf "\`\`\`%s\n%s\n\`\`\`\n" "$1" "$2"||printf "\`\`\`\n%s\n\`\`\`\n" "$1"
 }
-markdown.line() { printf -- "---\n"; }
-markdown.link() { printf "[%s](%s)\n" "${1}" "${2}"; }
-markdown.quote() { printf "> %s\n" "${1}"; }
-markdown.front_matter() {
-  printf -- "---\ntitle: %s\ndate: %s\nauthor: %s\n---\n" "$1" "$(date '+%Y-%m-%d %H:%M:%S')" "${SCRIPT_NAME:-bot}"
+markdown.line(){ printf -- "---\n";}
+markdown.link(){ printf "[%s](%s)\n" "$1" "$2";}
+markdown.quote(){ printf "> %s\n" "$1";}
+markdown.front_matter(){
+printf -- "---\ntitle: %s\ndate: %s\nauthor: %s\n---\n" "$1" "$(date '+%Y-%m-%d %H:%M:%S')" "${SCRIPT_NAME:-bot}"
 }
-
-system.command.exist() { command -v "$1" > /dev/null 2>&1; }
-system.command.required() { ! system.command.exist "$1" && log.error "This module required \`$1\` command." && exit 1 || return 0; }
-system.command.result() {
-  local result
-  result=$(eval "$1" 2>&1) || {
-    local exit_code=$?
-    if [[ $exit_code -eq 1 ]] && [[ $1 == *grep* ]]; then
-      result=""
-    else
-      result="（命令执行失败，退出码: $exit_code）"
-    fi
-  }
-  [[ -z $result ]] && result="（无输出）"
-  echo "$result"
+system.command.exist(){ command -v "$1" >/dev/null 2>&1;}
+system.command.required(){ ! system.command.exist "$1"&&log.error "This module required \`$1\` command."&&exit 1||return 0;}
+system.command.result(){
+local result
+result=$(eval "$1" 2>&1)||{
+local exit_code=$?
+if [[ $exit_code -eq 1 ]]&&[[ $1 == *grep* ]];then
+result=""
+else
+result="（命令执行失败，退出码: $exit_code）"
+fi
 }
-system.os() {
-  [[ -n ${_SYSTEM_OS+x} ]] && echo "$_SYSTEM_OS" && return 0
-  case "$OSTYPE" in
-  darwin*) echo "macos" ;;
-  linux*) echo "linux" ;;
-  msys* | cygwin*) echo "windows" ;;
-  bsd*) echo "bsd" ;;
-  solaris*) echo "solaris" ;;
-  *) echo"unknown" ;;
-  esac
+[[ -z $result ]]&&result="（无输出）"
+echo "$result"
+}
+system.os(){
+[[ -n ${_SYSTEM_OS+x} ]]&&echo "$_SYSTEM_OS"&&return 0
+case "$OSTYPE" in
+darwin*)echo "macos";;
+linux*)echo "linux";;
+msys*|cygwin*)echo "windows";;
+bsd*)echo "bsd";;
+solaris*)echo "solaris";;
+*)echo"unknown"
+esac
 }
 _SYSTEM_OS="$(system.os)"
-system.arch() {
-  [[ -n ${_SYSTEM_ARCH+x} ]] && echo "$_SYSTEM_ARCH" && return 0
-  local -r arch="$(uname -m)"
-  case "$arch" in
-  x86_64 | x64 | amd64) echo "amd64" ;;
-  aarch64 | arm64) echo "arm64" ;;
-  armv7l | armhf) echo "armhf" ;;
-  i686 | i386 | i586) echo "i386" ;;
-  esac
+system.arch(){
+[[ -n ${_SYSTEM_ARCH+x} ]]&&echo "$_SYSTEM_ARCH"&&return 0
+local -r arch="$(uname -m)"
+case "$arch" in
+x86_64|x64|amd64)echo "amd64";;
+aarch64|arm64)echo "arm64";;
+armv7l|armhf)echo "armhf";;
+i686|i386|i586)echo "i386"
+esac
 }
 _SYSTEM_ARCH="$(system.arch)"
-
 ANSI_ESC=$'\033'
-ANSI_CSI="${ANSI_ESC}["
-ansi.Color.IsAvailable() {
-  local colors
-  colors=$(tput colors 2> /dev/null || echo 0)
-  [[ $colors -ge 16 ]] && [[ -t 1 ]]
+ANSI_CSI="$ANSI_ESC["
+ansi.Color.IsAvailable(){
+local colors
+colors=$(tput colors 2>/dev/null||echo 0)
+[[ $colors -ge 16 ]]&&[[ -t 1 ]]
 }
-ansi.Powerline.IsAvailable() {
-  [[ -z ${NO_UNICODE-} ]] && locale -k LC_CTYPE 2> /dev/null | grep -q 'UTF-8'
+ansi.Powerline.IsAvailable(){
+[[ -z ${NO_UNICODE-} ]]&&locale -k LC_CTYPE 2>/dev/null|grep -q 'UTF-8'
 }
-ansi.enable.color() {
-  BLACK="${ANSI_CSI}30m"
-  RED="${ANSI_CSI}31m"
-  GREEN="${ANSI_CSI}32m"
-  YELLOW="${ANSI_CSI}33m"
-  BLUE="${ANSI_CSI}34m"
-  MAGENTA="${ANSI_CSI}35m"
-  CYAN="${ANSI_CSI}36m"
-  WHITE="${ANSI_CSI}37m"
-  BRIGHT_BLACK="${ANSI_CSI}90m"
-  BRIGHT_RED="${ANSI_CSI}91m"
-  BRIGHT_GREEN="${ANSI_CSI}92m"
-  BRIGHT_YELLOW="${ANSI_CSI}93m"
-  BRIGHT_BLUE="${ANSI_CSI}94m"
-  BRIGHT_MAGENTA="${ANSI_CSI}95m"
-  BRIGHT_CYAN="${ANSI_CSI}96m"
-  BRIGHT_WHITE="${ANSI_CSI}97m"
-  NC="${ANSI_CSI}0m"
-  NO_COLOR="${ANSI_CSI}0m"
+ansi.enable.color(){
+BLACK="${ANSI_CSI}30m"
+RED="${ANSI_CSI}31m"
+GREEN="${ANSI_CSI}32m"
+YELLOW="${ANSI_CSI}33m"
+BLUE="${ANSI_CSI}34m"
+MAGENTA="${ANSI_CSI}35m"
+CYAN="${ANSI_CSI}36m"
+WHITE="${ANSI_CSI}37m"
+BRIGHT_BLACK="${ANSI_CSI}90m"
+BRIGHT_RED="${ANSI_CSI}91m"
+BRIGHT_GREEN="${ANSI_CSI}92m"
+BRIGHT_YELLOW="${ANSI_CSI}93m"
+BRIGHT_BLUE="${ANSI_CSI}94m"
+BRIGHT_MAGENTA="${ANSI_CSI}95m"
+BRIGHT_CYAN="${ANSI_CSI}96m"
+BRIGHT_WHITE="${ANSI_CSI}97m"
+NC="${ANSI_CSI}0m"
+NO_COLOR="${ANSI_CSI}0m"
 }
-ansi.disable.color() {
-  BLACK=""
-  RED=""
-  GREEN=""
-  YELLOW=""
-  BLUE=""
-  MAGENTA=""
-  CYAN=""
-  WHITE=""
-  BRIGHT_BLACK=""
-  BRIGHT_RED=""
-  BRIGHT_GREEN=""
-  BRIGHT_YELLOW=""
-  BRIGHT_BLUE=""
-  BRIGHT_MAGENTA=""
-  BRIGHT_CYAN=""
-  BRIGHT_WHITE=""
-  NC=""
-  NO_COLOR=""
+ansi.disable.color(){
+BLACK=""
+RED=""
+GREEN=""
+YELLOW=""
+BLUE=""
+MAGENTA=""
+CYAN=""
+WHITE=""
+BRIGHT_BLACK=""
+BRIGHT_RED=""
+BRIGHT_GREEN=""
+BRIGHT_YELLOW=""
+BRIGHT_BLUE=""
+BRIGHT_MAGENTA=""
+BRIGHT_CYAN=""
+BRIGHT_WHITE=""
+NC=""
+NO_COLOR=""
 }
-ansi.enable.style() {
-  Bold="${ANSI_CSI}1m"
-  Dim="${ANSI_CSI}2m"
-  Italics="${ANSI_CSI}3m"
-  Underline="${ANSI_CSI}4m"
-  Blink="${ANSI_CSI}5m"
-  Reverse="${ANSI_CSI}7m"
-  Hidden="${ANSI_CSI}8m"
-  Strike="${ANSI_CSI}9m"
-  NoBold="${ANSI_CSI}21m"
-  NoDim="${ANSI_CSI}22m"
-  NoItalics="${ANSI_CSI}23m"
-  NoUnderline="${ANSI_CSI}24m"
-  NoBlink="${ANSI_CSI}25m"
-  NoReverse="${ANSI_CSI}27m"
-  NoHidden="${ANSI_CSI}28m"
-  NoStrike="${ANSI_CSI}29m"
+ansi.enable.style(){
+Bold="${ANSI_CSI}1m"
+Dim="${ANSI_CSI}2m"
+Italics="${ANSI_CSI}3m"
+Underline="${ANSI_CSI}4m"
+Blink="${ANSI_CSI}5m"
+Reverse="${ANSI_CSI}7m"
+Hidden="${ANSI_CSI}8m"
+Strike="${ANSI_CSI}9m"
+NoBold="${ANSI_CSI}21m"
+NoDim="${ANSI_CSI}22m"
+NoItalics="${ANSI_CSI}23m"
+NoUnderline="${ANSI_CSI}24m"
+NoBlink="${ANSI_CSI}25m"
+NoReverse="${ANSI_CSI}27m"
+NoHidden="${ANSI_CSI}28m"
+NoStrike="${ANSI_CSI}29m"
 }
-ansi.disable.style() {
-  Bold=""
-  Dim=""
-  Italics=""
-  Underline=""
-  Blink=""
-  Reverse=""
-  Hidden=""
-  Strike=""
-  NoBold=""
-  NoDim=""
-  NoItalics=""
-  NoUnderline=""
-  NoBlink=""
-  NoReverse=""
-  NoHidden=""
-  NoStrike=""
+ansi.disable.style(){
+Bold=""
+Dim=""
+Italics=""
+Underline=""
+Blink=""
+Reverse=""
+Hidden=""
+Strike=""
+NoBold=""
+NoDim=""
+NoItalics=""
+NoUnderline=""
+NoBlink=""
+NoReverse=""
+NoHidden=""
+NoStrike=""
 }
-ansi.enable.powerline() {
-  POWERLINE_SEPARATOR=$'\ue0b0'
-  POWERLINE_SEPARATOR_THIN=$'\ue0b1'
-  POWERLINE_SEPARATOR_LEFT=$'\ue0b2'
-  POWERLINE_SEPARATOR_LEFT_THIN=$'\ue0b3'
-  POWERLINE_BRANCH=$'\ue0a0'
-  POWERLINE_LINE=$'\ue0a1'
-  POWERLINE_READONLY=$'\ue0a2'
-  POWERLINE_POINTING_ARROW=$'\u27a1'
-  POWERLINE_ARROW_RIGHT=$'\u25b6'
-  POWERLINE_ARROW_LEFT=$'\u25c0'
-  POWERLINE_ARROW_DOWN=$'\u2b07'
-  POWERLINE_ARROW_RIGHT_DOWN=$'\u2b0a'
-  POWERLINE_PLUS_MINUS=$'\u00b1'
-  POWERLINE_REFERS_TO=$'\u27a6'
-  POWERLINE_OK=$'\u2714'
-  POWERLINE_FAIL=$'\u2718'
-  POWERLINE_WARN=$'\u26a0'
-  POWERLINE_COG=$'\u2699'
-  POWERLINE_HEART=$'\u2764'
-  POWERLINE_STAR=$'\u2605'
+ansi.enable.powerline(){
+POWERLINE_SEPARATOR=$'\ue0b0'
+POWERLINE_SEPARATOR_THIN=$'\ue0b1'
+POWERLINE_SEPARATOR_LEFT=$'\ue0b2'
+POWERLINE_SEPARATOR_LEFT_THIN=$'\ue0b3'
+POWERLINE_BRANCH=$'\ue0a0'
+POWERLINE_LINE=$'\ue0a1'
+POWERLINE_READONLY=$'\ue0a2'
+POWERLINE_POINTING_ARROW=$'\u27a1'
+POWERLINE_ARROW_RIGHT=$'\u25b6'
+POWERLINE_ARROW_LEFT=$'\u25c0'
+POWERLINE_ARROW_DOWN=$'\u2b07'
+POWERLINE_ARROW_RIGHT_DOWN=$'\u2b0a'
+POWERLINE_PLUS_MINUS=$'\u00b1'
+POWERLINE_REFERS_TO=$'\u27a6'
+POWERLINE_OK=$'\u2714'
+POWERLINE_FAIL=$'\u2718'
+POWERLINE_WARN=$'\u26a0'
+POWERLINE_COG=$'\u2699'
+POWERLINE_HEART=$'\u2764'
+POWERLINE_STAR=$'\u2605'
 }
-ansi.disable.powerline() {
-  POWERLINE_SEPARATOR=">"
-  POWERLINE_SEPARATOR_THIN=">"
-  POWERLINE_SEPARATOR_LEFT="<"
-  POWERLINE_SEPARATOR_LEFT_THIN="<"
-  POWERLINE_BRANCH="|}"
-  POWERLINE_LINE="LN"
-  POWERLINE_READONLY="RO"
-  POWERLINE_POINTING_ARROW="~"
-  POWERLINE_ARROW_RIGHT="->"
-  POWERLINE_ARROW_LEFT="<-"
-  POWERLINE_ARROW_DOWN="_"
-  POWERLINE_ARROW_RIGHT_DOWN=">"
-  POWERLINE_PLUS_MINUS="+-"
-  POWERLINE_REFERS_TO="*"
-  POWERLINE_OK="+"
-  POWERLINE_FAIL="x"
-  POWERLINE_WARN="!"
-  POWERLINE_COG="{*}"
-  POWERLINE_HEART="<3"
-  POWERLINE_STAR="*"
+ansi.disable.powerline(){
+POWERLINE_SEPARATOR=">"
+POWERLINE_SEPARATOR_THIN=">"
+POWERLINE_SEPARATOR_LEFT="<"
+POWERLINE_SEPARATOR_LEFT_THIN="<"
+POWERLINE_BRANCH="|}"
+POWERLINE_LINE="LN"
+POWERLINE_READONLY="RO"
+POWERLINE_POINTING_ARROW="~"
+POWERLINE_ARROW_RIGHT="->"
+POWERLINE_ARROW_LEFT="<-"
+POWERLINE_ARROW_DOWN="_"
+POWERLINE_ARROW_RIGHT_DOWN=">"
+POWERLINE_PLUS_MINUS="+-"
+POWERLINE_REFERS_TO="*"
+POWERLINE_OK="+"
+POWERLINE_FAIL="x"
+POWERLINE_WARN="!"
+POWERLINE_COG="{*}"
+POWERLINE_HEART="<3"
+POWERLINE_STAR="*"
 }
-ansi.enable() {
-  [[ -n ${_ANSI_FORCE_DISABLE-} ]] && ansi.disable && return 0
-  ansi.Color.IsAvailable && ansi.enable.color && ansi.enable.style || { ansi.disable.color && ansi.disable.style; }
-  ansi.Powerline.IsAvailable && ansi.enable.powerline || ansi.disable.powerline
+ansi.enable(){
+[[ -n ${_ANSI_FORCE_DISABLE-} ]]&&ansi.disable&&return 0
+ansi.Color.IsAvailable&&ansi.enable.color&&ansi.enable.style||{ ansi.disable.color&&ansi.disable.style;}
+ansi.Powerline.IsAvailable&&ansi.enable.powerline||ansi.disable.powerline
 }
-ansi.disable() {
-  ansi.disable.color
-  ansi.disable.style
-  ansi.disable.powerline
+ansi.disable(){
+ansi.disable.color
+ansi.disable.style
+ansi.disable.powerline
 }
-ansi.is.initialized() {
-  [[ -n ${ANSI_ESC} ]]
+ansi.is.initialized(){
+[[ -n $ANSI_ESC ]]
 }
 ansi.enable
-
-string.base64.encode() { base64 -w 0 "$1" 2> /dev/null || base64 "$1" 2> /dev/null; }
-string.base64.decode() { base64 -d 2> /dev/null || base64 -D 2> /dev/null; }
-string.escape.regex() { printf '%s' "${1:-}" | sed 's/[].[\\^$*+?{}()|]/\\&/g; s/\//\\\//g'; }
-string.escape.sed() { printf '%s' "${1:-}" | sed 's/\\/\\\\/g; s/&/\\&/g; s/|/\\|/g'; }
-string.trim() {
-  local s="${1#"${1%%[![:space:]]*}"}"
-  echo "${s%"${s##*[![:space:]]}"}"
+string.base64.encode(){ base64 -w 0 "$1" 2>/dev/null||base64 "$1" 2>/dev/null;}
+string.base64.decode(){ base64 -d 2>/dev/null||base64 -D 2>/dev/null;}
+string.escape.regex(){ printf '%s' "${1:-}"|sed 's/[].[\\^$*+?{}()|]/\\&/g; s/\//\\\//g';}
+string.escape.sed(){ printf '%s' "${1:-}"|sed 's/\\/\\\\/g; s/&/\\&/g; s/|/\\|/g';}
+string.trim(){
+local s="${1#"${1%%[![:space:]]*}"}"
+echo "${s%"${s##*[![:space:]]}"}"
 }
-string.int.check() { [[ $1 =~ ^-?[0-9]+$ ]]; }
-string.natural.check() { [[ $1 =~ ^[1-9][0-9]*$ ]]; }
-string.float.check() { [[ $1 =~ ^-?[0-9]+\.[0-9]+$ ]]; }
-string.is_ascii() { [[ $1 != *[![:ascii:]]* ]]; }
-string.has_ansi() { [[ $1 == *$'\x1b'* ]]; }
-
-console.stdout() { printf "%s\n" "$*"; }
-console.stderr() { printf "%s\n" "$*" >&2; }
-console.repeat() {
-  local repeat=${2:-0}
-  ((repeat <= 0)) && return
-  local char="$1"
-  if [[ ${#char} -eq 1 ]]; then
-    printf "%*s" "$repeat" "" | tr ' ' "$char"
-  else
-    local result=""
-    for ((i = 0; i < repeat; i++)); do
-      result+="$char"
-    done
-    printf "%s" "$result"
-  fi
+string.int.check(){ [[ $1 =~ ^-?[0-9]+$ ]];}
+string.natural.check(){ [[ $1 =~ ^[1-9][0-9]*$ ]];}
+string.float.check(){ [[ $1 =~ ^-?[0-9]+\.[0-9]+$ ]];}
+string.is_ascii(){ [[ $1 != *[![:ascii:]]* ]];}
+string.has_ansi(){ [[ $1 == *$'\x1b'* ]];}
+console.stdout(){ printf "%s\n" "$*";}
+console.stderr(){ printf "%s\n" "$*" >&2;}
+console.repeat(){
+local repeat=${2:-0}
+((repeat<=0))&&return
+local char="$1"
+if [[ ${#char} -eq 1 ]];then
+printf "%*s" "$repeat" ""|tr ' ' "$char"
+else
+local result=""
+for ((i=0; i<repeat; i++));do
+result+="$char"
+done
+printf "%s" "$result"
+fi
 }
 UNDERLINE_CACHE=$(console.repeat "=" 20)
-console.align() {
-  local padding=$(($1 - $(console.display_width "$2")))
-  ((padding > 0)) && printf "%s%${padding}s%s\n" "$2" "" "${*:3}" || printf "%s%s\n" "$2" "${*:3}"
+console.align(){
+local padding=$(($1-$(console.display_width "$2")))
+((padding>0))&&printf "%s%${padding}s%s\n" "$2" "" "${*:3}"||printf "%s%s\n" "$2" "${*:3}"
 }
-console.indent() { console.align $(($1 * 2)) "" "${*:2}"; }
-console.ansi_width() {
-  local width=0 i=0 len=${#1} flag=0
-  while ((i < len)); do
-    local char="${1:$((i++)):1}"
-    ((flag)) && {
-      [[ $char =~ [a-zA-Z] ]] && flag=0
-      continue
-    }
-    [[ $char == $'\x1b' ]] && flag=1 && continue
-    ((width++))
-  done
-  echo "$width"
+console.indent(){ console.align $(($1*2)) "" "${*:2}";}
+console.ansi_width(){
+local width=0 i=0 len=${#1} flag=0
+while ((i<len));do
+local char="${1:$((i++)):1}"
+((flag))&&{
+[[ $char =~ [a-zA-Z] ]]&&flag=0
+continue
 }
-console.mixed_width() {
-  local width=0 flag=0 i=0
-  local hex_bytes=$(printf "%s" "$1" | od -An -tx1 -v | tr -d ' \n')
-  local len=${#hex_bytes}
-  while ((i < len)); do
-    local num=$((0x${hex_bytes:i:2}))
-    i=$((i + 2))
-    ((flag)) && {
-      (((num >= 0x41 && num <= 0x5A) || (num >= 0x61 && num <= 0x7A))) && flag=0
-      continue
-    }
-    ((num == 0x1b)) && {
-      flag=1
-      continue
-    }
-    ((num <= 0x7F)) && {
-      ((width++))
-      continue
-    }
-    ((num >= 0xC2 && num <= 0xDF)) && {
-      ((width++))
-      i=$((i + 2))
-      continue
-    }
-    ((num >= 0xE0 && num <= 0xEF)) && {
-      ((width += 2))
-      i=$((i + 4))
-      continue
-    }
-    ((num >= 0xF0 && num <= 0xF7)) && {
-      ((width += 2))
-      i=$((i + 6))
-    }
-  done
-  echo "$width"
+[[ $char == $'\x1b' ]]&&flag=1&&continue
+((width++))
+done
+echo "$width"
 }
-console.display_width() {
-  [[ $1 ]] || {
-    echo "0"
-    return
-  }
-  ! string.is_ascii "$1" && console.mixed_width "$1" && return
-  string.has_ansi "$1" && console.ansi_width "$1" || echo "${#1}"
+console.mixed_width(){
+local width=0 flag=0 i=0
+local hex_bytes=$(printf "%s" "$1"|od -An -tx1 -v|tr -d ' \n')
+local len=${#hex_bytes}
+while ((i<len));do
+local num=$((0x${hex_bytes:i:2}))
+i=$((i+2))
+((flag))&&{
+(((num>=0x41&&num<=0x5A)||(num>=0x61&&num<=0x7A)))&&flag=0
+continue
 }
-console.section() {
-  console.stdout "$1:"
-  console.stdout "=${UNDERLINE_CACHE:0:$(console.mixed_width "$1")}"
+((num==0x1b))&&{
+flag=1
+continue
 }
-console.item.title() {
-  console.indent "$1" "${*:2}"
-  _CONSOLE_INDENT_DEPTH=$(($1 + 1))
+((num<=0x7F))&&{
+((width++))
+continue
 }
-console.item.item() {
-  console.indent "${_CONSOLE_INDENT_DEPTH}" "${*}"
+((num>=0xC2&&num<=0xDF))&&{
+((width++))
+i=$((i+2))
+continue
 }
-console.item.mid() {
-  console.item.item "├─" "${*}"
+((num>=0xE0&&num<=0xEF))&&{
+((width+=2))
+i=$((i+4))
+continue
 }
-console.item.end() {
-  console.item.item "└─" "${*}"
-  echo ""
+((num>=0xF0&&num<=0xF7))&&{
+((width+=2))
+i=$((i+6))
 }
-console.footer() {
-  console.stdout "========="
-  console.stdout "${*}"
+done
+echo "$width"
 }
-
+console.display_width(){
+[[ $1 ]]||{
+echo "0"
+return
+}
+! string.is_ascii "$1"&&console.mixed_width "$1"&&return
+string.has_ansi "$1"&&console.ansi_width "$1"||echo "${#1}"
+}
+console.section(){
+console.stdout "$1:"
+console.stdout "=${UNDERLINE_CACHE:0:$(console.mixed_width "$1")}"
+}
+console.item.title(){
+console.indent "$1" "${*:2}"
+_CONSOLE_INDENT_DEPTH=$(($1+1))
+}
+console.item.item(){
+console.indent "$_CONSOLE_INDENT_DEPTH" "$*"
+}
+console.item.mid(){
+console.item.item "├─" "$*"
+}
+console.item.end(){
+console.item.item "└─" "$*"
+echo ""
+}
+console.footer(){
+console.stdout "========="
+console.stdout "$*"
+}
 : "${_LOG_USE_EXTRA:=false}"
 : "${_LOG_LEVEL:=INFO}"
 declare -gA _LOG_LEVEL_MAP=(
-	[DEBUG]=0 [INFO]=1 [WARN]=2 [ERROR]=3
-)
+[DEBUG]=0 [INFO]=1 [WARN]=2 [ERROR]=3)
 declare -gi _LOG_MIN_LEVEL=${_LOG_LEVEL_MAP[$_LOG_LEVEL]}
-log.setLevel() {
-	local -r level="${1^^}"
-	[[ -v "_LOG_LEVEL_MAP[$level]" ]] || return 1
-	export _LOG_MIN_LEVEL=${_LOG_LEVEL_MAP[$level]}
-	export _LOG_LEVEL="$level"
+log.setLevel(){
+local -r level="${1^^}"
+[[ -v "_LOG_LEVEL_MAP[$level]" ]]||return 1
+export _LOG_MIN_LEVEL=${_LOG_LEVEL_MAP[$level]}
+export _LOG_LEVEL="$level"
 }
-log() {
-	local -r level="${1^^}"
-	local -r timestamp=$(date +"%m-%d %H:%M:%S ")
-	local flag
-	case "$level" in
-	SUCCESS) flag="${GREEN}[$level]${NC}" ;;
-	INFO) flag="${BLUE}[$level]${NC}" ;;
-	WARN) flag="${YELLOW}[$level]${NC}" ;;
-	ERROR) flag="${RED}[$level]${NC}" ;;
-	DEBUG) flag="${WHITE}[$level]${NC}" ;;
-	*) flag="" ;;
-	esac
-	[[ -z $flag ]] || shift
-	local prefix extra=""
-	[[ $_LOG_USE_EXTRA == true ]] && extra="${BASH_SOURCE[2]##*/}:${BASH_LINENO[0]}"
-	[[ -z $extra ]] || extra="$WHITE(${extra})$NC"
-	prefix="$WHITE$timestamp$NC$flag$extra"
-	console.stderr "$prefix" "$@"
+log(){
+local -r level="${1^^}"
+local timestamp
+printf -v timestamp '%(%m-%d %H:%M:%S )T' -1
+local flag
+case "$level" in
+SUCCESS)flag="$GREEN[$level]$NC";;
+INFO)flag="$BLUE[$level]$NC";;
+WARN)flag="$YELLOW[$level]$NC";;
+ERROR)flag="$RED[$level]$NC";;
+DEBUG)flag="$WHITE[$level]$NC";;
+*)flag=""
+esac
+[[ -z $flag ]]||shift
+local prefix extra=""
+[[ $_LOG_USE_EXTRA == true ]]&&extra="${BASH_SOURCE[2]##*/}:${BASH_LINENO[0]}"
+[[ -z $extra ]]||extra="$WHITE($extra)$NC"
+prefix="$WHITE$timestamp$NC$flag$extra"
+console.stderr "$prefix" "$@"
 }
-log.debug() { ((0 >= _LOG_MIN_LEVEL)) && log debug "$@" || true; }
-log.info() { ((1 >= _LOG_MIN_LEVEL)) && log info "$@" || true; }
-log.success() { ((1 >= _LOG_MIN_LEVEL)) && log success "$@" || true; }
-log.warn() { ((2 >= _LOG_MIN_LEVEL)) && log warn "$@" || true; }
-log.error() { ((3 >= _LOG_MIN_LEVEL)) && log error "$@" || true; }
-
-array.len() {
-  local -n ref="$1"
-  echo "${#ref[@]}"
+log.debug(){ ((0>=_LOG_MIN_LEVEL))&&log debug "$@"||true;}
+log.info(){ ((1>=_LOG_MIN_LEVEL))&&log info "$@"||true;}
+log.success(){ ((1>=_LOG_MIN_LEVEL))&&log success "$@"||true;}
+log.warn(){ ((2>=_LOG_MIN_LEVEL))&&log warn "$@"||true;}
+log.error(){ ((3>=_LOG_MIN_LEVEL))&&log error "$@"||true;}
+array.len(){
+local -n ref="$1"
+echo "${#ref[@]}"
 }
-array.contains() {
-  local -n ref="$1"
-  [[ " ${ref[*]} " == *" $2 "* ]]
+array.contains(){
+local -n ref="$1"
+if ((${#ref[@]}<=3));then
+[[ " ${ref[*]} " == *" $2 "* ]]
+else
+local -A lookup=()
+for elem in "${ref[@]}";do
+lookup["$elem"]=1
+done
+[[ -v "lookup[$2]" ]]
+fi
 }
-array.append() {
-  local -n array_ref="$1"
-  shift
-  array_ref+=("$@")
+array.append(){
+local -n array_ref="$1"
+shift
+array_ref+=("$@")
 }
-array.get() {
-  local -n ref="$1"
-  local len=${#ref[@]}
-  (($2 >= 0 && $2 < len)) && echo "${ref[$2]}" || return 1
+array.get(){
+local -n ref="$1"
+local len=${#ref[@]}
+(($2>=0&&$2<len))&&echo "${ref[$2]}"||return 1
 }
-array.type() {
-  local -r arr="$1"
-  local decl
-  decl="$(declare -p "$arr" 2> /dev/null)" || return 1
-  case "$decl" in
-  "declare -A"*) echo "associative" ;;
-  "declare -a"*) echo "indexed" ;;
-  *) return 1 ;;
-  esac
+array.type(){
+local -r arr="$1"
+local decl
+decl="$(declare -p "$arr" 2>/dev/null)"||return 1
+case "$decl" in
+"declare -A"*)echo "associative";;
+"declare -a"*)echo "indexed";;
+*)return 1
+esac
 }
-array.has_duplicates() {
-  local -n ref="$1"
-  local -A seen=()
-  local elem key
-  for elem in "${ref[@]}"; do
-    key="${elem:-__EMPTY__}"
-    [[ -v "seen[$key]" ]] && return 0
-    seen["$key"]=1
-  done
-  return 1
+array.has_duplicates(){
+local -n ref="$1"
+local -A seen=()
+local elem key
+for elem in "${ref[@]}";do
+key="${elem:-__EMPTY__}"
+[[ -v "seen[$key]" ]]&&return 0
+seen["$key"]=1
+done
+return 1
 }
-
-map.len() {
-  local -n ref="$1"
-  echo "${#ref[@]}"
+map.len(){
+local -n ref="$1"
+echo "${#ref[@]}"
 }
-map.contains() {
-  local -n ref="$1"
-  [[ -v "ref[$2]" ]]
+map.contains(){
+local -n ref="$1"
+[[ -v "ref[$2]" ]]
 }
-map.get() {
-  local -n ref="$1"
-  [[ -v "ref[$2]" ]] && echo "${ref[$2]}" || return 1
+map.get(){
+local -n ref="$1"
+[[ -v "ref[$2]" ]]&&echo "${ref[$2]}"||return 1
 }
-
 _USAGE_SCRIPT_FILENAME=${0##*/}
 _USAGE_SCRIPT_NAME=${SCRIPT_NAME:-$_USAGE_SCRIPT_FILENAME}
 _USAGE_SCRIPT_DESC=""
-usage.name.set() { _USAGE_SCRIPT_NAME="$1"; }
-usage.description.set() { [[ -n $1 ]] && _USAGE_SCRIPT_DESC="$1"; }
-usage.title() {
-  local _title="$_USAGE_SCRIPT_NAME"
-  [[ -n $_ARGS_CURRENT_SUBCOMMAND ]] && _title="$_title - $_ARGS_CURRENT_SUBCOMMAND"
-  [[ -n $_USAGE_SCRIPT_DESC ]] && _title="$_title - $_USAGE_SCRIPT_DESC"
-  console.stdout "${Bold}${_title}${NC}"
+usage.name.set(){ _USAGE_SCRIPT_NAME="$1";}
+usage.description.set(){ [[ -n $1 ]]&&_USAGE_SCRIPT_DESC="$1";}
+usage.title(){
+local _title="$_USAGE_SCRIPT_NAME"
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&_title="$_title - $_ARGS_CURRENT_SUBCOMMAND"
+[[ -n $_USAGE_SCRIPT_DESC ]]&&_title="$_title - $_USAGE_SCRIPT_DESC"
+console.stdout "$Bold$_title$NC"
 }
-usage.usage() {
-  local _usage_line="${BRIGHT_BLUE}Usage:${NC} ${BRIGHT_CYAN}$_USAGE_SCRIPT_FILENAME${NC}"
-  local subcommand="${_ARGS_CURRENT_SUBCOMMAND:-<subcommand>}"
-  ((${1:-0})) && _usage_line="${_usage_line} ${BRIGHT_MAGENTA}$subcommand${NC}"
-  ((${2:-0})) && _usage_line="${_usage_line} ${BRIGHT_YELLOW}[OPTIONS]${NC}"
-  ((${3:-0})) && _usage_line="${_usage_line} ${BRIGHT_YELLOW}[ARGUMENTS]${NC}"
-  console.stdout "$_usage_line"
+usage.usage(){
+local _usage_line="${BRIGHT_BLUE}Usage:$NC $BRIGHT_CYAN$_USAGE_SCRIPT_FILENAME$NC"
+local subcommand="${_ARGS_CURRENT_SUBCOMMAND:-<subcommand>}"
+((${1:-0}))&&_usage_line="$_usage_line $BRIGHT_MAGENTA$subcommand$NC"
+((${2:-0}))&&_usage_line="$_usage_line $BRIGHT_YELLOW[OPTIONS]$NC"
+((${3:-0}))&&_usage_line="$_usage_line $BRIGHT_YELLOW[ARGUMENTS]$NC"
+console.stdout "$_usage_line"
 }
-usage.section() {
-  echo ""
-  console.stdout "${Bold}${BRIGHT_BLUE}$1${NC}:"
+usage.section(){
+echo ""
+console.stdout "$Bold$BRIGHT_BLUE$1$NC:"
 }
-usage.section.items() {
-  local -n _items_ref="$1"
-  local -a _keys=("${!_items_ref[@]}")
-  local _max_width=20
-  for _key in "${_keys[@]}"; do
-    ((${#_key} > _max_width)) && _max_width=${#_key}
-  done
-  ((_max_width += 4))
-  for _key in "${_keys[@]}"; do
-    console.align "$_max_width" "  ${BRIGHT_CYAN}$_key${NC}" "${_items_ref[$_key]}"
-  done
+usage.section.items(){
+local -n _items_ref="$1"
+local -a _keys=("${!_items_ref[@]}")
+local _max_width=20
+for _key in "${_keys[@]}";do
+((${#_key}>_max_width))&&_max_width=${#_key}
+done
+((_max_width+=4))
+for _key in "${_keys[@]}";do
+console.align "$_max_width" "  $BRIGHT_CYAN$_key$NC" "${_items_ref[$_key]}"
+done
 }
-usage.footer() {
-  [[ ${#_ARGS_SUBCOMMANDS[@]} -eq 0 ]] && return 0
-  echo ""
-  console.stdout "${BRIGHT_BLACK}Use '${BRIGHT_WHITE}$_USAGE_SCRIPT_FILENAME <subcommand> --help${BRIGHT_BLACK}' for subcommand help${NC}"
+usage.footer(){
+[[ ${#_ARGS_SUBCOMMANDS[@]} -eq 0 ]]&&return 0
+echo ""
+console.stdout "${BRIGHT_BLACK}Use '$BRIGHT_WHITE$_USAGE_SCRIPT_FILENAME <subcommand> --help$BRIGHT_BLACK' for subcommand help$NC"
 }
-usage.show() {
-  local -n _opts_ref=$1
-  local -n _args_ref=$2
-  local -n _examples_ref=$3
-  local -n _notices_ref=$4
-  local -n _cmd_ref="_ARGS_CURRENT_SUBCOMMAND"
-  local -n _cmd_desc_ref="_ARGS_SUBCOMMANDS_DESC"
-  echo ""
-  usage.title
-  echo ""
-  usage.usage $(($(map.len _cmd_desc_ref) > 0)) $(($(map.len _opts_ref) > 0)) $(($(map.len _args_ref) > 0))
-  [[ -z $_cmd_ref ]] && [[ $(map.len _cmd_desc_ref) -gt 0 ]] && usage.section "Commands" && usage.section.items _cmd_desc_ref
-  [[ $(map.len _opts_ref) -gt 0 ]] && usage.section "Options" && usage.section.items _opts_ref
-  [[ $(map.len _args_ref) -gt 0 ]] && usage.section "Arguments" && usage.section.items _args_ref
-  [[ $(map.len _examples_ref) -gt 0 ]] && usage.section "Examples" && usage.section.items _examples_ref
-  [[ $(map.len _notices_ref) -gt 0 ]] && usage.section "Notices" && usage.section.items _notices_ref
-  [[ -z $_cmd_ref ]] && usage.footer || true
+usage.show(){
+local -n _opts_ref=$1
+local -n _args_ref=$2
+local -n _examples_ref=$3
+local -n _notices_ref=$4
+local -n _cmd_ref="_ARGS_CURRENT_SUBCOMMAND"
+local -n _cmd_desc_ref="_ARGS_SUBCOMMANDS_DESC"
+echo ""
+usage.title
+echo ""
+usage.usage $(($(map.len _cmd_desc_ref)>0)) $(($(map.len _opts_ref)>0)) $(($(map.len _args_ref)>0))
+[[ -z $_cmd_ref ]]&&[[ $(map.len _cmd_desc_ref) -gt 0 ]]&&usage.section "Commands"&&usage.section.items _cmd_desc_ref
+[[ $(map.len _opts_ref) -gt 0 ]]&&usage.section "Options"&&usage.section.items _opts_ref
+[[ $(map.len _args_ref) -gt 0 ]]&&usage.section "Arguments"&&usage.section.items _args_ref
+[[ $(map.len _examples_ref) -gt 0 ]]&&usage.section "Examples"&&usage.section.items _examples_ref
+[[ $(map.len _notices_ref) -gt 0 ]]&&usage.section "Notices"&&usage.section.items _notices_ref
+[[ -z $_cmd_ref ]]&&usage.footer||true
 }
-usage.version() { console.stdout "${BRIGHT_CYAN}${_USAGE_SCRIPT_NAME}${NC} version ${BRIGHT_GREEN}${VERSION:-null}${NC}"; }
-
+usage.version(){ console.stdout "$BRIGHT_CYAN$_USAGE_SCRIPT_NAME$NC version $BRIGHT_GREEN${VERSION:-null}$NC";}
 declare -gA _ARGS_SUBCOMMANDS=()
 declare -gA _ARGS_SUBCOMMANDS_DESC=()
 declare -ga _ARGS_OPTIONS=()
@@ -513,207 +512,200 @@ declare -gA _ARGS_HELP_OPTIONS=()
 declare -gA _ARGS_HELP_ARGS=()
 declare -gA _ARGS_HELP_EXAMPLES=()
 declare -gA _ARGS_HELP_NOTICES=()
-args.name() { usage.name.set "$1"; }
-args.description() { usage.description.set "$1" || return 1; }
-args.init() {
-  _ARGS_OPTIONS=()
-  declare -gA _ARGS_OPTIONS_SWITCH=()
-  declare -gA _ARGS_OPTIONS_TYPE=()
-  declare -gA _ARGS_HELP_OPTIONS=()
-  declare -gA _ARGS_HELP_ARGS=()
-  declare -gA _ARGS_HELP_EXAMPLES=()
-  declare -gA _ARGS_HELP_NOTICES=()
-  usage.description.set "${1:-}" || { [[ -n $_ARGS_CURRENT_SUBCOMMAND ]] && usage.description.set "${_ARGS_SUBCOMMANDS_DESC[$_ARGS_CURRENT_SUBCOMMAND]}"; }
-  args.add_options "help" "h" "显示帮助信息"
+args.name(){ usage.name.set "$1";}
+args.description(){ usage.description.set "$1"||return 1;}
+args.init(){
+_ARGS_OPTIONS=()
+declare -gA _ARGS_OPTIONS_SWITCH=()
+declare -gA _ARGS_OPTIONS_TYPE=()
+declare -gA _ARGS_HELP_OPTIONS=()
+declare -gA _ARGS_HELP_ARGS=()
+declare -gA _ARGS_HELP_EXAMPLES=()
+declare -gA _ARGS_HELP_NOTICES=()
+usage.description.set "${1:-}"||{ [[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&usage.description.set "${_ARGS_SUBCOMMANDS_DESC[$_ARGS_CURRENT_SUBCOMMAND]}";}
+args.add_options "help" "h" "显示帮助信息"
 }
-args.add_options() {
-  local type="${4:-}" key subcommand
-  : "${type:="NONE"}"
-  [[ -n $_ARGS_CURRENT_SUBCOMMAND ]] && subcommand=" $_ARGS_CURRENT_SUBCOMMAND" || subcommand=""
-  case ${1^^} in
-  "ARG") [[ -n $2 ]] && _ARGS_HELP_ARGS["$2"]="${3}" && _ARGS_OPTIONS_TYPE["$2"]="${type}" ;;
-  "EXAMPLE") _ARGS_HELP_EXAMPLES["$(basename "$0")$subcommand $2"]="${3}" ;;
-  "NOTICE") _ARGS_HELP_NOTICES+=(["${2}"]="") ;;
-  *)
-    _ARGS_OPTIONS_TYPE["$1"]="${type}"
-    _ARGS_OPTIONS+=("$1")
-    [[ -n $2 ]] && {
-      _ARGS_OPTIONS_SWITCH["$1"]="$2"
-      _ARGS_OPTIONS_SWITCH["$2"]="$1"
-      _ARGS_OPTIONS+=("$2")
-    }
-    key=""
-    [[ -n $2 ]] && key="-$2, "
-    key+="--$1"
-    [[ -n ${4+x} ]] && key+=" $type"
-    _ARGS_HELP_OPTIONS["${key}"]="${3}"
-    ;;
-  esac
+args.add_options(){
+local type="${4:-}" key subcommand
+: "${type:="NONE"}"
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&subcommand=" $_ARGS_CURRENT_SUBCOMMAND"||subcommand=""
+case ${1^^} in
+"ARG")[[ -n $2 ]]&&_ARGS_HELP_ARGS["$2"]="$3"&&_ARGS_OPTIONS_TYPE["$2"]="$type";;
+"EXAMPLE")_ARGS_HELP_EXAMPLES["$(basename "$0")$subcommand $2"]="$3";;
+"NOTICE")_ARGS_HELP_NOTICES+=(["$2"]="");;
+*)_ARGS_OPTIONS_TYPE["$1"]="$type"
+_ARGS_OPTIONS+=("$1")
+[[ -n $2 ]]&&{
+_ARGS_OPTIONS_SWITCH["$1"]="$2"
+_ARGS_OPTIONS_SWITCH["$2"]="$1"
+_ARGS_OPTIONS+=("$2")
 }
-args.add_subcommand() {
-  [[ -n $_ARGS_CURRENT_SUBCOMMAND ]] && return 0
-  _ARGS_SUBCOMMANDS["$1"]="$3"
-  _ARGS_SUBCOMMANDS_DESC["$1"]="$2"
+key=""
+[[ -n $2 ]]&&key="-$2, "
+key+="--$1"
+[[ -n ${4+x} ]]&&key+=" $type"
+_ARGS_HELP_OPTIONS["$key"]="$3"
+esac
 }
-args.dispatch() {
-  local cmd="${1:-}"
-  [[ -v "_ARGS_SUBCOMMANDS[$cmd]" ]] && {
-    local handler="${_ARGS_SUBCOMMANDS[$cmd]}"
-    _ARGS_CURRENT_SUBCOMMAND="$cmd"
-    shift
-    "$handler" "$@"
-    exit $?
-  }
-  return 1
+args.add_subcommand(){
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&return 0
+_ARGS_SUBCOMMANDS["$1"]="$3"
+_ARGS_SUBCOMMANDS_DESC["$1"]="$2"
 }
-args.process() {
-  [[ -z $_ARGS_CURRENT_SUBCOMMAND ]] && args.dispatch "$@" && exit 0
-  args.parse "$@"
-  args.verify || {
-    args.show_help
-    exit 1
-  }
-  args.has "-h" "--help" && args.show_help && exit 0 || true
+args.dispatch(){
+local cmd="${1:-}"
+[[ -v "_ARGS_SUBCOMMANDS[$cmd]" ]]&&{
+local handler="${_ARGS_SUBCOMMANDS[$cmd]}"
+_ARGS_CURRENT_SUBCOMMAND="$cmd"
+shift
+"$handler" "$@"
+exit $?
 }
-args.parse() {
-  declare -ga _ARGS_OPTS=()
-  declare -ga _ARGS_ARGS=()
-  declare -gA _ARGS_OPT_ARGS=()
-  local end=0 last=""
-  for arg in "$@"; do
-    if [[ $arg == '--' ]]; then
-      end=1
-      last=""
-    elif ((!end)) && [[ $arg =~ ^- ]]; then
-      if [[ $arg =~ ^-[a-zA-Z]{2,}$ ]]; then
-        local c="${arg:1}"
-        for ((i = 0; i < ${#c}; i++)); do
-          last="-${c:i:1}"
-          _ARGS_OPTS+=("$last")
-        done
-      else
-        _ARGS_OPTS+=("$arg")
-        last="$arg"
-      fi
-    else
-      _ARGS_ARGS+=("$arg")
-      [[ $last ]] && _ARGS_OPT_ARGS["$last"]=$((${#_ARGS_ARGS[@]} - 1)) && last=""
-    fi
-  done
-  return 0
+return 1
 }
-args.verify() {
-  for option in "${_ARGS_OPTS[@]}"; do
-    local opt="${option##*-}" another
-    array.contains _ARGS_OPTIONS "$opt" || {
-      log.error "未知选项: \"$option\""
-      return 1
-    }
-    array.contains _ARGS_OPTIONS_SWITCH "$opt" && {
-      another=${_ARGS_OPTIONS_SWITCH[$opt]}
-      args.has "-$another" "--$another" && log.error "重复选项" && return 1
-      [[ $option =~ ^-[a-zA-Z]$ ]] && opt=$another
-    }
-    case ${_ARGS_OPTIONS_TYPE[$opt]} in
-    "NONE") unset "_ARGS_OPT_ARGS[$option]" 2> /dev/null || true ;;
-    *) [[ -z ${_ARGS_OPT_ARGS[$option]+x} ]] && log.error "选项 $option 需要参数" && return 1 ;;
-    esac
-  done
-  array.has_duplicates _ARGS_OPTS && log.error "重复选项" && return 1
-  local -a _ARGS_TEMP_ARGS=("${_ARGS_ARGS[@]}")
-  for value in "${_ARGS_OPT_ARGS[@]}"; do
-    unset "_ARGS_TEMP_ARGS[$value]"
-  done
-  declare -ga _ARGS_FINAL_ARGS=("${_ARGS_TEMP_ARGS[@]}")
-  [[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]] && [[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]] && log.error "位置参数错误" && return 1 || true
+args.process(){
+[[ -z $_ARGS_CURRENT_SUBCOMMAND ]]&&args.dispatch "$@"&&exit 0
+args.parse "$@"
+args.verify||{
+args.show_help
+exit 1
 }
-args.has() {
-  for o in "$@"; do
-    array.contains _ARGS_OPTS "$o" && return 0
-  done
-  return 1
+args.has "-h" "--help"&&args.show_help&&exit 0||true
 }
-args.get() {
-  for o in "$@"; do
-    i=$(args.opt.arg_index "$o")
-    if [[ $i ]]; then
-      args.arg "$i"
-      return 0
-    fi
-  done
-  return 1
+args.parse(){
+declare -ga _ARGS_OPTS=()
+declare -ga _ARGS_ARGS=()
+declare -gA _ARGS_OPT_ARGS=()
+local end=0 last=""
+for arg in "$@";do
+if [[ $arg == '--' ]];then
+end=1
+last=""
+elif ((!end))&&[[ $arg =~ ^- ]];then
+if [[ $arg =~ ^-[a-zA-Z]{2,}$ ]];then
+local c="${arg:1}"
+for ((i=0; i<${#c}; i++));do
+last="-${c:i:1}"
+_ARGS_OPTS+=("$last")
+done
+else
+_ARGS_OPTS+=("$arg")
+last="$arg"
+fi
+else
+_ARGS_ARGS+=("$arg")
+[[ $last ]]&&_ARGS_OPT_ARGS["$last"]=$((${#_ARGS_ARGS[@]}-1))&&last=""
+fi
+done
+return 0
 }
-args.args() { echo "_ARGS_FINAL_ARGS"; }
-args.arg() { array.get _ARGS_ARGS "$1"; }
-args.opt.arg_index() { echo "${_ARGS_OPT_ARGS[$1]:-}"; }
-args.show_help() {
-  usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
+args.verify(){
+for option in "${_ARGS_OPTS[@]}";do
+local opt="${option##*-}" another
+array.contains _ARGS_OPTIONS "$opt"||{
+log.error "未知选项: \"$option\""
+return 1
 }
-
-fs.file.exists() { [[ -f $1 ]]; }
-fs.dir.exists() { [[ -d $1 ]]; }
-fs.write() {
-  local _f="$1"
-  mkdir -p "$(dirname "$1")"
-  shift
-  (($# > 0)) && printf "%s\n" "$@" > "$_f" || : > "$_f"
+array.contains _ARGS_OPTIONS_SWITCH "$opt"&&{
+another=${_ARGS_OPTIONS_SWITCH[$opt]}
+args.has "-$another" "--$another"&&log.error "重复选项"&&return 1
+[[ $option =~ ^-[a-zA-Z]$ ]]&&opt=$another
 }
-fs.find() { local _n=$(awk -v s="${3:-1}" -v p="$2" 'NR>=s && $0~p{print NR; exit}' "$1" 2> /dev/null) && [[ $_n ]] && echo "$_n" || return 1; }
-fs.replace() {
-  local _repl=$(string.escape.sed "$3")
-  [[ -n ${4:-} ]] && sed -i "${4},/$2/{/$2/{s|.*|$_repl|}}" "$1" || sed -i "/$2/{s|.*|$_repl|}" "$1"
+case ${_ARGS_OPTIONS_TYPE[$opt]} in
+"NONE")unset "_ARGS_OPT_ARGS[$option]" 2>/dev/null||true;;
+*)[[ -z ${_ARGS_OPT_ARGS[$option]+x} ]]&&log.error "选项 $option 需要参数"&&return 1
+esac
+done
+array.has_duplicates _ARGS_OPTS&&log.error "重复选项"&&return 1
+local -a _ARGS_TEMP_ARGS=("${_ARGS_ARGS[@]}")
+for value in "${_ARGS_OPT_ARGS[@]}";do
+unset "_ARGS_TEMP_ARGS[$value]"
+done
+declare -ga _ARGS_FINAL_ARGS=("${_ARGS_TEMP_ARGS[@]}")
+[[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]]&&[[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]]&&log.error "位置参数错误"&&return 1||true
 }
-fs.insert() { sed -i "/$2/a\\$3" "$1" 2> /dev/null; }
-fs.rmline() { [[ -n $4 ]] && sed -i "${4},/$2/{/$2/d}" "$1" 2> /dev/null || sed -i "/$2/d" "$1" 2> /dev/null; }
-fs.cleanup() { ls -t "${1}"* 2> /dev/null | tail -n +$((${2:-3} + 1)) | xargs -r rm -f; }
-fs.mktemp() { mktemp "$@" 2> /dev/null || { log.error "Failed to create temporary file" && return 1; }; }
-fs.file.extract() {
-  local path=$(realpath "$1") base=$(basename "$1")
-  builtin cd "$2" > /dev/null || return 1
-  case "${base,,}" in
-  *.zip | *.war | *.jar | *.ear | *.sublime-package | *.ipa | *.ipsw | *.xpi | *.apk | *.aar | *.whl | *.vsix | *.crx | *.pk3 | *.pk4) unzip -q "$path" ;;
-  *.tar.gz | *.tgz) tar -zxf "$path" ;;
-  *.tar.bz2 | *.tbz | *.tbz2 | *.tar.bz) tar -jxf "$path" ;;
-  *.tar.xz | *.txz) tar -xJf "$path" ;;
-  *.tar) tar -xf "$path" ;;
-  *.gz) gzip -dc "$path" > "${base%.gz}" ;;
-  *.bz2) bzip2 -dc "$path" > "${base%.bz2}" ;;
-  *.xz) xz -dc "$path" > "${base%.xz}" ;;
-  *)
-    chmod +x "$path"
-    cp "$path" "${base%%.*}"
-    ;;
-  esac
+args.has(){
+for o in "$@";do
+array.contains _ARGS_OPTS "$o"&&return 0
+done
+return 1
 }
-
+args.get(){
+for o in "$@";do
+i=$(args.opt.arg_index "$o")
+if [[ $i ]];then
+args.arg "$i"
+return 0
+fi
+done
+return 1
+}
+args.args(){ echo "_ARGS_FINAL_ARGS";}
+args.arg(){ array.get _ARGS_ARGS "$1";}
+args.opt.arg_index(){ echo "${_ARGS_OPT_ARGS[$1]:-}";}
+args.show_help(){
+usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
+}
+fs.file.exists(){ [[ -f $1 ]];}
+fs.dir.exists(){ [[ -d $1 ]];}
+fs.write(){
+local _f="$1"
+mkdir -p "$(dirname "$1")"
+shift
+(($#>0))&&printf "%s\n" "$@" >"$_f"||: >"$_f"
+}
+fs.find(){ local _n=$(awk -v s="${3:-1}" -v p="$2" 'NR>=s && $0~p{print NR; exit}' "$1" 2>/dev/null)&&[[ $_n ]]&&echo "$_n"||return 1;}
+fs.replace(){
+local _repl=$(string.escape.sed "$3")
+[[ -n ${4:-} ]]&&sed -i "$4,/$2/{/$2/{s|.*|$_repl|}}" "$1"||sed -i "/$2/{s|.*|$_repl|}" "$1"
+}
+fs.insert(){ sed -i "/$2/a\\$3" "$1" 2>/dev/null;}
+fs.rmline(){ [[ -n $4 ]]&&sed -i "$4,/$2/{/$2/d}" "$1" 2>/dev/null||sed -i "/$2/d" "$1" 2>/dev/null;}
+fs.cleanup(){ ls -t "$1"* 2>/dev/null|tail -n +$((${2:-3}+1))|xargs -r rm -f;}
+fs.mktemp(){ mktemp "$@" 2>/dev/null||{ log.error "Failed to create temporary file"&&return 1;};}
+fs.file.extract(){
+local path=$(realpath "$1") base=$(basename "$1")
+builtin cd "$2" >/dev/null||return 1
+case "${base,,}" in
+*.zip|*.war|*.jar|*.ear|*.sublime-package|*.ipa|*.ipsw|*.xpi|*.apk|*.aar|*.whl|*.vsix|*.crx|*.pk3|*.pk4)unzip -q "$path";;
+*.tar.gz|*.tgz)tar -zxf "$path";;
+*.tar.bz2|*.tbz|*.tbz2|*.tar.bz)tar -jxf "$path";;
+*.tar.xz|*.txz)tar -xJf "$path";;
+*.tar)tar -xf "$path";;
+*.gz)gzip -dc "$path" >"${base%.gz}";;
+*.bz2)bzip2 -dc "$path" >"${base%.bz2}";;
+*.xz)xz -dc "$path" >"${base%.xz}";;
+*)chmod +x "$path"
+cp "$path" "${base%%.*}"
+esac
+}
 : "${XDG_CONFIG_HOME:=$HOME/.config}"
 : "${XDG_DATA_HOME:=$HOME/.local/share}"
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
 : "${XDG_CACHE_HOME:=$HOME/.cache}"
-path.script_name() {
-  echo "${SCRIPT_NAME,,}"
+path.script_name(){
+echo "${SCRIPT_NAME,,}"
 }
-path.config_dir() {
-  : "${SCRIPT_CONFIG_DIR:=$XDG_CONFIG_HOME/$(path.script_name)}"
-  echo "$SCRIPT_CONFIG_DIR"
+path.config_dir(){
+: "${SCRIPT_CONFIG_DIR:=$XDG_CONFIG_HOME/$(path.script_name)}"
+echo "$SCRIPT_CONFIG_DIR"
 }
-path.data_dir() {
-  : "${SCRIPT_DATA_DIR:=$XDG_DATA_HOME/$(path.script_name)}"
-  echo "$SCRIPT_DATA_DIR"
+path.data_dir(){
+: "${SCRIPT_DATA_DIR:=$XDG_DATA_HOME/$(path.script_name)}"
+echo "$SCRIPT_DATA_DIR"
 }
-path.state_dir() {
-  : "${SCRIPT_STATE_DIR:=$XDG_STATE_HOME/$(path.script_name)}"
-  echo "$SCRIPT_STATE_DIR"
+path.state_dir(){
+: "${SCRIPT_STATE_DIR:=$XDG_STATE_HOME/$(path.script_name)}"
+echo "$SCRIPT_STATE_DIR"
 }
-path.cache_dir() {
-  : "${SCRIPT_CACHE_DIR:=$XDG_CACHE_HOME/$(path.script_name)}"
-  echo "$SCRIPT_CACHE_DIR"
+path.cache_dir(){
+: "${SCRIPT_CACHE_DIR:=$XDG_CACHE_HOME/$(path.script_name)}"
+echo "$SCRIPT_CACHE_DIR"
 }
-path.log_dir() {
-  : "${SCRIPT_LOG_DIR:=$(path.state_dir)/log}"
-  echo "$SCRIPT_LOG_DIR"
+path.log_dir(){
+: "${SCRIPT_LOG_DIR:=$(path.state_dir)/log}"
+echo "$SCRIPT_LOG_DIR"
 }
-
 declare -ga _CONFIG_REGISTERED=()
 declare -gA _CONFIG_ARRAY_REGISTERED=()
 declare -gA _CONFIG_ARRAY_ITEMS=()
@@ -721,187 +713,185 @@ declare -gA _CONFIG_VALUES=()
 declare -gA _CONFIG_TYPES=()
 declare -gA _CONFIG_DESCS=()
 declare -gi _CONFIG_STRICT_MODE=1
-config.path() {
-	[[ -n ${_CONFIG_PATH+x} ]] && echo "$_CONFIG_PATH" && return 0
-	local _f="config.toml"
-	[[ -f $_f ]] && echo "$_f" && return 0
-	_f="$(path.config_dir)/config.toml"
-	[[ -f $_f ]] && echo "$_f" && return 0
-	log.error "配置文件不存在: $_f"
-	return 1
+config.path(){
+[[ -n ${_CONFIG_PATH+x} ]]&&echo "$_CONFIG_PATH"&&return 0
+local _f="config.toml"
+[[ -f $_f ]]&&echo "$_f"&&return 0
+_f="$(path.config_dir)/config.toml"
+[[ -f $_f ]]&&echo "$_f"&&return 0
+log.error "配置文件不存在: $_f"
+return 1
 }
-config.register() {
-	array.contains _CONFIG_REGISTERED "$1" && log.warn "Key $1 重复定义" || _CONFIG_REGISTERED+=("$1")
-	_CONFIG_TYPES["$1"]="${3:-string}"
-	_CONFIG_DESCS["$1"]="${4:-}"
-	(($# >= 2)) && _CONFIG_VALUES["$1"]="$2" || true
+config.register(){
+array.contains _CONFIG_REGISTERED "$1"&&log.warn "Key $1 重复定义"||_CONFIG_REGISTERED+=("$1")
+_CONFIG_TYPES["$1"]="${3:-string}"
+_CONFIG_DESCS["$1"]="${4:-}"
+(($#>=2))&&_CONFIG_VALUES["$1"]="$2"||true
 }
-config.array.register() {
-	_CONFIG_ARRAY_REGISTERED["$1"]+=" $2"
-	config.register "$1.$2" "${@:3}"
-	unset '_CONFIG_REGISTERED[-1]'
+config.array.register(){
+_CONFIG_ARRAY_REGISTERED["$1"]+=" $2"
+config.register "$1.$2" "${@:3}"
+unset '_CONFIG_REGISTERED[-1]'
 }
-config.loose() { _CONFIG_STRICT_MODE=0; }
-config.load() {
-	local _f="${1:-$(config.path)}" _in_arr=false _table=""
-	[[ -z $_f ]] && return 1
-	while IFS= read -r line || [[ -n $line ]]; do
-		[[ $line =~ ^[[:space:]]*$ ]] && continue
-		[[ $line =~ ^[[:space:]]*# ]] && continue
-		if [[ $line =~ ^\[([^\]]+)\]$ ]]; then
-			_table="${BASH_REMATCH[1]}"
-			_in_arr=false
-			if [[ $_table =~ ^([^.]+)\.(.+)$ ]]; then
-				local _arr="${BASH_REMATCH[1]}" _itm="${BASH_REMATCH[2]}"
-				! ((_CONFIG_STRICT_MODE)) || config.array.has "$_arr" && config.array.add "$_arr" "$_itm" && _in_arr=true
-			fi
-			continue
-		fi
-		[[ $line =~ ^([^=[:space:]]+)[[:space:]]*=[[:space:]]*(.*)$ ]] || continue
-		local _ak="${BASH_REMATCH[1]}"
-		local _k="${_table:+$_table.}$_ak" _v="${BASH_REMATCH[2]}"
-		((_CONFIG_STRICT_MODE)) && [[ $_in_arr != "true" ]] && { array.contains "_CONFIG_REGISTERED" "$_k" || continue; }
-		((_CONFIG_STRICT_MODE)) && [[ $_in_arr == "true" ]] && { config.array.has "$_arr" "$_itm" "$_ak" || continue; }
-		_v="${_v%"${_v##*[![:space:]]}"}"
-		[[ $_v =~ ^[\'\"](.*)[\'\"]$ ]] && _v="${BASH_REMATCH[1]}"
-		_CONFIG_VALUES["$_k"]="$_v"
-	done <"$_f"
+config.loose(){ _CONFIG_STRICT_MODE=0;}
+config.load(){
+local _f="${1:-$(config.path)}" _in_arr=false _table=""
+[[ -z $_f ]]&&return 1
+while IFS= read -r line||[[ -n $line ]];do
+[[ $line =~ ^[[:space:]]*$ ]]&&continue
+[[ $line =~ ^[[:space:]]*# ]]&&continue
+if [[ $line =~ ^\[([^\]]+)\]$ ]];then
+_table="${BASH_REMATCH[1]}"
+_in_arr=false
+if [[ $_table =~ ^([^.]+)\.(.+)$ ]];then
+local _arr="${BASH_REMATCH[1]}" _itm="${BASH_REMATCH[2]}"
+! ((_CONFIG_STRICT_MODE))||config.array.has "$_arr"&&config.array.add "$_arr" "$_itm"&&_in_arr=true
+fi
+continue
+fi
+[[ $line =~ ^([^=[:space:]]+)[[:space:]]*=[[:space:]]*(.*)$ ]]||continue
+local _ak="${BASH_REMATCH[1]}"
+local _k="${_table:+$_table.}$_ak" _v="${BASH_REMATCH[2]}"
+((_CONFIG_STRICT_MODE))&&[[ $_in_arr != "true" ]]&&{ array.contains "_CONFIG_REGISTERED" "$_k"||continue;}
+((_CONFIG_STRICT_MODE))&&[[ $_in_arr == "true" ]]&&{ config.array.has "$_arr" "$_itm" "$_ak"||continue;}
+_v="${_v%"${_v##*[![:space:]]}"}"
+[[ $_v =~ ^[\'\"](.*)[\'\"]$ ]]&&_v="${BASH_REMATCH[1]}"
+_CONFIG_VALUES["$_k"]="$_v"
+done <"$_f"
 }
-config.keys() { printf "%s\n" "${_CONFIG_REGISTERED[@]}"; }
-config.has() { [[ -v "_CONFIG_VALUES[$1]" ]]; }
-config.get() { [[ -v "_CONFIG_VALUES[$1]" ]] && echo "${_CONFIG_VALUES[$1]}" || return 1; }
-config.set() {
-	! array.contains "_CONFIG_REGISTERED" "$1" && {
-		log.error "未注册的配置项: $1"
-		return 1
-	}
-	_CONFIG_VALUES["$1"]="$2"
+config.keys(){ printf "%s\n" "${_CONFIG_REGISTERED[@]}";}
+config.has(){ [[ -v "_CONFIG_VALUES[$1]" ]];}
+config.get(){ [[ -v "_CONFIG_VALUES[$1]" ]]&&echo "${_CONFIG_VALUES[$1]}"||return 1;}
+config.set(){
+! array.contains "_CONFIG_REGISTERED" "$1"&&{
+log.error "未注册的配置项: $1"
+return 1
 }
-config.sections() {
-	local prefix="${1:-}"
-	local -A seen=()
-	local key section_prefix="${prefix:+$prefix.}"
-	for key in "${!_CONFIG_VALUES[@]}"; do
-		[[ $key == ${section_prefix}*.* ]] && {
-			local part=${key#"$section_prefix"}
-			seen["${part%%.*}"]=1
-		}
-	done
-	printf "%s\n" "${!seen[@]}"
+_CONFIG_VALUES["$1"]="$2"
 }
-config.array.items() { [[ -v "_CONFIG_ARRAY_ITEMS[$1]" ]] && echo "${_CONFIG_ARRAY_ITEMS[$1]}"; }
-config.array.has() {
-	map.contains _CONFIG_ARRAY_REGISTERED "$1" || return 1
-	(($# >= 2)) && [[ " ${_CONFIG_ARRAY_ITEMS[$1]:-} " == *" ${2:-} "* ]] || (($# < 2)) || return 1
-	(($# >= 3)) && array.contains _CONFIG_ARRAY_REGISTERED "$3" || (($# < 3)) || return 1
+config.sections(){
+local prefix="${1:-}"
+local -A seen=()
+local key section_prefix="${prefix:+$prefix.}"
+for key in "${!_CONFIG_VALUES[@]}";do
+[[ $key == $section_prefix*.* ]]&&{
+local part=${key#"$section_prefix"}
+seen["${part%%.*}"]=1
 }
-config.array.get() { [[ -v "_CONFIG_VALUES["$1.$2.$3"]" ]] && echo "${_CONFIG_VALUES["$1.$2.$3"]}" || return 1; }
-config.array.add() { [[ " ${_CONFIG_ARRAY_ITEMS[$1]:-} " != *" ${2:-} "* ]] && _CONFIG_ARRAY_ITEMS["$1"]+=" $2" || return 0; }
-config.array.set() {
-	! config.array.has "$1" && {
-		log.error "未注册的数组配置名: $1"
-		return 1
-	}
-	! array.contains _CONFIG_ARRAY_REGISTERED "${3-}" && {
-		log.error "未注册的数组配置项: $1:$3"
-		return 1
-	}
-	config.array.add "$1" "$2"
-	_CONFIG_VALUES["$1.$2.$3"]=$4
+done
+printf "%s\n" "${!seen[@]}"
 }
-config.type() { [[ -v "_CONFIG_TYPES[$1]" ]] && echo "${_CONFIG_TYPES[$1]}"; }
-config.desc() { [[ -v "_CONFIG_DESCS[$1]" ]] && echo "${_CONFIG_DESCS[$1]}"; }
-config.update() {
-	local _f _s _k _v _sec _sec_grep _pat _repl _n
-	(($# % 2 == 1)) && _f="${!#}" && set -- "${@:1:$#-1}" || _f="$(config.path)"
-	(($# == 2)) && { _v="$2" && [[ $1 == *.* ]] && _s="${1%%.*}" _k="${1#*.}" || _s="" _k="$1" && config.set "$@" || return $?; }
-	(($# == 4)) && { _s="$1.$2" _k="$3" _v="$4" && config.array.set "$@" || return $?; }
-	[[ ! -f $_f ]] && config.save "$_f" && return 0
-	_sec="${_s:+[$_s]}"
-	_sec_grep="$(string.escape.regex "${_sec}")"
-	_pat="^${_k}[[:space:]]*=" _repl="${_k} = \"${_v}\""
-	[[ -n $_sec ]] && _n=$(fs.find "$_f" "^${_sec_grep}$") || _n="" && fs.find "$_f" "$_pat" "$_n" 1>/dev/null && fs.replace "$_f" "$_pat" "$_repl" "$_n" && return 0 || true
-	[[ -n $_n ]] && fs.insert "$_f" "^${_sec_grep}$" "$_repl" "0" && return 0 || true
-	{
-		echo ""
-		[[ -n $_s ]] && echo "$_sec"
-		echo "$_repl"
-	} >>"$_f"
+config.array.items(){ [[ -v "_CONFIG_ARRAY_ITEMS[$1]" ]]&&echo "${_CONFIG_ARRAY_ITEMS[$1]}";}
+config.array.has(){
+map.contains _CONFIG_ARRAY_REGISTERED "$1"||return 1
+(($#>=2))&&[[ " ${_CONFIG_ARRAY_ITEMS[$1]:-} " == *" ${2:-} "* ]]||(($#<2))||return 1
+(($#>=3))&&array.contains _CONFIG_ARRAY_REGISTERED "$3"||(($#<3))||return 1
 }
-config.save() {
-	local _f="${1:-$(config.path)}" _k _v _s _field _arr _current _last=""
-	local -a _top=() _other=() _o=()
-	local _has_f_k=0 _has_f_a=0
-	(($# >= 2)) && [[ -n $2 ]] && local -n _filter_keys="$2" && _has_f_k=1
-	(($# >= 3)) && [[ -n $3 ]] && local -n _filter_arrays="$3" && _has_f_a=1
-	for _k in "${!_CONFIG_VALUES[@]}"; do
-		((_has_f_k)) && _s="${_k%.*}" && ! [[ -v "_CONFIG_ARRAY_REGISTERED[${_s%%.*}]" ]] && [[ " ${_filter_keys[*]} " != *" $_k "* ]] && continue
-		[[ $_k =~ \. ]] && _other+=("$_k") || _top+=("$_k")
-	done
-	IFS=$'\n' _other=($(sort <<<"${_other[*]}")) && unset IFS
-	for _k in "${_top[@]}"; do
-		[[ -v "_CONFIG_VALUES[$_k]" ]] && _o+=("$_k = \"${_CONFIG_VALUES[$_k]}\"")
-	done
-	for _k in "${_other[@]}"; do
-		_v="${_CONFIG_VALUES[$_k]}"
-		_s="${_k%.*}"
-		_field="${_k##*.}"
-		_arr="${_s%%.*}"
-		if [[ -v "_CONFIG_ARRAY_REGISTERED[$_arr]" ]]; then
-			[[ ! $_s =~ ^[^.]+\.[^.]+$ ]] && continue
-			((_has_f_a)) && {
-				[[ -v "_filter_arrays[$_arr]" ]] || continue
-				[[ " ${_filter_arrays[$_arr]} " == *" $_field "* ]] || continue
-			}
-		fi
-		_current="[$_s]"
-		[[ $_current != "$_last" ]] && {
-			[[ -n $_last || ${#_o[@]} -gt 0 ]] && _o+=("")
-			_o+=("$_current")
-			_last="$_current"
-		}
-		_o+=("$_field = \"$_v\"")
-	done
-	fs.write "$_f" "${_o[@]}"
+config.array.get(){ [[ -v "_CONFIG_VALUES["$1.$2.$3"]" ]]&&echo "${_CONFIG_VALUES["$1.$2.$3"]}"||return 1;}
+config.array.add(){ [[ " ${_CONFIG_ARRAY_ITEMS[$1]:-} " != *" ${2:-} "* ]]&&_CONFIG_ARRAY_ITEMS["$1"]+=" $2"||return 0;}
+config.array.set(){
+! config.array.has "$1"&&{
+log.error "未注册的数组配置名: $1"
+return 1
 }
-
+! array.contains _CONFIG_ARRAY_REGISTERED "${3-}"&&{
+log.error "未注册的数组配置项: $1:$3"
+return 1
+}
+config.array.add "$1" "$2"
+_CONFIG_VALUES["$1.$2.$3"]=$4
+}
+config.type(){ [[ -v "_CONFIG_TYPES[$1]" ]]&&echo "${_CONFIG_TYPES[$1]}";}
+config.desc(){ [[ -v "_CONFIG_DESCS[$1]" ]]&&echo "${_CONFIG_DESCS[$1]}";}
+config.update(){
+local _f _s _k _v _sec _sec_grep _pat _repl _n
+(($#%2==1))&&_f="${!#}"&&set -- "${@:1:$#-1}"||_f="$(config.path)"
+(($#==2))&&{ _v="$2"&&[[ $1 == *.* ]]&&_s="${1%%.*}" _k="${1#*.}"||_s="" _k="$1"&&config.set "$@"||return $?;}
+(($#==4))&&{ _s="$1.$2" _k="$3" _v="$4"&&config.array.set "$@"||return $?;}
+[[ ! -f $_f ]]&&config.save "$_f"&&return 0
+_sec="${_s:+[$_s]}"
+_sec_grep="$(string.escape.regex "$_sec")"
+_pat="^$_k[[:space:]]*=" _repl="$_k = \"$_v\""
+[[ -n $_sec ]]&&_n=$(fs.find "$_f" "^$_sec_grep$")||_n=""&&fs.find "$_f" "$_pat" "$_n" 1>/dev/null&&fs.replace "$_f" "$_pat" "$_repl" "$_n"&&return 0||true
+[[ -n $_n ]]&&fs.insert "$_f" "^$_sec_grep$" "$_repl" "0"&&return 0||true
+{
+echo ""
+[[ -n $_s ]]&&echo "$_sec"
+echo "$_repl"
+} >>"$_f"
+}
+config.save(){
+local _f="${1:-$(config.path)}" _k _v _s _field _arr _current _last=""
+local -a _top=() _other=() _o=()
+local _has_f_k=0 _has_f_a=0
+(($#>=2))&&[[ -n $2 ]]&&local -n _filter_keys="$2"&&_has_f_k=1
+(($#>=3))&&[[ -n $3 ]]&&local -n _filter_arrays="$3"&&_has_f_a=1
+for _k in "${!_CONFIG_VALUES[@]}";do
+((_has_f_k))&&_s="${_k%.*}"&&! [[ -v "_CONFIG_ARRAY_REGISTERED[${_s%%.*}]" ]]&&[[ " ${_filter_keys[*]} " != *" $_k "* ]]&&continue
+[[ $_k =~ \. ]]&&_other+=("$_k")||_top+=("$_k")
+done
+IFS=$'\n' _other=($(sort <<<"${_other[*]}"))&&unset IFS
+for _k in "${_top[@]}";do
+[[ -v "_CONFIG_VALUES[$_k]" ]]&&_o+=("$_k = \"${_CONFIG_VALUES[$_k]}\"")
+done
+for _k in "${_other[@]}";do
+_v="${_CONFIG_VALUES[$_k]}"
+_s="${_k%.*}"
+_field="${_k##*.}"
+_arr="${_s%%.*}"
+if [[ -v "_CONFIG_ARRAY_REGISTERED[$_arr]" ]];then
+[[ ! $_s =~ ^[^.]+\.[^.]+$ ]]&&continue
+((_has_f_a))&&{
+[[ -v "_filter_arrays[$_arr]" ]]||continue
+[[ " ${_filter_arrays[$_arr]} " == *" $_field "* ]]||continue
+}
+fi
+_current="[$_s]"
+[[ $_current != "$_last" ]]&&{
+[[ -n $_last || ${#_o[@]} -gt 0 ]]&&_o+=("")
+_o+=("$_current")
+_last="$_current"
+}
+_o+=("$_field = \"$_v\"")
+done
+fs.write "$_f" "${_o[@]}"
+}
 declare -g _REPORT_DIR=""
 declare -g _REPORT_SECTION_NUM=1
 declare -ga _REPORT_CONTENT=()
-report.dir.set() { _REPORT_DIR=$1; }
-report.reset() { _REPORT_CONTENT=(); }
-report.init() {
-  report.reset
-  _REPORT_CONTENT+=("$(markdown.front_matter "$1")" "" "$(markdown.h1 "$1")" "")
+report.dir.set(){ _REPORT_DIR=$1;}
+report.reset(){ _REPORT_CONTENT=();}
+report.init(){
+report.reset
+_REPORT_CONTENT+=("$(markdown.front_matter "$1")" "" "$(markdown.h1 "$1")" "")
 }
-report.section() {
-  _REPORT_CONTENT+=("$(markdown.h2 "$_REPORT_SECTION_NUM. $*")" "")
-  ((_REPORT_SECTION_NUM++))
+report.section(){
+_REPORT_CONTENT+=("$(markdown.h2 "$_REPORT_SECTION_NUM. $*")" "")
+((_REPORT_SECTION_NUM++))
 }
-report.subsection() {
-  _REPORT_CONTENT+=("$(markdown.h3 "$1")")
+report.subsection(){
+_REPORT_CONTENT+=("$(markdown.h3 "$1")")
 }
-report.code() {
-  _REPORT_CONTENT+=("$(markdown.code "bash" "$1")" "$(system.command.result "$1")" "")
+report.code(){
+_REPORT_CONTENT+=("$(markdown.code "bash" "$1")" "$(system.command.result "$1")" "")
 }
-report.table.begin() {
-  _REPORT_CONTENT+=("$(markdown.table.header "$@")")
+report.table.begin(){
+_REPORT_CONTENT+=("$(markdown.table.header "$@")")
 }
-report.table.add() {
-  _REPORT_CONTENT+=("$(markdown.table.row "$@")")
+report.table.add(){
+_REPORT_CONTENT+=("$(markdown.table.row "$@")")
 }
-report.table.end() {
-  _REPORT_CONTENT+=("")
+report.table.end(){
+_REPORT_CONTENT+=("")
 }
-report.export() {
-  local report_file=${1:-$_REPORT_DIR/$(date +%Y%m%d_%H%M%S).md}
-  fs.write "$report_file" "${_REPORT_CONTENT[@]}"
-  chmod 644 "$report_file" 2> /dev/null || true
-  printf "%s\n" "$report_file"
+report.export(){
+local report_file=${1:-$_REPORT_DIR/$(date +%Y%m%d_%H%M%S).md}
+fs.write "$report_file" "${_REPORT_CONTENT[@]}"
+chmod 644 "$report_file" 2>/dev/null||true
+printf "%s\n" "$report_file"
 }
-
 VERSION="2.0.0"
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."&&pwd)"
 DEFAULT_OUTPUT_DIR="$(path.state_dir)"
 OPT_OUTPUT_DIR=""
 OPT_CONFIG_FILE=""
@@ -909,186 +899,184 @@ OPT_FORCE_RUN=false
 OPT_MAX_AGE_HOURS=24
 declare -gA _MONITOR_CHECKS=()
 declare -gA _MONITOR_CACHE=()
-run() {
-  local result=$(bash -c "$1" 2>&1)
-  log.debug "$1 (exit=$?): $result"
-  echo "$result"
+run(){
+local result=$(bash -c "$1" 2>&1)
+log.debug "$1 (exit=$?): $result"
+echo "$result"
 }
-file.need_fresh() {
-  [[ $OPT_FORCE_RUN == true ]] && log.info "强制重新采集数据" && return
-  local latest_file=$(ls "$OPT_OUTPUT_DIR"/*.md 2> /dev/null | tail -1)
-  [[ -z $latest_file ]] && log.info "未找到历史记录文件" && return
-  local name=$(basename "$latest_file" .md)
-  local file_timestamp=$(date -d "${name:0:4}-${name:4:2}-${name:6:2} ${name:9:2}:${name:11:2}:${name:13:2}" +%s)
-  local age_hours=$((($(date +%s) - file_timestamp) / 3600))
-  ((age_hours < OPT_MAX_AGE_HOURS)) && log.info "数据有效（${age_hours} 小时前）" && echo "跳过采集（最近报告: $latest_file）" && return 1
-  log.info "数据已过期（${age_hours} 小时）"
+file.need_fresh(){
+[[ $OPT_FORCE_RUN == true ]]&&log.info "强制重新采集数据"&&return
+local latest_file=$(ls "$OPT_OUTPUT_DIR"/*.md 2>/dev/null|tail -1)
+[[ -z $latest_file ]]&&log.info "未找到历史记录文件"&&return
+local name=$(basename "$latest_file" .md)
+local file_timestamp=$(date -d "${name:0:4}-${name:4:2}-${name:6:2} ${name:9:2}:${name:11:2}:${name:13:2}" +%s)
+local age_hours=$((($(date +%s)-file_timestamp)/3600))
+((age_hours<OPT_MAX_AGE_HOURS))&&log.info "数据有效（$age_hours 小时前）"&&echo "跳过采集（最近报告: $latest_file）"&&return 1
+log.info "数据已过期（$age_hours 小时）"
 }
-data.cache() { _MONITOR_CACHE["$1"]=$(run "$2" 2> /dev/null); }
-data.get_cache() { [[ -v "_MONITOR_CACHE[$1]" ]] && echo "${_MONITOR_CACHE[$1]}" || echo ""; }
-data.vars() {
-  local key
-  for key in "${!_CONFIG_VALUES[@]}"; do
-    [[ $key == *".var:"* ]] && data.cache "${key##*.var:}" "${_CONFIG_VALUES[$key]}"
-  done
+data.cache(){ _MONITOR_CACHE["$1"]=$(run "$2" 2>/dev/null);}
+data.get_cache(){ [[ -v "_MONITOR_CACHE[$1]" ]]&&echo "${_MONITOR_CACHE[$1]}"||echo "";}
+data.vars(){
+local key
+for key in "${!_CONFIG_VALUES[@]}";do
+[[ $key == *".var:"* ]]&&data.cache "${key##*.var:}" "${_CONFIG_VALUES[$key]}"
+done
 }
-data.add() {
-  local name="$1"
-  local raw_value="$2"
-  local cmd unit=""
-  [[ $raw_value =~ ^\"(.*)\"$ ]] && raw_value="${BASH_REMATCH[1]}"
-  [[ $raw_value =~ ^(.+)[[:space:]]+::[[:space:]]+(.+)$ ]] && cmd="${BASH_REMATCH[1]}" && unit="${BASH_REMATCH[2]}" || cmd="$raw_value"
-  local result
-  while [[ $cmd =~ @([a-zA-Z_][a-zA-Z0-9_]*) ]]; do
-    local cache_name="${BASH_REMATCH[1]}"
-    local cache_value="$(data.get_cache "$cache_name")"
-    cmd="${cmd//@${cache_name}/${cache_value}}"
-  done
-  result=$(run "$cmd")
-  result=$(string.trim "$result")
-  [[ -n $unit && -n $result && $result != "N/A" && $unit != "status" ]] && result="$result $unit"
-  _MONITOR_CHECKS["${name}"]="${result:-N/A}"
+data.add(){
+local name="$1"
+local raw_value="$2"
+local cmd unit=""
+[[ $raw_value =~ ^\"(.*)\"$ ]]&&raw_value="${BASH_REMATCH[1]}"
+[[ $raw_value =~ ^(.+)[[:space:]]+::[[:space:]]+(.+)$ ]]&&cmd="${BASH_REMATCH[1]}"&&unit="${BASH_REMATCH[2]}"||cmd="$raw_value"
+local result
+while [[ $cmd =~ @([a-zA-Z_][a-zA-Z0-9_]*) ]];do
+local cache_name="${BASH_REMATCH[1]}"
+local cache_value="$(data.get_cache "$cache_name")"
+cmd="${cmd//@$cache_name/$cache_value}"
+done
+result=$(run "$cmd")
+result=$(string.trim "$result")
+[[ -n $unit && -n $result && $result != "N/A" && $unit != "status" ]]&&result="$result $unit"
+_MONITOR_CHECKS["$name"]="${result:-N/A}"
 }
-data.show() {
-  report.table.begin "名称" "值"
-  for name in "${!_MONITOR_CHECKS[@]}"; do
-    report.table.add "$name" "${_MONITOR_CHECKS[${name}]:-N/A}"
-  done
-  report.table.end
-  _MONITOR_CHECKS=()
+data.show(){
+report.table.begin "名称" "值"
+for name in "${!_MONITOR_CHECKS[@]}";do
+report.table.add "$name" "${_MONITOR_CHECKS[$name]:-N/A}"
+done
+report.table.end
+_MONITOR_CHECKS=()
 }
-data.exec() {
-  local prefix="$1."
-  local key value count=0 has_code=0
-  for key in "${!_CONFIG_VALUES[@]}"; do
-    if [[ $key == "$prefix"* ]] && [[ $key != "$prefix"*.* ]]; then
-      value="${_CONFIG_VALUES[$key]}"
-      key="${key#"$prefix"}"
-      if [[ $key == "code" ]]; then
-        has_code=1
-        code_value="$value"
-      elif [[ $key != var:* ]]; then
-        data.add "$key" "$value"
-        ((count++))
-      fi
-    fi
-  done
-  ((count > 0)) && data.show
-  ((has_code > 0)) && report.code "$code_value"
-  return 0
-}
-data.unfold() {
-  local -A dynamic_values=()
-  local key value
-  for key in "${!_CONFIG_VALUES[@]}"; do
-    [[ $key == dynamic:* ]] && dynamic_values["${key#dynamic:}"]="$(run "${_CONFIG_VALUES[$key]}")"
-  done
-  [[ ${#dynamic_values[@]} -eq 0 ]] && return 0
-  local -A new_config=()
-  for key in "${!_CONFIG_VALUES[@]}"; do
-    [[ $key == dynamic:* ]] && continue
-    value="${_CONFIG_VALUES[$key]}"
-    if [[ $key == *@* ]]; then
-      for var_name in "${!dynamic_values[@]}"; do
-        local pattern="@${var_name}"
-        [[ $key == *"$pattern"* ]] || continue
-        local devices_list="${dynamic_values[$var_name]}"
-        [[ -n $devices_list ]] || continue
-        while IFS= read -r item; do
-          [[ -z $item ]] && continue
-          local new_key="${key//$pattern/$item}"
-          new_config["$new_key"]="${value//$pattern/$item}"
-        done <<< "$devices_list"
-      done
-    else
-      new_config["$key"]="$value"
-    fi
-  done
-  _CONFIG_VALUES=()
-  for key in "${!new_config[@]}"; do
-    _CONFIG_VALUES["$key"]="${new_config[$key]}"
-  done
-}
-data.contitional() {
-  local -A four_level_sections=()
-  for key in "${!_CONFIG_VALUES[@]}"; do
-    [[ $key == *.*.*.* ]] && four_level_sections["${key%.*}"]=1
-  done
-  [[ ${#four_level_sections[@]} -eq 0 ]] && return 0
-  for section_prefix in "${!four_level_sections[@]}"; do
-    local section1="${section_prefix%%.*}"
-    local remaining="${section_prefix#*.}"
-    local section2="${remaining%%.*}"
-    local condition_name="${remaining#*.}"
-    local condition_key="$section_prefix.condition"
-    if [[ -v "_CONFIG_VALUES[$condition_key]" ]]; then
-      local cmd="${_CONFIG_VALUES[$condition_key]}"
-      while [[ $cmd =~ @([a-zA-Z_][a-zA-Z0-9_]*) ]]; do
-        local cache_name="${BASH_REMATCH[1]}"
-        cmd="${cmd//@${cache_name}/$(data.get_cache "$cache_name")}"
-      done
-      if [[ "$(run "$cmd")" == "$condition_name" ]]; then
-        for subkey in "${!_CONFIG_VALUES[@]}"; do
-          [[ $subkey == "$section_prefix".* ]] && [[ $subkey != "$condition_key" ]] &&
-            _CONFIG_VALUES["$section1.$section2.${subkey##"$section_prefix."}"]="${_CONFIG_VALUES[$subkey]}"
-        done
-      fi
-    fi
-  done
-}
-output.make() {
-  local title
-  title=$(config.get "title") || title="检测报告"
-  report.init "$title"
-  data.unfold
-  data.vars
-  data.contitional
-  mapfile -t sections < <(config.sections | sort)
-  for section in "${sections[@]}"; do
-    if [[ -n $section ]]; then
-      local display_name="${section#*-}"
-      report.section "$display_name"
-      data.exec "$section"
-      mapfile -t subsections < <(config.sections "$section")
-      for subsection in "${subsections[@]}"; do
-        [[ -n ${subsection} ]] || continue
-        report.subsection "$subsection"
-        data.exec "$section.$subsection"
-      done
-    fi
-  done
-  local file=$(report.export)
-  local size=$(stat -c%s "$file" 2> /dev/null || stat -f%z "$file" 2> /dev/null || echo "未知")
-  console.stdout "报告已生成: $file ($size 字节)"
-}
-cli.handle() {
-  args.init
-  args.add_options "verbose" "v" "详细输出模式"
-  args.add_options "force" "f" "强制重新采集（忽略时效性检查）"
-  args.add_options "output" "o" "指定输出目录（默认: $DEFAULT_OUTPUT_DIR）" "DIR"
-  args.add_options "config" "c" "指定配置文件" "FILE"
-  args.process "$@"
-  OPT_OUTPUT_DIR=$(args.get "-o" "--output") 2> /dev/null || OPT_OUTPUT_DIR="${DEFAULT_OUTPUT_DIR}/${_ARGS_CURRENT_SUBCOMMAND}"
-  report.dir.set "$OPT_OUTPUT_DIR"
-  OPT_CONFIG_FILE=$(args.get "-c" "--config") 2> /dev/null || OPT_CONFIG_FILE="$(path.config_dir)/${_ARGS_CURRENT_SUBCOMMAND}.toml"
-  args.has "-v" "--verbose" && log.setLevel info || log.setLevel warn
-  args.has "-f" "--force" && OPT_FORCE_RUN=true
-  file.need_fresh || return
-  config.loose
-  config.load "$OPT_CONFIG_FILE"
-  output.make
-}
-main() {
-  args.init
-  args.add_options "version" "v" "显示版本信息"
-  args.add_subcommand "storage" "监控存储信息" "cli.handle"
-  args.add_subcommand "network" "监控网络信息" "cli.handle"
-  args.add_subcommand "system" "监控系统信息" "cli.handle"
-  args.add_subcommand "performance" "监控性能信息" "cli.handle"
-  args.process "$@"
-  args.has "-v" "--version" && usage.version && exit 0
-}
-if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
-  main "$@"
+data.exec(){
+local prefix="$1."
+local key value count=0 has_code=0
+for key in "${!_CONFIG_VALUES[@]}";do
+if [[ $key == "$prefix"* ]]&&[[ $key != "$prefix"*.* ]];then
+value="${_CONFIG_VALUES[$key]}"
+key="${key#"$prefix"}"
+if [[ $key == "code" ]];then
+has_code=1
+code_value="$value"
+elif [[ $key != var:* ]];then
+data.add "$key" "$value"
+((count++))
 fi
-
+fi
+done
+((count>0))&&data.show
+((has_code>0))&&report.code "$code_value"
+return 0
+}
+data.unfold(){
+local -A dynamic_values=()
+local key value
+for key in "${!_CONFIG_VALUES[@]}";do
+[[ $key == dynamic:* ]]&&dynamic_values["${key#dynamic:}"]="$(run "${_CONFIG_VALUES[$key]}")"
+done
+[[ ${#dynamic_values[@]} -eq 0 ]]&&return 0
+local -A new_config=()
+for key in "${!_CONFIG_VALUES[@]}";do
+[[ $key == dynamic:* ]]&&continue
+value="${_CONFIG_VALUES[$key]}"
+if [[ $key == *@* ]];then
+for var_name in "${!dynamic_values[@]}";do
+local pattern="@$var_name"
+[[ $key == *"$pattern"* ]]||continue
+local devices_list="${dynamic_values[$var_name]}"
+[[ -n $devices_list ]]||continue
+while IFS= read -r item;do
+[[ -z $item ]]&&continue
+local new_key="${key//$pattern/$item}"
+new_config["$new_key"]="${value//$pattern/$item}"
+done <<<"$devices_list"
+done
+else
+new_config["$key"]="$value"
+fi
+done
+_CONFIG_VALUES=()
+for key in "${!new_config[@]}";do
+_CONFIG_VALUES["$key"]="${new_config[$key]}"
+done
+}
+data.contitional(){
+local -A four_level_sections=()
+for key in "${!_CONFIG_VALUES[@]}";do
+[[ $key == *.*.*.* ]]&&four_level_sections["${key%.*}"]=1
+done
+[[ ${#four_level_sections[@]} -eq 0 ]]&&return 0
+for section_prefix in "${!four_level_sections[@]}";do
+local section1="${section_prefix%%.*}"
+local remaining="${section_prefix#*.}"
+local section2="${remaining%%.*}"
+local condition_name="${remaining#*.}"
+local condition_key="$section_prefix.condition"
+if [[ -v "_CONFIG_VALUES[$condition_key]" ]];then
+local cmd="${_CONFIG_VALUES[$condition_key]}"
+while [[ $cmd =~ @([a-zA-Z_][a-zA-Z0-9_]*) ]];do
+local cache_name="${BASH_REMATCH[1]}"
+cmd="${cmd//@$cache_name/$(data.get_cache "$cache_name")}"
+done
+if [[ "$(run "$cmd")" == "$condition_name" ]];then
+for subkey in "${!_CONFIG_VALUES[@]}";do
+[[ $subkey == "$section_prefix".* ]]&&[[ $subkey != "$condition_key" ]]&&_CONFIG_VALUES["$section1.$section2.${subkey##"$section_prefix."}"]="${_CONFIG_VALUES[$subkey]}"
+done
+fi
+fi
+done
+}
+output.make(){
+local title
+title=$(config.get "title")||title="检测报告"
+report.init "$title"
+data.unfold
+data.vars
+data.contitional
+mapfile -t sections < <(config.sections|sort)
+for section in "${sections[@]}";do
+if [[ -n $section ]];then
+local display_name="${section#*-}"
+report.section "$display_name"
+data.exec "$section"
+mapfile -t subsections < <(config.sections "$section")
+for subsection in "${subsections[@]}";do
+[[ -n $subsection ]]||continue
+report.subsection "$subsection"
+data.exec "$section.$subsection"
+done
+fi
+done
+local file=$(report.export)
+local size=$(stat -c%s "$file" 2>/dev/null||stat -f%z "$file" 2>/dev/null||echo "未知")
+console.stdout "报告已生成: $file ($size 字节)"
+}
+cli.handle(){
+args.init
+args.add_options "verbose" "v" "详细输出模式"
+args.add_options "force" "f" "强制重新采集（忽略时效性检查）"
+args.add_options "output" "o" "指定输出目录（默认: $DEFAULT_OUTPUT_DIR）" "DIR"
+args.add_options "config" "c" "指定配置文件" "FILE"
+args.process "$@"
+OPT_OUTPUT_DIR=$(args.get "-o" "--output") 2>/dev/null||OPT_OUTPUT_DIR="$DEFAULT_OUTPUT_DIR/$_ARGS_CURRENT_SUBCOMMAND"
+report.dir.set "$OPT_OUTPUT_DIR"
+OPT_CONFIG_FILE=$(args.get "-c" "--config") 2>/dev/null||OPT_CONFIG_FILE="$(path.config_dir)/$_ARGS_CURRENT_SUBCOMMAND.toml"
+args.has "-v" "--verbose"&&log.setLevel info||log.setLevel warn
+args.has "-f" "--force"&&OPT_FORCE_RUN=true
+file.need_fresh||return
+config.loose
+config.load "$OPT_CONFIG_FILE"
+output.make
+}
+main(){
+args.init
+args.add_options "version" "v" "显示版本信息"
+args.add_subcommand "storage" "监控存储信息" "cli.handle"
+args.add_subcommand "network" "监控网络信息" "cli.handle"
+args.add_subcommand "system" "监控系统信息" "cli.handle"
+args.add_subcommand "performance" "监控性能信息" "cli.handle"
+args.process "$@"
+args.has "-v" "--version"&&usage.version&&exit 0
+}
+if [[ ${BASH_SOURCE[0]} == "$0" ]];then
+main "$@"
+fi
