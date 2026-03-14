@@ -186,46 +186,6 @@ case "${base,,}" in
 cp "$path" "${base%%.*}"
 esac
 }
-: "${XDG_CONFIG_HOME:=$HOME/.config}"
-: "${XDG_DATA_HOME:=$HOME/.local/share}"
-: "${XDG_STATE_HOME:=$HOME/.local/state}"
-: "${XDG_CACHE_HOME:=$HOME/.cache}"
-: "${SCRIPT_NAME:=}"
-_PATH_LOCAL_DIR="local"
-path.script_name(){
-echo "${SCRIPT_NAME,,}"
-}
-path.config_dir(){
-: "${SCRIPT_CONFIG_DIR:=$XDG_CONFIG_HOME/$(path.script_name)}"
-echo "$SCRIPT_CONFIG_DIR"
-}
-path.data_dir(){
-: "${SCRIPT_DATA_DIR:=$XDG_DATA_HOME/$(path.script_name)}"
-echo "$SCRIPT_DATA_DIR"
-}
-path.state_dir(){
-: "${SCRIPT_STATE_DIR:=$XDG_STATE_HOME/$(path.script_name)}"
-echo "$SCRIPT_STATE_DIR"
-}
-path.cache_dir(){
-: "${SCRIPT_CACHE_DIR:=$XDG_CACHE_HOME/$(path.script_name)}"
-echo "$SCRIPT_CACHE_DIR"
-}
-path.log_dir(){
-: "${SCRIPT_LOG_DIR:=$(path.state_dir)/logs}"
-echo "$SCRIPT_LOG_DIR"
-}
-path.local_config_dir(){
-: "${SCRIPT_LOCAL_CONFIG_DIR:=$XDG_CONFIG_HOME/$_PATH_LOCAL_DIR}"
-echo "$SCRIPT_LOCAL_CONFIG_DIR"
-}
-pass.get(){
-[[ -z $1 || $1 == */* || $1 == *..* ]]&&return 1
-local filename="$(path.config_dir)/$1.gpg"
-[[ -f $filename ]]||filename="$(path.local_config_dir)/$1.gpg"
-[[ -f $filename ]]&&system.command.exist "gpg"||return 1
-gpg -dq "$filename" 2>/dev/null
-}
 ANSI_ESC=$'\033'
 ANSI_CSI="$ANSI_ESC["
 ansi.Color.IsAvailable(){
@@ -668,6 +628,39 @@ args.opt.arg_index(){ echo "${_ARGS_OPT_ARGS[$1]:-}";}
 args.show_help(){
 usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
 }
+: "${XDG_CONFIG_HOME:=$HOME/.config}"
+: "${XDG_DATA_HOME:=$HOME/.local/share}"
+: "${XDG_STATE_HOME:=$HOME/.local/state}"
+: "${XDG_CACHE_HOME:=$HOME/.cache}"
+: "${SCRIPT_NAME:=}"
+_PATH_LOCAL_DIR="local"
+path.script_name(){
+echo "${SCRIPT_NAME,,}"
+}
+path.config_dir(){
+: "${SCRIPT_CONFIG_DIR:=$XDG_CONFIG_HOME/$(path.script_name)}"
+echo "$SCRIPT_CONFIG_DIR"
+}
+path.data_dir(){
+: "${SCRIPT_DATA_DIR:=$XDG_DATA_HOME/$(path.script_name)}"
+echo "$SCRIPT_DATA_DIR"
+}
+path.state_dir(){
+: "${SCRIPT_STATE_DIR:=$XDG_STATE_HOME/$(path.script_name)}"
+echo "$SCRIPT_STATE_DIR"
+}
+path.cache_dir(){
+: "${SCRIPT_CACHE_DIR:=$XDG_CACHE_HOME/$(path.script_name)}"
+echo "$SCRIPT_CACHE_DIR"
+}
+path.log_dir(){
+: "${SCRIPT_LOG_DIR:=$(path.state_dir)/logs}"
+echo "$SCRIPT_LOG_DIR"
+}
+path.local_config_dir(){
+: "${SCRIPT_LOCAL_CONFIG_DIR:=$XDG_CONFIG_HOME/$_PATH_LOCAL_DIR}"
+echo "$SCRIPT_LOCAL_CONFIG_DIR"
+}
 declare -ga _CONFIG_REGISTERED=()
 declare -gA _CONFIG_ARRAY_REGISTERED=()
 declare -gA _CONFIG_ARRAY_ITEMS=()
@@ -995,7 +988,7 @@ requests.auth(){ _REQUESTS_AUTH["Authorization"]="Basic $(jq -nr --arg c "$1:$2"
 requests.auth_bearer(){ _REQUESTS_AUTH["Authorization"]="Bearer $1";}
 VERSION="2.2.0"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."&&pwd)"
-: "${GITHUB_TOKEN:=$(pass.get "github")}"
+: "${GITHUB_TOKEN:=$(pass "github")}"
 get_package_property(){ config.array.get "packages" "$1" "$2";}
 _get_arch_regex(){
 case "$(system.arch)" in
