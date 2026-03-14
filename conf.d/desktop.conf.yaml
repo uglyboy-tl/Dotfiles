@@ -28,12 +28,6 @@
     $XDG_CONFIG_HOME/newsboat/config: desktop/newsboat/config
     ## Zathura PDF 阅读器
     $XDG_CONFIG_HOME/zathura: desktop/zathura
-    ## MUTT 邮件客户端
-    $XDG_CONFIG_HOME/mutt/muttrc: desktop/mutt/muttrc # Mutt 主配置
-    $XDG_CONFIG_HOME/mutt/mailboxes: desktop/mutt/mailboxes # 邮箱配置
-    $XDG_CONFIG_HOME/mutt/mailcap: desktop/mutt/mailcap # MIME 类型处理
-    $XDG_CONFIG_HOME/offlineimap/config: desktop/mutt/offlineimap.conf # 邮件同步
-    $XDG_CONFIG_HOME/notmuch/default/config: desktop/mutt/notmuch.conf # 邮件同步
 
     # X Window 系统配置
     # 环境变量配置

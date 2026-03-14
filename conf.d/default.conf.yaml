@@ -62,6 +62,13 @@
     $XDG_DATA_HOME/fastfetch/logos: config/fastfetch/logos
 
     # 其他应用程序配置
+    ## MUTT 邮件客户端
+    $XDG_CONFIG_HOME/mutt/muttrc: config/mail/muttrc # Mutt 主配置
+    $XDG_CONFIG_HOME/mutt/mailboxes: config/mail/mailboxes # 邮箱配置
+    $XDG_CONFIG_HOME/mutt/mailcap: config/mail/mailcap # MIME 类型处理
+    $XDG_CONFIG_HOME/offlineimap/config: config/mail/offlineimap.conf # 邮件同步
+    $XDG_CONFIG_HOME/notmuch/default/config: config/mail/notmuch.conf # notmuch 配置
+    $XDG_CONFIG_HOME/himalaya/config.toml: config/mail/himalaya.toml # himalaya 配置
     ## LF 文件管理器
     $XDG_CONFIG_HOME/lf: config/lf
     ## OpenCode
