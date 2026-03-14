@@ -3,8 +3,15 @@
 export PATH="$HOME/.local/bin:$PATH"
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 export ZLOCAL="${XDG_CONFIG_HOME:-$HOME/.config}/local"
+
+# History settings
 export HISTFILE=$XDG_STATE_HOME/zsh/history
-export SAVEHIST=50000
+HISTSIZE=10000
+SAVEHIST=50000
+setopt APPEND_HISTORY
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_DUPS
+setopt HIST_REDUCE_BLANKS
 
 [ -f "$ZLOCAL/zshrc.before" ] && source "$ZLOCAL/zshrc.before"
 
