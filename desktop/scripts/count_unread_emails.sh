@@ -6,8 +6,8 @@ MAILDIR=~/.local/share/Mail
 
 # 计算未读邮件的数量
 # Maildir格式中，未读邮件位于 "new" 目录中
-# 使用 find 命令来计数 "new" 目录下的文件数量
-UNREAD_COUNT=$(find "$MAILDIR"/ -type f -wholename "*/new/*" | wc -l)
+# 使用 find 命令来计数 "new" 目录下的文件数量，排除垃圾邮件夹
+UNREAD_COUNT=$(find "$MAILDIR"/ -type f -wholename "*/new/*" ! -wholename "*/Junk/new/*" | wc -l)
 
 # 输出未读邮件的数量
 echo "$UNREAD_COUNT"
