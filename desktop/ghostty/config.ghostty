@@ -1,0 +1,16 @@
+font-family = Maple Mono SC NF
+font-family = Hack Nerd Font Mono
+font-family = Monaco
+font-family = 霞鹜文楷等宽
+font-size = 11
+theme = Catppuccin Mocha
+gtk-titlebar = false
+window-height = 46
+window-width = 150
+window-padding-x = 10
+window-padding-balance = true
+background-opacity = 0.9
+copy-on-select = true
+clipboard-trim-trailing-spaces = true
+clipboard-read = allow
+clipboard-write = allow

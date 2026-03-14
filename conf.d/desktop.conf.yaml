@@ -56,6 +56,8 @@
 
     ## Alacritty 终端模拟器
     $XDG_CONFIG_HOME/alacritty: desktop/alacritty
+    ## Ghostty 终端模拟器
+    $XDG_CONFIG_HOME/ghostty: desktop/ghostty
 
     ## FCITX5-RIME 输入法
     $XDG_DATA_HOME/fcitx5/rime/default.custom.yaml: desktop/fcitx5-rime/default.custom.yaml # 默认输入方案
@@ -75,5 +77,5 @@
 # Crontab 定时任务配置
 - crontab:
     - time: 0 * * * * # 每小时执行一次
-      command: env DISPLAY=:0 DESKTOP_SESSION=lightdm-xsession DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus" dwall.sh -s lakeside
+      command: env TERM=dumb dwall.sh -s lakeside
       platform: linux # 仅限 Linux 平台
