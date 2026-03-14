@@ -2,416 +2,417 @@
 set -euo pipefail
 SCRIPT_NAME="AptHist"
 ANSI_ESC=$'\033'
-ANSI_CSI="${ANSI_ESC}["
-ansi.Color.IsAvailable() {
-  local colors
-  colors=$(tput colors 2> /dev/null || echo 0)
-  [[ $colors -ge 16 ]] && [[ -t 1 ]]
+ANSI_CSI="$ANSI_ESC["
+ansi.Color.IsAvailable(){
+local colors
+colors=$(tput colors 2>/dev/null||echo 0)
+[[ $colors -ge 16 ]]&&[[ -t 1 ]]
 }
-ansi.Powerline.IsAvailable() {
-  [[ -z ${NO_UNICODE-} ]] && locale -k LC_CTYPE 2> /dev/null | grep -q 'UTF-8'
+ansi.Powerline.IsAvailable(){
+[[ -z ${NO_UNICODE-} ]]&&locale -k LC_CTYPE 2>/dev/null|grep -q 'UTF-8'
 }
-ansi.enable.color() {
-  BLACK="${ANSI_CSI}30m"
-  RED="${ANSI_CSI}31m"
-  GREEN="${ANSI_CSI}32m"
-  YELLOW="${ANSI_CSI}33m"
-  BLUE="${ANSI_CSI}34m"
-  MAGENTA="${ANSI_CSI}35m"
-  CYAN="${ANSI_CSI}36m"
-  WHITE="${ANSI_CSI}37m"
-  BRIGHT_BLACK="${ANSI_CSI}90m"
-  BRIGHT_RED="${ANSI_CSI}91m"
-  BRIGHT_GREEN="${ANSI_CSI}92m"
-  BRIGHT_YELLOW="${ANSI_CSI}93m"
-  BRIGHT_BLUE="${ANSI_CSI}94m"
-  BRIGHT_MAGENTA="${ANSI_CSI}95m"
-  BRIGHT_CYAN="${ANSI_CSI}96m"
-  BRIGHT_WHITE="${ANSI_CSI}97m"
-  NC="${ANSI_CSI}0m"
-  NO_COLOR="${ANSI_CSI}0m"
+ansi.enable.color(){
+BLACK="${ANSI_CSI}30m"
+RED="${ANSI_CSI}31m"
+GREEN="${ANSI_CSI}32m"
+YELLOW="${ANSI_CSI}33m"
+BLUE="${ANSI_CSI}34m"
+MAGENTA="${ANSI_CSI}35m"
+CYAN="${ANSI_CSI}36m"
+WHITE="${ANSI_CSI}37m"
+BRIGHT_BLACK="${ANSI_CSI}90m"
+BRIGHT_RED="${ANSI_CSI}91m"
+BRIGHT_GREEN="${ANSI_CSI}92m"
+BRIGHT_YELLOW="${ANSI_CSI}93m"
+BRIGHT_BLUE="${ANSI_CSI}94m"
+BRIGHT_MAGENTA="${ANSI_CSI}95m"
+BRIGHT_CYAN="${ANSI_CSI}96m"
+BRIGHT_WHITE="${ANSI_CSI}97m"
+NC="${ANSI_CSI}0m"
+NO_COLOR="${ANSI_CSI}0m"
 }
-ansi.disable.color() {
-  BLACK=""
-  RED=""
-  GREEN=""
-  YELLOW=""
-  BLUE=""
-  MAGENTA=""
-  CYAN=""
-  WHITE=""
-  BRIGHT_BLACK=""
-  BRIGHT_RED=""
-  BRIGHT_GREEN=""
-  BRIGHT_YELLOW=""
-  BRIGHT_BLUE=""
-  BRIGHT_MAGENTA=""
-  BRIGHT_CYAN=""
-  BRIGHT_WHITE=""
-  NC=""
-  NO_COLOR=""
+ansi.disable.color(){
+BLACK=""
+RED=""
+GREEN=""
+YELLOW=""
+BLUE=""
+MAGENTA=""
+CYAN=""
+WHITE=""
+BRIGHT_BLACK=""
+BRIGHT_RED=""
+BRIGHT_GREEN=""
+BRIGHT_YELLOW=""
+BRIGHT_BLUE=""
+BRIGHT_MAGENTA=""
+BRIGHT_CYAN=""
+BRIGHT_WHITE=""
+NC=""
+NO_COLOR=""
 }
-ansi.enable.style() {
-  Bold="${ANSI_CSI}1m"
-  Dim="${ANSI_CSI}2m"
-  Italics="${ANSI_CSI}3m"
-  Underline="${ANSI_CSI}4m"
-  Blink="${ANSI_CSI}5m"
-  Reverse="${ANSI_CSI}7m"
-  Hidden="${ANSI_CSI}8m"
-  Strike="${ANSI_CSI}9m"
-  NoBold="${ANSI_CSI}21m"
-  NoDim="${ANSI_CSI}22m"
-  NoItalics="${ANSI_CSI}23m"
-  NoUnderline="${ANSI_CSI}24m"
-  NoBlink="${ANSI_CSI}25m"
-  NoReverse="${ANSI_CSI}27m"
-  NoHidden="${ANSI_CSI}28m"
-  NoStrike="${ANSI_CSI}29m"
+ansi.enable.style(){
+Bold="${ANSI_CSI}1m"
+Dim="${ANSI_CSI}2m"
+Italics="${ANSI_CSI}3m"
+Underline="${ANSI_CSI}4m"
+Blink="${ANSI_CSI}5m"
+Reverse="${ANSI_CSI}7m"
+Hidden="${ANSI_CSI}8m"
+Strike="${ANSI_CSI}9m"
+NoBold="${ANSI_CSI}21m"
+NoDim="${ANSI_CSI}22m"
+NoItalics="${ANSI_CSI}23m"
+NoUnderline="${ANSI_CSI}24m"
+NoBlink="${ANSI_CSI}25m"
+NoReverse="${ANSI_CSI}27m"
+NoHidden="${ANSI_CSI}28m"
+NoStrike="${ANSI_CSI}29m"
 }
-ansi.disable.style() {
-  Bold=""
-  Dim=""
-  Italics=""
-  Underline=""
-  Blink=""
-  Reverse=""
-  Hidden=""
-  Strike=""
-  NoBold=""
-  NoDim=""
-  NoItalics=""
-  NoUnderline=""
-  NoBlink=""
-  NoReverse=""
-  NoHidden=""
-  NoStrike=""
+ansi.disable.style(){
+Bold=""
+Dim=""
+Italics=""
+Underline=""
+Blink=""
+Reverse=""
+Hidden=""
+Strike=""
+NoBold=""
+NoDim=""
+NoItalics=""
+NoUnderline=""
+NoBlink=""
+NoReverse=""
+NoHidden=""
+NoStrike=""
 }
-ansi.enable.powerline() {
-  POWERLINE_SEPARATOR=$'\ue0b0'
-  POWERLINE_SEPARATOR_THIN=$'\ue0b1'
-  POWERLINE_SEPARATOR_LEFT=$'\ue0b2'
-  POWERLINE_SEPARATOR_LEFT_THIN=$'\ue0b3'
-  POWERLINE_BRANCH=$'\ue0a0'
-  POWERLINE_LINE=$'\ue0a1'
-  POWERLINE_READONLY=$'\ue0a2'
-  POWERLINE_POINTING_ARROW=$'\u27a1'
-  POWERLINE_ARROW_RIGHT=$'\u25b6'
-  POWERLINE_ARROW_LEFT=$'\u25c0'
-  POWERLINE_ARROW_DOWN=$'\u2b07'
-  POWERLINE_ARROW_RIGHT_DOWN=$'\u2b0a'
-  POWERLINE_PLUS_MINUS=$'\u00b1'
-  POWERLINE_REFERS_TO=$'\u27a6'
-  POWERLINE_OK=$'\u2714'
-  POWERLINE_FAIL=$'\u2718'
-  POWERLINE_WARN=$'\u26a0'
-  POWERLINE_COG=$'\u2699'
-  POWERLINE_HEART=$'\u2764'
-  POWERLINE_STAR=$'\u2605'
+ansi.enable.powerline(){
+POWERLINE_SEPARATOR=$'\ue0b0'
+POWERLINE_SEPARATOR_THIN=$'\ue0b1'
+POWERLINE_SEPARATOR_LEFT=$'\ue0b2'
+POWERLINE_SEPARATOR_LEFT_THIN=$'\ue0b3'
+POWERLINE_BRANCH=$'\ue0a0'
+POWERLINE_LINE=$'\ue0a1'
+POWERLINE_READONLY=$'\ue0a2'
+POWERLINE_POINTING_ARROW=$'\u27a1'
+POWERLINE_ARROW_RIGHT=$'\u25b6'
+POWERLINE_ARROW_LEFT=$'\u25c0'
+POWERLINE_ARROW_DOWN=$'\u2b07'
+POWERLINE_ARROW_RIGHT_DOWN=$'\u2b0a'
+POWERLINE_PLUS_MINUS=$'\u00b1'
+POWERLINE_REFERS_TO=$'\u27a6'
+POWERLINE_OK=$'\u2714'
+POWERLINE_FAIL=$'\u2718'
+POWERLINE_WARN=$'\u26a0'
+POWERLINE_COG=$'\u2699'
+POWERLINE_HEART=$'\u2764'
+POWERLINE_STAR=$'\u2605'
 }
-ansi.disable.powerline() {
-  POWERLINE_SEPARATOR=">"
-  POWERLINE_SEPARATOR_THIN=">"
-  POWERLINE_SEPARATOR_LEFT="<"
-  POWERLINE_SEPARATOR_LEFT_THIN="<"
-  POWERLINE_BRANCH="|}"
-  POWERLINE_LINE="LN"
-  POWERLINE_READONLY="RO"
-  POWERLINE_POINTING_ARROW="~"
-  POWERLINE_ARROW_RIGHT="->"
-  POWERLINE_ARROW_LEFT="<-"
-  POWERLINE_ARROW_DOWN="_"
-  POWERLINE_ARROW_RIGHT_DOWN=">"
-  POWERLINE_PLUS_MINUS="+-"
-  POWERLINE_REFERS_TO="*"
-  POWERLINE_OK="+"
-  POWERLINE_FAIL="x"
-  POWERLINE_WARN="!"
-  POWERLINE_COG="{*}"
-  POWERLINE_HEART="<3"
-  POWERLINE_STAR="*"
+ansi.disable.powerline(){
+POWERLINE_SEPARATOR=">"
+POWERLINE_SEPARATOR_THIN=">"
+POWERLINE_SEPARATOR_LEFT="<"
+POWERLINE_SEPARATOR_LEFT_THIN="<"
+POWERLINE_BRANCH="|}"
+POWERLINE_LINE="LN"
+POWERLINE_READONLY="RO"
+POWERLINE_POINTING_ARROW="~"
+POWERLINE_ARROW_RIGHT="->"
+POWERLINE_ARROW_LEFT="<-"
+POWERLINE_ARROW_DOWN="_"
+POWERLINE_ARROW_RIGHT_DOWN=">"
+POWERLINE_PLUS_MINUS="+-"
+POWERLINE_REFERS_TO="*"
+POWERLINE_OK="+"
+POWERLINE_FAIL="x"
+POWERLINE_WARN="!"
+POWERLINE_COG="{*}"
+POWERLINE_HEART="<3"
+POWERLINE_STAR="*"
 }
-ansi.enable() {
-  [[ -n ${_ANSI_FORCE_DISABLE-} ]] && ansi.disable && return 0
-  ansi.Color.IsAvailable && ansi.enable.color && ansi.enable.style || { ansi.disable.color && ansi.disable.style; }
-  ansi.Powerline.IsAvailable && ansi.enable.powerline || ansi.disable.powerline
+ansi.enable(){
+[[ -n ${_ANSI_FORCE_DISABLE-} ]]&&ansi.disable&&return 0
+ansi.Color.IsAvailable&&ansi.enable.color&&ansi.enable.style||{ ansi.disable.color&&ansi.disable.style;}
+ansi.Powerline.IsAvailable&&ansi.enable.powerline||ansi.disable.powerline
 }
-ansi.disable() {
-  ansi.disable.color
-  ansi.disable.style
-  ansi.disable.powerline
+ansi.disable(){
+ansi.disable.color
+ansi.disable.style
+ansi.disable.powerline
 }
-ansi.is.initialized() {
-  [[ -n ${ANSI_ESC} ]]
+ansi.is.initialized(){
+[[ -n $ANSI_ESC ]]
 }
 ansi.enable
-
-string.base64.encode() { base64 -w 0 "$1" 2> /dev/null || base64 "$1" 2> /dev/null; }
-string.base64.decode() { base64 -d 2> /dev/null || base64 -D 2> /dev/null; }
-string.escape.regex() { printf '%s' "${1:-}" | sed 's/[].[\\^$*+?{}()|]/\\&/g; s/\//\\\//g'; }
-string.escape.sed() { printf '%s' "${1:-}" | sed 's/\\/\\\\/g; s/&/\\&/g; s/|/\\|/g'; }
-string.trim() {
-  local s="${1#"${1%%[![:space:]]*}"}"
-  echo "${s%"${s##*[![:space:]]}"}"
+string.base64.encode(){ base64 -w 0 "$1" 2>/dev/null||base64 "$1" 2>/dev/null;}
+string.base64.decode(){ base64 -d 2>/dev/null||base64 -D 2>/dev/null;}
+string.escape.regex(){ printf '%s' "${1:-}"|sed 's/[].[\\^$*+?{}()|]/\\&/g; s/\//\\\//g';}
+string.escape.sed(){ printf '%s' "${1:-}"|sed 's/\\/\\\\/g; s/&/\\&/g; s/|/\\|/g';}
+string.trim(){
+local s="${1#"${1%%[![:space:]]*}"}"
+echo "${s%"${s##*[![:space:]]}"}"
 }
-string.int.check() { [[ $1 =~ ^-?[0-9]+$ ]]; }
-string.natural.check() { [[ $1 =~ ^[1-9][0-9]*$ ]]; }
-string.float.check() { [[ $1 =~ ^-?[0-9]+\.[0-9]+$ ]]; }
-string.is_ascii() { [[ $1 != *[![:ascii:]]* ]]; }
-string.has_ansi() { [[ $1 == *$'\x1b'* ]]; }
-
-console.stdout() { printf "%s\n" "$*"; }
-console.stderr() { printf "%s\n" "$*" >&2; }
-console.repeat() {
-  local repeat=${2:-0}
-  ((repeat <= 0)) && return
-  local char="$1"
-  if [[ ${#char} -eq 1 ]]; then
-    printf "%*s" "$repeat" "" | tr ' ' "$char"
-  else
-    local result=""
-    for ((i = 0; i < repeat; i++)); do
-      result+="$char"
-    done
-    printf "%s" "$result"
-  fi
+string.int.check(){ [[ $1 =~ ^-?[0-9]+$ ]];}
+string.natural.check(){ [[ $1 =~ ^[1-9][0-9]*$ ]];}
+string.float.check(){ [[ $1 =~ ^-?[0-9]+\.[0-9]+$ ]];}
+string.is_ascii(){ [[ $1 != *[![:ascii:]]* ]];}
+string.has_ansi(){ [[ $1 == *$'\x1b'* ]];}
+console.stdout(){ printf "%s\n" "$*";}
+console.stderr(){ printf "%s\n" "$*" >&2;}
+console.repeat(){
+local repeat=${2:-0}
+((repeat<=0))&&return
+local char="$1"
+if [[ ${#char} -eq 1 ]];then
+printf "%*s" "$repeat" ""|tr ' ' "$char"
+else
+local result=""
+for ((i=0; i<repeat; i++));do
+result+="$char"
+done
+printf "%s" "$result"
+fi
 }
 UNDERLINE_CACHE=$(console.repeat "=" 20)
-console.align() {
-  local padding=$(($1 - $(console.display_width "$2")))
-  ((padding > 0)) && printf "%s%${padding}s%s\n" "$2" "" "${*:3}" || printf "%s%s\n" "$2" "${*:3}"
+console.align(){
+local padding=$(($1-$(console.display_width "$2")))
+((padding>0))&&printf "%s%${padding}s%s\n" "$2" "" "${*:3}"||printf "%s%s\n" "$2" "${*:3}"
 }
-console.indent() { console.align $(($1 * 2)) "" "${*:2}"; }
-console.ansi_width() {
-  local width=0 i=0 len=${#1} flag=0
-  while ((i < len)); do
-    local char="${1:$((i++)):1}"
-    ((flag)) && {
-      [[ $char =~ [a-zA-Z] ]] && flag=0
-      continue
-    }
-    [[ $char == $'\x1b' ]] && flag=1 && continue
-    ((width++))
-  done
-  echo "$width"
+console.indent(){ console.align $(($1*2)) "" "${*:2}";}
+console.ansi_width(){
+local width=0 i=0 len=${#1} flag=0
+while ((i<len));do
+local char="${1:$((i++)):1}"
+((flag))&&{
+[[ $char =~ [a-zA-Z] ]]&&flag=0
+continue
 }
-console.mixed_width() {
-  local width=0 flag=0 i=0
-  local hex_bytes=$(printf "%s" "$1" | od -An -tx1 -v | tr -d ' \n')
-  local len=${#hex_bytes}
-  while ((i < len)); do
-    local num=$((0x${hex_bytes:i:2}))
-    i=$((i + 2))
-    ((flag)) && {
-      (((num >= 0x41 && num <= 0x5A) || (num >= 0x61 && num <= 0x7A))) && flag=0
-      continue
-    }
-    ((num == 0x1b)) && {
-      flag=1
-      continue
-    }
-    ((num <= 0x7F)) && {
-      ((width++))
-      continue
-    }
-    ((num >= 0xC2 && num <= 0xDF)) && {
-      ((width++))
-      i=$((i + 2))
-      continue
-    }
-    ((num >= 0xE0 && num <= 0xEF)) && {
-      ((width += 2))
-      i=$((i + 4))
-      continue
-    }
-    ((num >= 0xF0 && num <= 0xF7)) && {
-      ((width += 2))
-      i=$((i + 6))
-    }
-  done
-  echo "$width"
+[[ $char == $'\x1b' ]]&&flag=1&&continue
+((width++))
+done
+echo "$width"
 }
-console.display_width() {
-  [[ $1 ]] || {
-    echo "0"
-    return
-  }
-  ! string.is_ascii "$1" && console.mixed_width "$1" && return
-  string.has_ansi "$1" && console.ansi_width "$1" || echo "${#1}"
+console.mixed_width(){
+local width=0 flag=0 i=0
+local hex_bytes=$(printf "%s" "$1"|od -An -tx1 -v|tr -d ' \n')
+local len=${#hex_bytes}
+while ((i<len));do
+local num=$((0x${hex_bytes:i:2}))
+i=$((i+2))
+((flag))&&{
+(((num>=0x41&&num<=0x5A)||(num>=0x61&&num<=0x7A)))&&flag=0
+continue
 }
-console.section() {
-  console.stdout "$1:"
-  console.stdout "=${UNDERLINE_CACHE:0:$(console.mixed_width "$1")}"
+((num==0x1b))&&{
+flag=1
+continue
 }
-console.item.title() {
-  console.indent "$1" "${*:2}"
-  _CONSOLE_INDENT_DEPTH=$(($1 + 1))
+((num<=0x7F))&&{
+((width++))
+continue
 }
-console.item.item() {
-  console.indent "${_CONSOLE_INDENT_DEPTH}" "${*}"
+((num>=0xC2&&num<=0xDF))&&{
+((width++))
+i=$((i+2))
+continue
 }
-console.item.mid() {
-  console.item.item "├─" "${*}"
+((num>=0xE0&&num<=0xEF))&&{
+((width+=2))
+i=$((i+4))
+continue
 }
-console.item.end() {
-  console.item.item "└─" "${*}"
-  echo ""
+((num>=0xF0&&num<=0xF7))&&{
+((width+=2))
+i=$((i+6))
 }
-console.footer() {
-  console.stdout "========="
-  console.stdout "${*}"
+done
+echo "$width"
 }
-
+console.display_width(){
+[[ $1 ]]||{
+echo "0"
+return
+}
+! string.is_ascii "$1"&&console.mixed_width "$1"&&return
+string.has_ansi "$1"&&console.ansi_width "$1"||echo "${#1}"
+}
+console.section(){
+console.stdout "$1:"
+console.stdout "=${UNDERLINE_CACHE:0:$(console.mixed_width "$1")}"
+}
+console.item.title(){
+console.indent "$1" "${*:2}"
+_CONSOLE_INDENT_DEPTH=$(($1+1))
+}
+console.item.item(){
+console.indent "$_CONSOLE_INDENT_DEPTH" "$*"
+}
+console.item.mid(){
+console.item.item "├─" "$*"
+}
+console.item.end(){
+console.item.item "└─" "$*"
+echo ""
+}
+console.footer(){
+console.stdout "========="
+console.stdout "$*"
+}
 : "${_LOG_USE_EXTRA:=false}"
 : "${_LOG_LEVEL:=INFO}"
 declare -gA _LOG_LEVEL_MAP=(
-	[DEBUG]=0 [INFO]=1 [WARN]=2 [ERROR]=3
-)
+[DEBUG]=0 [INFO]=1 [WARN]=2 [ERROR]=3)
 declare -gi _LOG_MIN_LEVEL=${_LOG_LEVEL_MAP[$_LOG_LEVEL]}
-log.setLevel() {
-	local -r level="${1^^}"
-	[[ -v "_LOG_LEVEL_MAP[$level]" ]] || return 1
-	export _LOG_MIN_LEVEL=${_LOG_LEVEL_MAP[$level]}
-	export _LOG_LEVEL="$level"
+log.setLevel(){
+local -r level="${1^^}"
+[[ -v "_LOG_LEVEL_MAP[$level]" ]]||return 1
+export _LOG_MIN_LEVEL=${_LOG_LEVEL_MAP[$level]}
+export _LOG_LEVEL="$level"
 }
-log() {
-	local -r level="${1^^}"
-	local -r timestamp=$(date +"%m-%d %H:%M:%S ")
-	local flag
-	case "$level" in
-	SUCCESS) flag="${GREEN}[$level]${NC}" ;;
-	INFO) flag="${BLUE}[$level]${NC}" ;;
-	WARN) flag="${YELLOW}[$level]${NC}" ;;
-	ERROR) flag="${RED}[$level]${NC}" ;;
-	DEBUG) flag="${WHITE}[$level]${NC}" ;;
-	*) flag="" ;;
-	esac
-	[[ -z $flag ]] || shift
-	local prefix extra=""
-	[[ $_LOG_USE_EXTRA == true ]] && extra="${BASH_SOURCE[2]##*/}:${BASH_LINENO[0]}"
-	[[ -z $extra ]] || extra="$WHITE(${extra})$NC"
-	prefix="$WHITE$timestamp$NC$flag$extra"
-	console.stderr "$prefix" "$@"
+log(){
+local -r level="${1^^}"
+local timestamp
+printf -v timestamp '%(%m-%d %H:%M:%S )T' -1
+local flag
+case "$level" in
+SUCCESS)flag="$GREEN[$level]$NC";;
+INFO)flag="$BLUE[$level]$NC";;
+WARN)flag="$YELLOW[$level]$NC";;
+ERROR)flag="$RED[$level]$NC";;
+DEBUG)flag="$WHITE[$level]$NC";;
+*)flag=""
+esac
+[[ -z $flag ]]||shift
+local prefix extra=""
+[[ $_LOG_USE_EXTRA == true ]]&&extra="${BASH_SOURCE[2]##*/}:${BASH_LINENO[0]}"
+[[ -z $extra ]]||extra="$WHITE($extra)$NC"
+prefix="$WHITE$timestamp$NC$flag$extra"
+console.stderr "$prefix" "$@"
 }
-log.debug() { ((0 >= _LOG_MIN_LEVEL)) && log debug "$@" || true; }
-log.info() { ((1 >= _LOG_MIN_LEVEL)) && log info "$@" || true; }
-log.success() { ((1 >= _LOG_MIN_LEVEL)) && log success "$@" || true; }
-log.warn() { ((2 >= _LOG_MIN_LEVEL)) && log warn "$@" || true; }
-log.error() { ((3 >= _LOG_MIN_LEVEL)) && log error "$@" || true; }
-
-array.len() {
-  local -n ref="$1"
-  echo "${#ref[@]}"
+log.debug(){ ((0>=_LOG_MIN_LEVEL))&&log debug "$@"||true;}
+log.info(){ ((1>=_LOG_MIN_LEVEL))&&log info "$@"||true;}
+log.success(){ ((1>=_LOG_MIN_LEVEL))&&log success "$@"||true;}
+log.warn(){ ((2>=_LOG_MIN_LEVEL))&&log warn "$@"||true;}
+log.error(){ ((3>=_LOG_MIN_LEVEL))&&log error "$@"||true;}
+array.len(){
+local -n ref="$1"
+echo "${#ref[@]}"
 }
-array.contains() {
-  local -n ref="$1"
-  [[ " ${ref[*]} " == *" $2 "* ]]
+array.contains(){
+local -n ref="$1"
+if ((${#ref[@]}<=3));then
+[[ " ${ref[*]} " == *" $2 "* ]]
+else
+local -A lookup=()
+for elem in "${ref[@]}";do
+lookup["$elem"]=1
+done
+[[ -v "lookup[$2]" ]]
+fi
 }
-array.append() {
-  local -n array_ref="$1"
-  shift
-  array_ref+=("$@")
+array.append(){
+local -n array_ref="$1"
+shift
+array_ref+=("$@")
 }
-array.get() {
-  local -n ref="$1"
-  local len=${#ref[@]}
-  (($2 >= 0 && $2 < len)) && echo "${ref[$2]}" || return 1
+array.get(){
+local -n ref="$1"
+local len=${#ref[@]}
+(($2>=0&&$2<len))&&echo "${ref[$2]}"||return 1
 }
-array.type() {
-  local -r arr="$1"
-  local decl
-  decl="$(declare -p "$arr" 2> /dev/null)" || return 1
-  case "$decl" in
-  "declare -A"*) echo "associative" ;;
-  "declare -a"*) echo "indexed" ;;
-  *) return 1 ;;
-  esac
+array.type(){
+local -r arr="$1"
+local decl
+decl="$(declare -p "$arr" 2>/dev/null)"||return 1
+case "$decl" in
+"declare -A"*)echo "associative";;
+"declare -a"*)echo "indexed";;
+*)return 1
+esac
 }
-array.has_duplicates() {
-  local -n ref="$1"
-  local -A seen=()
-  local elem key
-  for elem in "${ref[@]}"; do
-    key="${elem:-__EMPTY__}"
-    [[ -v "seen[$key]" ]] && return 0
-    seen["$key"]=1
-  done
-  return 1
+array.has_duplicates(){
+local -n ref="$1"
+local -A seen=()
+local elem key
+for elem in "${ref[@]}";do
+key="${elem:-__EMPTY__}"
+[[ -v "seen[$key]" ]]&&return 0
+seen["$key"]=1
+done
+return 1
 }
-
-map.len() {
-  local -n ref="$1"
-  echo "${#ref[@]}"
+map.len(){
+local -n ref="$1"
+echo "${#ref[@]}"
 }
-map.contains() {
-  local -n ref="$1"
-  [[ -v "ref[$2]" ]]
+map.contains(){
+local -n ref="$1"
+[[ -v "ref[$2]" ]]
 }
-map.get() {
-  local -n ref="$1"
-  [[ -v "ref[$2]" ]] && echo "${ref[$2]}" || return 1
+map.get(){
+local -n ref="$1"
+[[ -v "ref[$2]" ]]&&echo "${ref[$2]}"||return 1
 }
-
 _USAGE_SCRIPT_FILENAME=${0##*/}
 _USAGE_SCRIPT_NAME=${SCRIPT_NAME:-$_USAGE_SCRIPT_FILENAME}
 _USAGE_SCRIPT_DESC=""
-usage.name.set() { _USAGE_SCRIPT_NAME="$1"; }
-usage.description.set() { [[ -n $1 ]] && _USAGE_SCRIPT_DESC="$1"; }
-usage.title() {
-  local _title="$_USAGE_SCRIPT_NAME"
-  [[ -n $_ARGS_CURRENT_SUBCOMMAND ]] && _title="$_title - $_ARGS_CURRENT_SUBCOMMAND"
-  [[ -n $_USAGE_SCRIPT_DESC ]] && _title="$_title - $_USAGE_SCRIPT_DESC"
-  console.stdout "${Bold}${_title}${NC}"
+usage.name.set(){ _USAGE_SCRIPT_NAME="$1";}
+usage.description.set(){ [[ -n $1 ]]&&_USAGE_SCRIPT_DESC="$1";}
+usage.title(){
+local _title="$_USAGE_SCRIPT_NAME"
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&_title="$_title - $_ARGS_CURRENT_SUBCOMMAND"
+[[ -n $_USAGE_SCRIPT_DESC ]]&&_title="$_title - $_USAGE_SCRIPT_DESC"
+console.stdout "$Bold$_title$NC"
 }
-usage.usage() {
-  local _usage_line="${BRIGHT_BLUE}Usage:${NC} ${BRIGHT_CYAN}$_USAGE_SCRIPT_FILENAME${NC}"
-  local subcommand="${_ARGS_CURRENT_SUBCOMMAND:-<subcommand>}"
-  ((${1:-0})) && _usage_line="${_usage_line} ${BRIGHT_MAGENTA}$subcommand${NC}"
-  ((${2:-0})) && _usage_line="${_usage_line} ${BRIGHT_YELLOW}[OPTIONS]${NC}"
-  ((${3:-0})) && _usage_line="${_usage_line} ${BRIGHT_YELLOW}[ARGUMENTS]${NC}"
-  console.stdout "$_usage_line"
+usage.usage(){
+local _usage_line="${BRIGHT_BLUE}Usage:$NC $BRIGHT_CYAN$_USAGE_SCRIPT_FILENAME$NC"
+local subcommand="${_ARGS_CURRENT_SUBCOMMAND:-<subcommand>}"
+((${1:-0}))&&_usage_line="$_usage_line $BRIGHT_MAGENTA$subcommand$NC"
+((${2:-0}))&&_usage_line="$_usage_line $BRIGHT_YELLOW[OPTIONS]$NC"
+((${3:-0}))&&_usage_line="$_usage_line $BRIGHT_YELLOW[ARGUMENTS]$NC"
+console.stdout "$_usage_line"
 }
-usage.section() {
-  echo ""
-  console.stdout "${Bold}${BRIGHT_BLUE}$1${NC}:"
+usage.section(){
+echo ""
+console.stdout "$Bold$BRIGHT_BLUE$1$NC:"
 }
-usage.section.items() {
-  local -n _items_ref="$1"
-  local -a _keys=("${!_items_ref[@]}")
-  local _max_width=20
-  for _key in "${_keys[@]}"; do
-    ((${#_key} > _max_width)) && _max_width=${#_key}
-  done
-  ((_max_width += 4))
-  for _key in "${_keys[@]}"; do
-    console.align "$_max_width" "  ${BRIGHT_CYAN}$_key${NC}" "${_items_ref[$_key]}"
-  done
+usage.section.items(){
+local -n _items_ref="$1"
+local -a _keys=("${!_items_ref[@]}")
+local _max_width=20
+for _key in "${_keys[@]}";do
+((${#_key}>_max_width))&&_max_width=${#_key}
+done
+((_max_width+=4))
+for _key in "${_keys[@]}";do
+console.align "$_max_width" "  $BRIGHT_CYAN$_key$NC" "${_items_ref[$_key]}"
+done
 }
-usage.footer() {
-  [[ ${#_ARGS_SUBCOMMANDS[@]} -eq 0 ]] && return 0
-  echo ""
-  console.stdout "${BRIGHT_BLACK}Use '${BRIGHT_WHITE}$_USAGE_SCRIPT_FILENAME <subcommand> --help${BRIGHT_BLACK}' for subcommand help${NC}"
+usage.footer(){
+[[ ${#_ARGS_SUBCOMMANDS[@]} -eq 0 ]]&&return 0
+echo ""
+console.stdout "${BRIGHT_BLACK}Use '$BRIGHT_WHITE$_USAGE_SCRIPT_FILENAME <subcommand> --help$BRIGHT_BLACK' for subcommand help$NC"
 }
-usage.show() {
-  local -n _opts_ref=$1
-  local -n _args_ref=$2
-  local -n _examples_ref=$3
-  local -n _notices_ref=$4
-  local -n _cmd_ref="_ARGS_CURRENT_SUBCOMMAND"
-  local -n _cmd_desc_ref="_ARGS_SUBCOMMANDS_DESC"
-  echo ""
-  usage.title
-  echo ""
-  usage.usage $(($(map.len _cmd_desc_ref) > 0)) $(($(map.len _opts_ref) > 0)) $(($(map.len _args_ref) > 0))
-  [[ -z $_cmd_ref ]] && [[ $(map.len _cmd_desc_ref) -gt 0 ]] && usage.section "Commands" && usage.section.items _cmd_desc_ref
-  [[ $(map.len _opts_ref) -gt 0 ]] && usage.section "Options" && usage.section.items _opts_ref
-  [[ $(map.len _args_ref) -gt 0 ]] && usage.section "Arguments" && usage.section.items _args_ref
-  [[ $(map.len _examples_ref) -gt 0 ]] && usage.section "Examples" && usage.section.items _examples_ref
-  [[ $(map.len _notices_ref) -gt 0 ]] && usage.section "Notices" && usage.section.items _notices_ref
-  [[ -z $_cmd_ref ]] && usage.footer || true
+usage.show(){
+local -n _opts_ref=$1
+local -n _args_ref=$2
+local -n _examples_ref=$3
+local -n _notices_ref=$4
+local -n _cmd_ref="_ARGS_CURRENT_SUBCOMMAND"
+local -n _cmd_desc_ref="_ARGS_SUBCOMMANDS_DESC"
+echo ""
+usage.title
+echo ""
+usage.usage $(($(map.len _cmd_desc_ref)>0)) $(($(map.len _opts_ref)>0)) $(($(map.len _args_ref)>0))
+[[ -z $_cmd_ref ]]&&[[ $(map.len _cmd_desc_ref) -gt 0 ]]&&usage.section "Commands"&&usage.section.items _cmd_desc_ref
+[[ $(map.len _opts_ref) -gt 0 ]]&&usage.section "Options"&&usage.section.items _opts_ref
+[[ $(map.len _args_ref) -gt 0 ]]&&usage.section "Arguments"&&usage.section.items _args_ref
+[[ $(map.len _examples_ref) -gt 0 ]]&&usage.section "Examples"&&usage.section.items _examples_ref
+[[ $(map.len _notices_ref) -gt 0 ]]&&usage.section "Notices"&&usage.section.items _notices_ref
+[[ -z $_cmd_ref ]]&&usage.footer||true
 }
-usage.version() { console.stdout "${BRIGHT_CYAN}${_USAGE_SCRIPT_NAME}${NC} version ${BRIGHT_GREEN}${VERSION:-null}${NC}"; }
-
+usage.version(){ console.stdout "$BRIGHT_CYAN$_USAGE_SCRIPT_NAME$NC version $BRIGHT_GREEN${VERSION:-null}$NC";}
 declare -gA _ARGS_SUBCOMMANDS=()
 declare -gA _ARGS_SUBCOMMANDS_DESC=()
 declare -ga _ARGS_OPTIONS=()
@@ -422,262 +423,254 @@ declare -gA _ARGS_HELP_OPTIONS=()
 declare -gA _ARGS_HELP_ARGS=()
 declare -gA _ARGS_HELP_EXAMPLES=()
 declare -gA _ARGS_HELP_NOTICES=()
-args.name() { usage.name.set "$1"; }
-args.description() { usage.description.set "$1" || return 1; }
-args.init() {
-  _ARGS_OPTIONS=()
-  declare -gA _ARGS_OPTIONS_SWITCH=()
-  declare -gA _ARGS_OPTIONS_TYPE=()
-  declare -gA _ARGS_HELP_OPTIONS=()
-  declare -gA _ARGS_HELP_ARGS=()
-  declare -gA _ARGS_HELP_EXAMPLES=()
-  declare -gA _ARGS_HELP_NOTICES=()
-  usage.description.set "${1:-}" || { [[ -n $_ARGS_CURRENT_SUBCOMMAND ]] && usage.description.set "${_ARGS_SUBCOMMANDS_DESC[$_ARGS_CURRENT_SUBCOMMAND]}"; }
-  args.add_options "help" "h" "显示帮助信息"
+args.name(){ usage.name.set "$1";}
+args.description(){ usage.description.set "$1"||return 1;}
+args.init(){
+_ARGS_OPTIONS=()
+declare -gA _ARGS_OPTIONS_SWITCH=()
+declare -gA _ARGS_OPTIONS_TYPE=()
+declare -gA _ARGS_HELP_OPTIONS=()
+declare -gA _ARGS_HELP_ARGS=()
+declare -gA _ARGS_HELP_EXAMPLES=()
+declare -gA _ARGS_HELP_NOTICES=()
+usage.description.set "${1:-}"||{ [[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&usage.description.set "${_ARGS_SUBCOMMANDS_DESC[$_ARGS_CURRENT_SUBCOMMAND]}";}
+args.add_options "help" "h" "显示帮助信息"
 }
-args.add_options() {
-  local type="${4:-}" key subcommand
-  : "${type:="NONE"}"
-  [[ -n $_ARGS_CURRENT_SUBCOMMAND ]] && subcommand=" $_ARGS_CURRENT_SUBCOMMAND" || subcommand=""
-  case ${1^^} in
-  "ARG") [[ -n $2 ]] && _ARGS_HELP_ARGS["$2"]="${3}" && _ARGS_OPTIONS_TYPE["$2"]="${type}" ;;
-  "EXAMPLE") _ARGS_HELP_EXAMPLES["$(basename "$0")$subcommand $2"]="${3}" ;;
-  "NOTICE") _ARGS_HELP_NOTICES+=(["${2}"]="") ;;
-  *)
-    _ARGS_OPTIONS_TYPE["$1"]="${type}"
-    _ARGS_OPTIONS+=("$1")
-    [[ -n $2 ]] && {
-      _ARGS_OPTIONS_SWITCH["$1"]="$2"
-      _ARGS_OPTIONS_SWITCH["$2"]="$1"
-      _ARGS_OPTIONS+=("$2")
-    }
-    key=""
-    [[ -n $2 ]] && key="-$2, "
-    key+="--$1"
-    [[ -n ${4+x} ]] && key+=" $type"
-    _ARGS_HELP_OPTIONS["${key}"]="${3}"
-    ;;
-  esac
+args.add_options(){
+local type="${4:-}" key subcommand
+: "${type:="NONE"}"
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&subcommand=" $_ARGS_CURRENT_SUBCOMMAND"||subcommand=""
+case ${1^^} in
+"ARG")[[ -n $2 ]]&&_ARGS_HELP_ARGS["$2"]="$3"&&_ARGS_OPTIONS_TYPE["$2"]="$type";;
+"EXAMPLE")_ARGS_HELP_EXAMPLES["$(basename "$0")$subcommand $2"]="$3";;
+"NOTICE")_ARGS_HELP_NOTICES+=(["$2"]="");;
+*)_ARGS_OPTIONS_TYPE["$1"]="$type"
+_ARGS_OPTIONS+=("$1")
+[[ -n $2 ]]&&{
+_ARGS_OPTIONS_SWITCH["$1"]="$2"
+_ARGS_OPTIONS_SWITCH["$2"]="$1"
+_ARGS_OPTIONS+=("$2")
 }
-args.add_subcommand() {
-  [[ -n $_ARGS_CURRENT_SUBCOMMAND ]] && return 0
-  _ARGS_SUBCOMMANDS["$1"]="$3"
-  _ARGS_SUBCOMMANDS_DESC["$1"]="$2"
+key=""
+[[ -n $2 ]]&&key="-$2, "
+key+="--$1"
+[[ -n ${4+x} ]]&&key+=" $type"
+_ARGS_HELP_OPTIONS["$key"]="$3"
+esac
 }
-args.dispatch() {
-  local cmd="${1:-}"
-  [[ -v "_ARGS_SUBCOMMANDS[$cmd]" ]] && {
-    local handler="${_ARGS_SUBCOMMANDS[$cmd]}"
-    _ARGS_CURRENT_SUBCOMMAND="$cmd"
-    shift
-    "$handler" "$@"
-    exit $?
-  }
-  return 1
+args.add_subcommand(){
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&return 0
+_ARGS_SUBCOMMANDS["$1"]="$3"
+_ARGS_SUBCOMMANDS_DESC["$1"]="$2"
 }
-args.process() {
-  [[ -z $_ARGS_CURRENT_SUBCOMMAND ]] && args.dispatch "$@" && exit 0
-  args.parse "$@"
-  args.verify || {
-    args.show_help
-    exit 1
-  }
-  args.has "-h" "--help" && args.show_help && exit 0 || true
+args.dispatch(){
+local cmd="${1:-}"
+[[ -v "_ARGS_SUBCOMMANDS[$cmd]" ]]&&{
+local handler="${_ARGS_SUBCOMMANDS[$cmd]}"
+_ARGS_CURRENT_SUBCOMMAND="$cmd"
+shift
+"$handler" "$@"
+exit $?
 }
-args.parse() {
-  declare -ga _ARGS_OPTS=()
-  declare -ga _ARGS_ARGS=()
-  declare -gA _ARGS_OPT_ARGS=()
-  local end=0 last=""
-  for arg in "$@"; do
-    if [[ $arg == '--' ]]; then
-      end=1
-      last=""
-    elif ((!end)) && [[ $arg =~ ^- ]]; then
-      if [[ $arg =~ ^-[a-zA-Z]{2,}$ ]]; then
-        local c="${arg:1}"
-        for ((i = 0; i < ${#c}; i++)); do
-          last="-${c:i:1}"
-          _ARGS_OPTS+=("$last")
-        done
-      else
-        _ARGS_OPTS+=("$arg")
-        last="$arg"
-      fi
-    else
-      _ARGS_ARGS+=("$arg")
-      [[ $last ]] && _ARGS_OPT_ARGS["$last"]=$((${#_ARGS_ARGS[@]} - 1)) && last=""
-    fi
-  done
-  return 0
+return 1
 }
-args.verify() {
-  for option in "${_ARGS_OPTS[@]}"; do
-    local opt="${option##*-}" another
-    array.contains _ARGS_OPTIONS "$opt" || {
-      log.error "未知选项: \"$option\""
-      return 1
-    }
-    array.contains _ARGS_OPTIONS_SWITCH "$opt" && {
-      another=${_ARGS_OPTIONS_SWITCH[$opt]}
-      args.has "-$another" "--$another" && log.error "重复选项" && return 1
-      [[ $option =~ ^-[a-zA-Z]$ ]] && opt=$another
-    }
-    case ${_ARGS_OPTIONS_TYPE[$opt]} in
-    "NONE") unset "_ARGS_OPT_ARGS[$option]" 2> /dev/null || true ;;
-    *) [[ -z ${_ARGS_OPT_ARGS[$option]+x} ]] && log.error "选项 $option 需要参数" && return 1 ;;
-    esac
-  done
-  array.has_duplicates _ARGS_OPTS && log.error "重复选项" && return 1
-  local -a _ARGS_TEMP_ARGS=("${_ARGS_ARGS[@]}")
-  for value in "${_ARGS_OPT_ARGS[@]}"; do
-    unset "_ARGS_TEMP_ARGS[$value]"
-  done
-  declare -ga _ARGS_FINAL_ARGS=("${_ARGS_TEMP_ARGS[@]}")
-  [[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]] && [[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]] && log.error "位置参数错误" && return 1 || true
+args.process(){
+[[ -z $_ARGS_CURRENT_SUBCOMMAND ]]&&args.dispatch "$@"&&exit 0
+args.parse "$@"
+args.verify||{
+args.show_help
+exit 1
 }
-args.has() {
-  for o in "$@"; do
-    array.contains _ARGS_OPTS "$o" && return 0
-  done
-  return 1
+args.has "-h" "--help"&&args.show_help&&exit 0||true
 }
-args.get() {
-  for o in "$@"; do
-    i=$(args.opt.arg_index "$o")
-    if [[ $i ]]; then
-      args.arg "$i"
-      return 0
-    fi
-  done
-  return 1
+args.parse(){
+declare -ga _ARGS_OPTS=()
+declare -ga _ARGS_ARGS=()
+declare -gA _ARGS_OPT_ARGS=()
+local end=0 last=""
+for arg in "$@";do
+if [[ $arg == '--' ]];then
+end=1
+last=""
+elif ((!end))&&[[ $arg =~ ^- ]];then
+if [[ $arg =~ ^-[a-zA-Z]{2,}$ ]];then
+local c="${arg:1}"
+for ((i=0; i<${#c}; i++));do
+last="-${c:i:1}"
+_ARGS_OPTS+=("$last")
+done
+else
+_ARGS_OPTS+=("$arg")
+last="$arg"
+fi
+else
+_ARGS_ARGS+=("$arg")
+[[ $last ]]&&_ARGS_OPT_ARGS["$last"]=$((${#_ARGS_ARGS[@]}-1))&&last=""
+fi
+done
+return 0
 }
-args.args() { echo "_ARGS_FINAL_ARGS"; }
-args.arg() { array.get _ARGS_ARGS "$1"; }
-args.opt.arg_index() { echo "${_ARGS_OPT_ARGS[$1]:-}"; }
-args.show_help() {
-  usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
+args.verify(){
+for option in "${_ARGS_OPTS[@]}";do
+local opt="${option##*-}" another
+array.contains _ARGS_OPTIONS "$opt"||{
+log.error "未知选项: \"$option\""
+return 1
 }
-
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+array.contains _ARGS_OPTIONS_SWITCH "$opt"&&{
+another=${_ARGS_OPTIONS_SWITCH[$opt]}
+args.has "-$another" "--$another"&&log.error "重复选项"&&return 1
+[[ $option =~ ^-[a-zA-Z]$ ]]&&opt=$another
+}
+case ${_ARGS_OPTIONS_TYPE[$opt]} in
+"NONE")unset "_ARGS_OPT_ARGS[$option]" 2>/dev/null||true;;
+*)[[ -z ${_ARGS_OPT_ARGS[$option]+x} ]]&&log.error "选项 $option 需要参数"&&return 1
+esac
+done
+array.has_duplicates _ARGS_OPTS&&log.error "重复选项"&&return 1
+local -a _ARGS_TEMP_ARGS=("${_ARGS_ARGS[@]}")
+for value in "${_ARGS_OPT_ARGS[@]}";do
+unset "_ARGS_TEMP_ARGS[$value]"
+done
+declare -ga _ARGS_FINAL_ARGS=("${_ARGS_TEMP_ARGS[@]}")
+[[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]]&&[[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]]&&log.error "位置参数错误"&&return 1||true
+}
+args.has(){
+for o in "$@";do
+array.contains _ARGS_OPTS "$o"&&return 0
+done
+return 1
+}
+args.get(){
+for o in "$@";do
+i=$(args.opt.arg_index "$o")
+if [[ $i ]];then
+args.arg "$i"
+return 0
+fi
+done
+return 1
+}
+args.args(){ echo "_ARGS_FINAL_ARGS";}
+args.arg(){ array.get _ARGS_ARGS "$1";}
+args.opt.arg_index(){ echo "${_ARGS_OPT_ARGS[$1]:-}";}
+args.show_help(){
+usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
+}
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."&&pwd)"
 declare -g _APT_LOG="/var/log/apt/history.log"
 declare -gi _DAYS=7 _SHOW_AUTO=0 _SHOW_REMOVED=0
 declare -g _START_DATE=""
-_parse_pkg_name() {
-  local pkg="${1%% (*}"
-  string.trim "${pkg%%:*}"
+_parse_pkg_name(){
+local pkg="${1%% (*}"
+string.trim "${pkg%%:*}"
 }
-_is_auto_install() { [[ $1 == *", automatic)" ]]; }
-_split_pkg_entries() {
-  local line="$1"
-  local -n _entries_ref="$2"
-  local entry
-  line="${line#Install: }"
-  line="${line#Remove: }"
-  line="${line#Purge: }"
-  line="${line%), }"
-  _entries_ref=()
-  while [[ -n $line ]]; do
-    entry="${line%%), *}"
-    if [[ $entry == "$line" ]]; then
-      [[ -n $line ]] && _entries_ref+=("$line")
-      break
-    fi
-    _entries_ref+=("$entry)")
-    line="${line#*), }"
-  done
-}
-_parse_apt_log_state() {
-  local -n _final_state_ref="$1"
-  local line date
-  local -a entries
-  local pkg auto_flag
-  while IFS= read -r line; do
-    case "$line" in
-    "Start-Date: "*)
-      date="${line#Start-Date: }"
-      date="${date%% *}"
-      ;;
-    "Install: "*)
-      [[ $date < $_START_DATE ]] && continue
-      _split_pkg_entries "$line" entries
-      for entry in "${entries[@]}"; do
-        pkg="$(_parse_pkg_name "$entry")"
-        [[ -z $pkg ]] && continue
-        auto_flag=$(_is_auto_install "$entry" && echo 1 || echo 0)
-        _final_state_ref["$pkg"]="$date|$auto_flag|1"
-      done
-      ;;
-    "Remove: "* | "Purge: "*)
-      [[ $date < $_START_DATE ]] && continue
-      _split_pkg_entries "$line" entries
-      for entry in "${entries[@]}"; do
-        pkg="$(_parse_pkg_name "$entry")"
-        [[ -n $pkg ]] && _final_state_ref["$pkg"]="$date|0|0"
-      done
-      ;;
-    esac
-  done < "$_APT_LOG"
-}
-display_packages() {
-  local title="$1"
-  local date_color="$2"
-  local -n _packages_ref="$3"
-  console.section "$title"
-  [[ ${#_packages_ref[@]} -eq 0 ]] && console.align 50 "  ${BRIGHT_BLACK}无结果${NC}" "" && return
-  for pkg_name in "${!_packages_ref[@]}"; do
-    local data="${_packages_ref[$pkg_name]}"
-    local date="${data%%|*}"
-    local auto_flag="${data#*|}"
-    ((auto_flag)) && auto_flag="${YELLOW} (自动)" || auto_flag=""
-    console.align 50 "  ${BRIGHT_CYAN}$pkg_name${NC}" "${date_color}${date}${NC}${auto_flag}${NC}"
-  done
-}
-get_packages() {
-  local -n _packages_ref="$1"
-  declare -A final_state=()
-  _parse_apt_log_state final_state
-  _packages_ref=()
-  for pkg in "${!final_state[@]}"; do
-    local pkg_status="${final_state[$pkg]##*|}"
-    ((pkg_status == _SHOW_REMOVED)) && continue
-    local data="${final_state[$pkg]%|*}"
-    ((_SHOW_REMOVED == 0 && _SHOW_AUTO == 0 && ${data#*|})) && continue
-    _packages_ref["$pkg"]="$data"
-  done
-}
-validate_apt_log() {
-  [[ -f $_APT_LOG && -r $_APT_LOG ]] || {
-    log.error "找不到或无法读取 apt 日志文件: $_APT_LOG"
-    return 1
-  }
-  head -20 "$_APT_LOG" | grep -q "Start-Date:" || log.warn "日志文件格式可能不正确，继续处理..."
-}
-main() {
-  args.init "分析最近安装/卸载的软件包"
-  args.add_options "days" "d" "分析最近多少天的记录 (默认: 7)" "DAYS"
-  args.add_options "log" "l" "apt 日志文件路径 (默认: /var/log/apt/history.log)" "FILE"
-  args.add_options "auto" "a" "显示自动安装的包"
-  args.add_options "removed" "r" "显示已卸载的包"
-  args.add_options "help" "h" "显示帮助信息"
-  args.add_options "EXAMPLE" "-d 7" "分析最近7天安装的手动包"
-  args.add_options "EXAMPLE" "-d 14 -a" "分析最近14天安装的所有包"
-  args.add_options "EXAMPLE" "-d 7 -r" "分析最近7天卸载的包"
-  args.add_options "NOTICE" "默认只显示当前仍然安装且手动安装的包"
-  args.process "$@"
-  _DAYS=$(args.get "-d" "--days") 2> /dev/null || _DAYS=7
-  _APT_LOG=$(args.get "-l" "--log") 2> /dev/null || _APT_LOG="/var/log/apt/history.log"
-  args.has "-a" "--auto" && _SHOW_AUTO=1
-  args.has "-r" "--removed" && _SHOW_REMOVED=1
-  validate_apt_log || exit 1
-  _START_DATE=$(date -d "-${_DAYS} days" +"%Y-%m-%d" 2> /dev/null) || _START_DATE="1970-01-01"
-  ((_SHOW_REMOVED)) && log.info "分析最近 ${_DAYS} 天的卸载记录..." || log.info "分析最近 ${_DAYS} 天的安装记录..."
-  log.info "开始日期: $_START_DATE"
-  declare -A packages=()
-  get_packages packages
-  ((_SHOW_REMOVED)) && display_packages "已卸载的软件包" "${BRIGHT_RED}" packages || display_packages "安装的软件包" "${BRIGHT_GREEN}" packages
-}
-if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
-  main "$@"
+_is_auto_install(){ [[ $1 == *", automatic)" ]];}
+_split_pkg_entries(){
+local line="$1"
+local -n _entries_ref="$2"
+local entry
+line="${line#Install: }"
+line="${line#Remove: }"
+line="${line#Purge: }"
+line="${line%), }"
+_entries_ref=()
+while [[ -n $line ]];do
+entry="${line%%), *}"
+if [[ $entry == "$line" ]];then
+[[ -n $line ]]&&_entries_ref+=("$line")
+break
 fi
-
+_entries_ref+=("$entry)")
+line="${line#*), }"
+done
+}
+_parse_apt_log_state(){
+local -n _final_state_ref="$1"
+local line date
+local -a entries
+local pkg auto_flag
+while IFS= read -r line;do
+case "$line" in
+"Start-Date: "*)date="${line#Start-Date: }"
+date="${date%% *}"
+;;
+"Install: "*)[[ $date < $_START_DATE ]]&&continue
+_split_pkg_entries "$line" entries
+for entry in "${entries[@]}";do
+pkg="$(_parse_pkg_name "$entry")"
+[[ -z $pkg ]]&&continue
+auto_flag=$(_is_auto_install "$entry"&&echo 1||echo 0)
+_final_state_ref["$pkg"]="$date|$auto_flag|1"
+done
+;;
+"Remove: "*|"Purge: "*)[[ $date < $_START_DATE ]]&&continue
+_split_pkg_entries "$line" entries
+for entry in "${entries[@]}";do
+pkg="$(_parse_pkg_name "$entry")"
+[[ -n $pkg ]]&&_final_state_ref["$pkg"]="$date|0|0"
+done
+esac
+done <"$_APT_LOG"
+}
+display_packages(){
+local title="$1"
+local date_color="$2"
+local -n _packages_ref="$3"
+console.section "$title"
+[[ ${#_packages_ref[@]} -eq 0 ]]&&console.align 50 "  $BRIGHT_BLACK无结果$NC" ""&&return
+for pkg_name in "${!_packages_ref[@]}";do
+local data="${_packages_ref[$pkg_name]}"
+local date="${data%%|*}"
+local auto_flag="${data#*|}"
+((auto_flag))&&auto_flag="$YELLOW (自动)"||auto_flag=""
+console.align 50 "  $BRIGHT_CYAN$pkg_name$NC" "$date_color$date$NC$auto_flag$NC"
+done
+}
+get_packages(){
+local -n _packages_ref="$1"
+declare -A final_state=()
+_parse_apt_log_state final_state
+_packages_ref=()
+for pkg in "${!final_state[@]}";do
+local pkg_status="${final_state[$pkg]##*|}"
+((pkg_status==_SHOW_REMOVED))&&continue
+local data="${final_state[$pkg]%|*}"
+((_SHOW_REMOVED==0&&_SHOW_AUTO==0&&${data#*|}))&&continue
+_packages_ref["$pkg"]="$data"
+done
+}
+validate_apt_log(){
+[[ -f $_APT_LOG && -r $_APT_LOG ]]||{
+log.error "找不到或无法读取 apt 日志文件: $_APT_LOG"
+return 1
+}
+head -20 "$_APT_LOG"|grep -q "Start-Date:"||log.warn "日志文件格式可能不正确，继续处理..."
+}
+main(){
+args.init "分析最近安装/卸载的软件包"
+args.add_options "days" "d" "分析最近多少天的记录 (默认: 7)" "DAYS"
+args.add_options "log" "l" "apt 日志文件路径 (默认: /var/log/apt/history.log)" "FILE"
+args.add_options "auto" "a" "显示自动安装的包"
+args.add_options "removed" "r" "显示已卸载的包"
+args.add_options "help" "h" "显示帮助信息"
+args.add_options "EXAMPLE" "-d 7" "分析最近7天安装的手动包"
+args.add_options "EXAMPLE" "-d 14 -a" "分析最近14天安装的所有包"
+args.add_options "EXAMPLE" "-d 7 -r" "分析最近7天卸载的包"
+args.add_options "NOTICE" "默认只显示当前仍然安装且手动安装的包"
+args.process "$@"
+_DAYS=$(args.get "-d" "--days") 2>/dev/null||_DAYS=7
+_APT_LOG=$(args.get "-l" "--log") 2>/dev/null||_APT_LOG="/var/log/apt/history.log"
+args.has "-a" "--auto"&&_SHOW_AUTO=1
+args.has "-r" "--removed"&&_SHOW_REMOVED=1
+validate_apt_log||exit 1
+_START_DATE=$(date -d "-$_DAYS days" +"%Y-%m-%d" 2>/dev/null)||_START_DATE="1970-01-01"
+((_SHOW_REMOVED))&&log.info "分析最近 $_DAYS 天的卸载记录..."||log.info "分析最近 $_DAYS 天的安装记录..."
+log.info "开始日期: $_START_DATE"
+declare -A packages=()
+get_packages packages
+((_SHOW_REMOVED))&&display_packages "已卸载的软件包" "$BRIGHT_RED" packages||display_packages "安装的软件包" "$BRIGHT_GREEN" packages
+}
+if [[ ${BASH_SOURCE[0]} == "$0" ]];then
+main "$@"
+fi
