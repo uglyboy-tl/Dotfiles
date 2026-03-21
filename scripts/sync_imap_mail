@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-offlineimap -q
+
+offlineimap -o -u basic
 
 notmuch new
 

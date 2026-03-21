@@ -1,0 +1,12 @@
+[Unit]
+Description=Offlineimap Service (oneshot)
+Documentation=man:offlineimap(1)
+
+[Service]
+Type=oneshot
+ExecStart=/home/uglyboy/.local/bin/sync_imap_mail
+# Give 120 seconds for offlineimap to gracefully stop before hard killing it:
+TimeoutStopSec=120
+
+[Install]
+WantedBy=mail.target
