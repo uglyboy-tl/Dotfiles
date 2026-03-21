@@ -26,3 +26,8 @@ repo = "mikefarah/yq"
 file_pattern = "yq_{os}_{arch}"
 file_extension = "tar.gz"
 binary_name = "yq"
+
+[back.sonar]
+repo = "raskrebs/sonar"
+file_pattern = "sonar_{os}_{arch}"
+file_extension = "tar.gz"
