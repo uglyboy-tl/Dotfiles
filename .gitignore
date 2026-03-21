@@ -1,2 +1,4 @@
+.vscode/
+.opencode/
 .worktrees/
 *__pycache__*
