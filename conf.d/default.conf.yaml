@@ -79,6 +79,9 @@
     $XDG_CONFIG_HOME/opencode/agents: config/opencode/agents
     $XDG_CONFIG_HOME/opencode/commands: config/opencode/commands
     $XDG_CONFIG_HOME/opencode/skills: config/opencode/skills
+    $XDG_CONFIG_HOME/opencode/plugins: config/opencode/plugins
+    $XDG_DATA_HOME/openpeon/packs: config/opencode/openpeon
+    $XDG_CONFIG_HOME/opencode/peon-ping.json: config/opencode/config/peon-ping.json
 
     # 开发环境配置
     ## Python 包管理配置

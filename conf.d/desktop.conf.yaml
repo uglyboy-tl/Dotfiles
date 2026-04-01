@@ -66,10 +66,11 @@
     $XDG_CONFIG_HOME/mpv/scripts/uosc/intl: desktop/mpv/uosc/src/uosc/intl # 国际化
     $XDG_CONFIG_HOME/mpv/scripts/uosc/lib: desktop/mpv/uosc/src/uosc/lib # 库文件
     $XDG_CONFIG_HOME/mpv/scripts/uosc/main.lua: desktop/mpv/uosc/src/uosc/main.lua # uosc 主脚本
+    $XDG_CONFIG_HOME/mpv/scripts/autoload.lua: desktop/mpv/autoload.lua # uosc 主脚本
     $XDG_CONFIG_HOME/mpv/script-opts/uosc.conf: desktop/mpv/uosc.conf # uosc 配置文件
 
 # Crontab 定时任务配置
 - crontab:
     - time: 0 * * * * # 每小时执行一次
-      command: env TERM=dumb dwall.sh -s lakeside
+      command: DISPLAY=:0 XAUTHORITY="$HOME/.Xauthority" PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin" XDG_DATA_HOME="$HOME/.local/share" TERM=dumb dwall.sh -s lakeside
       platform: linux # 仅限 Linux 平台
