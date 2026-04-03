@@ -16,12 +16,12 @@ repo = "anomalyco/opencode"
 file_pattern = "opencode-{os}-{arch}"
 file_extension = "tar.gz"
 
-[packages.lf]
+[back.lf]
 repo = "gokcehan/lf"
 file_pattern = "lf-{os}-{arch}"
 file_extension = "tar.gz"
 
-[packages.yq]
+[back.yq]
 repo = "mikefarah/yq"
 file_pattern = "yq_{os}_{arch}"
 file_extension = "tar.gz"
