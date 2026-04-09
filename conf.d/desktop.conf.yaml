@@ -36,7 +36,7 @@
     $XDG_CONFIG_HOME/X11/Xresources: desktop/X11/Xresources # X 资源定义
     $XDG_CONFIG_HOME/X11/Xresources.d/rxvt-unicode: desktop/X11/rxvt-unicode # URxvt 终端配置
     ## 字体配置
-    $XDG_CONFIG_HOME/fontconfig/fonts.conf: desktop/fonts.conf # 字体配置文件
+    $XDG_CONFIG_HOME/fontconfig/fonts.conf: desktop/fontconfig/fonts.conf # 字体配置文件
     ## BSPWM 窗口管理器生态
     $XDG_CONFIG_HOME/bspwm/bspwmrc: desktop/bspwmrc # BSPWM 主配置
     $XDG_CONFIG_HOME/sxhkd/sxhkdrc: desktop/sxhkdrc # 快捷键配置
