@@ -8,8 +8,14 @@ theme = Catppuccin Mocha
 
 # --- Window and Appearance ---
 background-opacity = 0.8
-background-blur-radius = 10
+background-blur = true
 background-opacity-cells = true
 gtk-titlebar = false
 window-padding-x = 8
 window-padding-balance = true
+
+# --- Mouse ---
+mouse-hide-while-typing = true
+clipboard-read = allow
+copy-on-select = clipboard
+right-click-action = copy-or-paste
