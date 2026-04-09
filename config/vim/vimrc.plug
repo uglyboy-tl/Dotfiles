@@ -10,7 +10,6 @@ Plug 'arcticicestudio/nord-vim'
 Plug 'itchyny/lightline.vim'
 
 " 文件导航
-Plug 'junegunn/fzf'
 Plug 'junegunn/fzf.vim'
 
 " 效率统计
