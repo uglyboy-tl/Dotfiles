@@ -73,6 +73,9 @@
     $XDG_CONFIG_HOME/systemd/user/offlineimap-oneshot.timer: config/mail/offlineimap-oneshot.timer
     ## LF 文件管理器
     $XDG_CONFIG_HOME/lf: config/lf
+    ## yazi 文件管理器
+    $XDG_CONFIG_HOME/yazi: config/yazi
+
     ## OpenCode
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/config/opencode.json
     $XDG_CONFIG_HOME/opencode/AGENTS.md: config/opencode/config/AGENTS.md

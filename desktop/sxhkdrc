@@ -6,7 +6,7 @@
 
 # 终端模拟器
 super + Return
-	alacritty
+	ghostty
 
 # 程序启动器
 super + r
@@ -28,11 +28,11 @@ super + b
 
 # 文件管理器
 super + e
-	alacritty --class lf -e ~/.local/bin/lf.sh
+	ghostty --config-file='?~/.config/ghostty/config-yazi.ghostty' -e yazi
 
 # 终端应用 (音乐、系统监控、新闻阅读)
 super + {m, h, n}
-	alacritty -e {ncmpcpp, btop, newsboat}
+	command -v {ncmpcpp, btop, newsboat} >/dev/null && ghostty -e {ncmpcpp, btop, newsboat}
 
 #
 # 主音量控制
@@ -60,7 +60,7 @@ super + {_, shift + }w
 
 # 在平铺和单窗口布局之间切换
 super + shift + f
-    bspc desktop -l next
+	bspc desktop -l next
 
 #
 # 窗口状态/标志
@@ -72,11 +72,11 @@ super + {t, shift + t, s, f}
 
 # 在浮动和平铺之间切换
 super + space
-    bspc node -t "~"{floating,tiled}
+	bspc node -t "~"{floating,tiled}
 
 # 设置节点标志
 super + ctrl + {m, x, y, z}
-        bspc node -g {marked, locked, sticky, private}
+	bspc node -g {marked, locked, sticky, private}
 
 #
 # 焦点/交换
