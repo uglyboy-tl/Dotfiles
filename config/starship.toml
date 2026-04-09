@@ -31,7 +31,7 @@ format = '\[[$symbol($version)]($style)\]' # CMake 版本显示格式
 
 # 命令执行时间模块配置
 [cmd_duration]
-format = '\[[⏱ $duration]($style)\]' # 命令执行时间显示格式，显示一个时钟图标和持续时间
+format = '\[[ $duration]($style)\]' # 命令执行时间显示格式，显示一个时钟图标和持续时间
 
 # Cobol 模块配置
 [cobol]
