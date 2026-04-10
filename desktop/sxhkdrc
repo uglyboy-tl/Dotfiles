@@ -1,87 +1,62 @@
-# sxhkd 配置文件 - 快捷键绑定
+# sxhkd 快捷键配置
 
-#
-# 独立于窗口管理器的快捷键
-#
-
-# 终端模拟器
+# === 通用应用 ===
+# 终端
 super + Return
 	ghostty
 
-# 程序启动器
+# 应用启动器
 super + r
 	rofi -show drun
 
+# 窗口切换
 alt + Tab
 	rofi -show window
 
-#super + r     # Super + r (备用，当前未启用)
-#	rofi -show run # 启动 Rofi 的命令运行器 (run 模式)
+# 文件管理器
+super + e
+	ghostty --x11-instance-name=yazi -e yazi
 
-# 重新加载 sxhkd 配置文件
-super + Escape
-	pkill -USR1 -x sxhkd
+# 终端应用 (音乐/系统监控/新闻)
+super + {m,h,n}
+	command -v {ncmpcpp,btop,newsboat} >/dev/null && ghostty -e {ncmpcpp,btop,newsboat}
 
-# 蓝牙管理脚本
+# 蓝牙管理
 super + b
 	~/.local/bin/rofi-bluetooth
 
-# 文件管理器
-super + e
-	ghostty --config-file='?~/.config/ghostty/config-yazi.ghostty' -e yazi
+# 重载配置
+super + Escape
+	pkill -USR1 -x sxhkd
 
-# 终端应用 (音乐、系统监控、新闻阅读)
-super + {m, h, n}
-	command -v {ncmpcpp, btop, newsboat} >/dev/null && ghostty -e {ncmpcpp, btop, newsboat}
+# === 音量控制 ===
+# 音量 +/-/静音
+XF86Audio{RaiseVolume,LowerVolume,Mute}
+	~/.local/bin/barify v {i,d,m}
 
-#
-# 主音量控制
-#
-XF86AudioRaiseVolume
-	~/.local/bin/barify v i
+# === bspwm 窗管 ===
+# 退出重启
+super + alt + q
+	bspc quit
 
-XF86AudioLowerVolume
-	~/.local/bin/barify v d
+# 关闭/强制关闭
+super + {_,shift+}w
+	bspc node -{c,k}
 
-XF86AudioMute
-	~/.local/bin/barify v m
-
-#
-# bspwm 快捷键
-#
-
-# 退出/重启 bspwm
-super + alt + {q,r}
-	bspc {quit,wm -r}
-
-# 关闭和杀死窗口
-super + {_, shift + }w
-	bspc node -{c, k}
-
-# 在平铺和单窗口布局之间切换
+# 切换布局
 super + shift + f
 	bspc desktop -l next
 
-#
-# 窗口状态/标志
-#
+# === 窗口状态 ===
+# 平铺/伪平铺/浮动/全屏
+super + {t,shift+t,s,f}
+	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
 
-# 设置窗口状态
-super + {t, shift + t, s, f}
-	bspc node -t {tiled, pseudo_tiled, floating, fullscreen}
-
-# 在浮动和平铺之间切换
+# 浮动/平铺切换
 super + space
 	bspc node -t "~"{floating,tiled}
 
-# 设置节点标志
-super + ctrl + {m, x, y, z}
-	bspc node -g {marked, locked, sticky, private}
-
-#
-# 焦点/交换
-#
-
-# 聚焦或发送到指定桌面
-super + {_, shift + }{1-9, 0}
-	bspc {desktop -f, node -d} '^{1-9, 10}'
+# === 桌面切换 ===
+# 焦点/移动到桌面
+super + {_,shift+}{1-9,0}
+	bspc {desktop -f,node -d} '^{1-9,10}'
