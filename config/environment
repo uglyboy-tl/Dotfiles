@@ -60,7 +60,6 @@ export ZDOTDIR="$HOME"/.config/zsh
 
 # [X11]
 export USRRESOURCES="$XDG_CONFIG_HOME/X11/Xresources"
-export ERRFILE="$XDG_CACHE_HOME/X11/xsession-errors"
 
 # [CUDA]
 export CUDA_CACHE_PATH="$XDG_CACHE_HOME"/nv
