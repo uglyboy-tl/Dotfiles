@@ -43,7 +43,7 @@
     $XDG_CONFIG_HOME/picom/picom.conf: desktop/picom.conf # 合成器配置
     $XDG_CONFIG_HOME/polybar: desktop/polybar # 状态栏配置
     $XDG_CONFIG_HOME/rofi: desktop/rofi # 应用启动器
-    $XDG_CONFIG_HOME/dunst/dunstrc: desktop/dunstrc # 桌面通知
+    $XDG_CONFIG_HOME/dunst/dunstrc: desktop/dunst.conf # 桌面通知
 
     ## 动态壁纸
     $XDG_DATA_HOME/dynamic-wallpaper: data/dynamic-wallpaper # 动态壁纸资源
