@@ -7,30 +7,14 @@
 [pull]
 	rebase = false
 
-# delta
-[core]
-    pager = delta
-[interactive]
-    diffFilter = delta --color-only
-[delta]
-    navigate = true  # use n and N to move between diff sections
-    light = false
-[merge]
-    conflictstyle = diff3
-[diff]
-    colorMoved = default
-
 # Allow local customizations in the .gitconfig_local file
 [include]
     path=~/.config/git/local
-[filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+
 [alias]
 	lg = log --oneline --graph --decorate --all
 	st = status -sb
+
 [url "https://xget.uglyboy.cn/gh/"]
 	insteadOf = https://github.com/
 [init]

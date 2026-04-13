@@ -69,3 +69,4 @@ compinit -d "$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
 setopt no_nomatch
 
 eval "$(starship init zsh)"
+eval "$(atuin init zsh --disable-up-arrow)"
