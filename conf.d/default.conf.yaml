@@ -46,6 +46,9 @@
     $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
     $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen # Zgen 插件管理器
 
+    # ATUIN 配置
+    $XDG_CONFIG_HOME/atuin/config.toml: config/atuin/config.toml # Atuin 主配置文件
+
     # VIM 配置
     $XDG_CONFIG_HOME/vim/vimrc: config/vim/vimrc # Vim 主配置文件
     $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug # 插件配置文件
@@ -75,9 +78,12 @@
     $XDG_CONFIG_HOME/lf: config/lf
     ## yazi 文件管理器
     $XDG_CONFIG_HOME/yazi: config/yazi
+    ## Newsboat RSS 阅读器
+    $XDG_CONFIG_HOME/newsboat/config: config/newsboat/config
 
     ## OpenCode
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/config/opencode.json
+    $XDG_CONFIG_HOME/opencode/tui.json: config/opencode/config/tui.json
     $XDG_CONFIG_HOME/opencode/AGENTS.md: config/opencode/config/AGENTS.md
     $XDG_CONFIG_HOME/opencode/agents: config/opencode/agents
     $XDG_CONFIG_HOME/opencode/commands: config/opencode/commands

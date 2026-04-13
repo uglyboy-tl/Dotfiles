@@ -24,8 +24,6 @@
     # Built-in
     $XDG_CONFIG_HOME/binup/config.toml: desktop/builtin/binup.toml # UV 配置
 
-    ## Newsboat RSS 阅读器
-    $XDG_CONFIG_HOME/newsboat/config: desktop/newsboat/config
     ## Zathura PDF 阅读器
     $XDG_CONFIG_HOME/zathura: desktop/zathura
 
@@ -44,6 +42,8 @@
     $XDG_CONFIG_HOME/polybar: desktop/polybar # 状态栏配置
     $XDG_CONFIG_HOME/rofi: desktop/rofi # 应用启动器
     $XDG_CONFIG_HOME/dunst/dunstrc: desktop/dunst.conf # 桌面通知
+    ## UDiskie 配置
+    $XDG_CONFIG_HOME/udiskie/config.yml: desktop/udiskie/config.yml
 
     ## 动态壁纸
     $XDG_DATA_HOME/dynamic-wallpaper: data/dynamic-wallpaper # 动态壁纸资源
