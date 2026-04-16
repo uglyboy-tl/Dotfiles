@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #   This file echoes four gradients with 24-bit color codes
 #   to the terminal to demonstrate their functionality.
@@ -25,7 +25,7 @@ resetOutput()
 # $red $green and $blue are integers
 # ranging between 0 and 255 inclusive
 rainbowColor()
-{ 
+{
     let h=$1/43
     let f=$1-43*$h
     let t=$f*255/43
