@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.config/zsh/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -5,26 +7,17 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-#!/bin/bash
-
 export PATH="$HOME/.local/bin:$PATH"
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 export ZLOCAL="${XDG_CONFIG_HOME:-$HOME/.config}/local"
-export ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
+
 # History settings
 export HISTFILE=$XDG_STATE_HOME/zsh/history
-HISTSIZE=10000
-SAVEHIST=50000
-setopt APPEND_HISTORY
-setopt SHARE_HISTORY
-setopt HIST_IGNORE_DUPS
-setopt HIST_REDUCE_BLANKS
-
-[ -f "$ZLOCAL/zshrc.before" ] && source "$ZLOCAL/zshrc.before"
-
 export DOTFILES="$XDG_DATA_HOME/dotfiles"
 export OS_RELEASE="${OS_RELEASE:-$(source /etc/os-release 2>/dev/null && echo $NAME)}"
 export PYTHON_VENV_NAME=".venv"
+
+[ -f "$ZLOCAL/zshrc.before" ] && source "$ZLOCAL/zshrc.before"
 
 # fzf options
 export FZF_PREVIEW_COMMAND="bat --style=numbers,header --color=always {} || batcat --style=numbers,header --color=always {} || cat {}"
