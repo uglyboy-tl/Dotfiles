@@ -44,7 +44,7 @@
     $XDG_CONFIG_HOME/zsh/.zshenv: config/environment # ZSH 环境变量
     $XDG_CONFIG_HOME/zsh/zshrc.alias: config/zsh/aliases.zsh # 别名配置
     $XDG_CONFIG_HOME/starship.toml: config/starship.toml # Starship 提示符配置
-    $XDG_CONFIG_HOME/zsh/zgen: config/zsh/zgen # Zgen 插件管理器
+    $XDG_CONFIG_HOME/zsh/zinit: config/zsh/zinit # Zinit 插件管理器
 
     # ATUIN 配置
     $XDG_CONFIG_HOME/atuin/config.toml: config/atuin/config.toml # Atuin 主配置文件

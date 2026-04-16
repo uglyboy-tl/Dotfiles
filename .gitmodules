@@ -8,9 +8,9 @@
 [submodule "config/vim/vim-plug"]
 	path = config/vim/vim-plug
 	url = https://github.com/junegunn/vim-plug.git
-[submodule "config/zsh/zgen"]
-	path = config/zsh/zgen
-	url = https://github.com/tarjoilija/zgen.git
+[submodule "config/zsh/zinit"]
+	path = config/zsh/zinit
+	url = https://github.com/zdharma-continuum/zinit.git
 [submodule "desktop/mpv/thumbfast"]
 	path = desktop/mpv/thumbfast
 	url = https://github.com/po5/thumbfast

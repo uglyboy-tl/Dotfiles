@@ -3,7 +3,7 @@
 export PATH="$HOME/.local/bin:$PATH"
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 export ZLOCAL="${XDG_CONFIG_HOME:-$HOME/.config}/local"
-
+export ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
 # History settings
 export HISTFILE=$XDG_STATE_HOME/zsh/history
 HISTSIZE=10000
@@ -30,38 +30,49 @@ export FZF_DEFAULT_OPTS=" \
 export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!{.git,.idea,.vscode,.sass-cache,node_modules,build,.m2}/*" 2> /dev/null'
 export FZF_ALT_C_COMMAND="rg --sort-files --files --null 2> /dev/null | xargs -0 dirname | uniq"
 
-export ZGEN_DIR="$ZDOTDIR/zgen"
-source "$ZGEN_DIR/zgen.zsh"
+source "${ZDOTDIR:-$HOME/.config/zsh}/zinit/zinit.zsh"
 
 export ZSH_WAKATIME_PROJECT_DETECTION=true
 
-# Generate zgen init.sh if it doesn't exist
-if ! zgen saved; then
-    zgen oh-my-zsh
-    zgen oh-my-zsh plugins/git-auto-fetch
-    zgen oh-my-zsh plugins/extract
-    case "$OS_RELEASE" in
-        "Ubuntu"|"Raspbian GNU/Linux"|"Debian GNU/Linux")
-            zgen oh-my-zsh plugins/ubuntu
-            ;;
-        "Arch Linux"|"Arch Linux ARM")
-            zgen oh-my-zsh plugins/archlinux
-            ;;
-        *)
-            ;;
-        esac
+# Enable autosuggestions and syntax highlighting with zinit's turbo mode for faster startup
+zinit wait lucid for \
+  atinit'zicompinit; zicdreplay' \
+    zdharma-continuum/fast-syntax-highlighting \
+  atload'_zsh_autosuggest_start' \
+    zsh-users/zsh-autosuggestions \
+  wbingli/zsh-wakatime
 
-    zgen oh-my-zsh plugins/zoxide
-    zgen oh-my-zsh plugins/fzf
-    zgen load zsh-users/zsh-syntax-highlighting
-    zgen load wbingli/zsh-wakatime
+# Load Oh My Zsh basic functionality
+zi snippet OMZL::completion.zsh
+zi snippet OMZL::key-bindings.zsh
+zi snippet OMZL::directories.zsh
+zi snippet OMZL::history.zsh
+zi snippet OMZL::correction.zsh
+zi snippet OMZL::functions.zsh
+zi snippet OMZL::termsupport.zsh
+zi snippet OMZL::spectrum.zsh
+zi snippet OMZL::theme-and-appearance.zsh
 
-    [ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
+# Load Oh My Zsh plugins
+zi snippet OMZP::git-auto-fetch
+zi snippet OMZP::extract
+zi snippet OMZP::zoxide
+zi snippet OMZP::fzf
 
-    zgen save
-fi
+case "$OS_RELEASE" in
+  "Ubuntu"|"Raspbian GNU/Linux"|"Debian GNU/Linux")
+    zi snippet OMZP::ubuntu
+    ;;
+  "Arch Linux"|"Arch Linux ARM")
+    zi snippet OMZP::archlinux
+    ;;
+  *)
+    ;;
+esac
 
-compinit -d "$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
+
+[ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
+
 
 [ -f "$ZDOTDIR/zshrc.alias" ] && source "$ZDOTDIR/zshrc.alias"
 [ -f "$ZLOCAL/zshrc.after" ] && source "$ZLOCAL/zshrc.after"
