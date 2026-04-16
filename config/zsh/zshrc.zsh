@@ -1,3 +1,10 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.config/zsh/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 #!/bin/bash
 
 export PATH="$HOME/.local/bin:$PATH"
@@ -72,10 +79,15 @@ zinit wait lucid for \
   atload'_zsh_autosuggest_start' \
     zsh-users/zsh-autosuggestions \
 
+# Load powerlevel10k theme last for better performance
+zi ice depth=1; zi light romkatv/powerlevel10k
+
 [ -f "$ZDOTDIR/zshrc.alias" ] && source "$ZDOTDIR/zshrc.alias"
 [ -f "$ZLOCAL/zshrc.after" ] && source "$ZLOCAL/zshrc.after"
 
 setopt no_nomatch
 
-eval "$(starship init zsh)"
 eval "$(atuin init zsh --disable-up-arrow)"
+
+# To customize prompt, run `p10k configure` or edit ~/.config/zsh/.p10k.zsh.
+[[ ! -f ~/.config/zsh/.p10k.zsh ]] || source ~/.config/zsh/.p10k.zsh
