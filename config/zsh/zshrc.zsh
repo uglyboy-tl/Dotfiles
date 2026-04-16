@@ -16,7 +16,7 @@ setopt HIST_REDUCE_BLANKS
 [ -f "$ZLOCAL/zshrc.before" ] && source "$ZLOCAL/zshrc.before"
 
 export DOTFILES="$XDG_DATA_HOME/dotfiles"
-export OS_RELEASE=$(awk -F= '/^NAME/{print $2}' /etc/os-release | tr -d '"')
+export OS_RELEASE="${OS_RELEASE:-$(source /etc/os-release 2>/dev/null && echo $NAME)}"
 export PYTHON_VENV_NAME=".venv"
 
 # fzf options
@@ -33,14 +33,6 @@ export FZF_ALT_C_COMMAND="rg --sort-files --files --null 2> /dev/null | xargs -0
 source "${ZDOTDIR:-$HOME/.config/zsh}/zinit/zinit.zsh"
 
 export ZSH_WAKATIME_PROJECT_DETECTION=true
-
-# Enable autosuggestions and syntax highlighting with zinit's turbo mode for faster startup
-zinit wait lucid for \
-  atinit'zicompinit; zicdreplay' \
-    zdharma-continuum/fast-syntax-highlighting \
-  atload'_zsh_autosuggest_start' \
-    zsh-users/zsh-autosuggestions \
-  wbingli/zsh-wakatime
 
 # Load Oh My Zsh basic functionality
 zi snippet OMZL::completion.zsh
@@ -73,6 +65,12 @@ esac
 
 [ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
 
+# Enable autosuggestions and syntax highlighting with zinit's turbo mode for faster startup
+zinit wait lucid for \
+  atinit'zicompinit; zicdreplay' \
+    zdharma-continuum/fast-syntax-highlighting \
+  atload'_zsh_autosuggest_start' \
+    zsh-users/zsh-autosuggestions \
 
 [ -f "$ZDOTDIR/zshrc.alias" ] && source "$ZDOTDIR/zshrc.alias"
 [ -f "$ZLOCAL/zshrc.after" ] && source "$ZLOCAL/zshrc.after"
