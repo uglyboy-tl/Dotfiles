@@ -11,7 +11,7 @@ repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($r
 
 # 目录替换规则
 [directory.substitutions]
-"~" = " ~"   # 将 "~" 替换为家目录图标和 "~"
+"~" = "🏠 ~"   # 将 "~" 替换为家目录 emoji 图标和 "~"
 
 # AWS 模块配置
 [aws]
