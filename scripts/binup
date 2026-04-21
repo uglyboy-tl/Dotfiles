@@ -990,6 +990,25 @@ VERSION="2.2.0"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.."&&pwd)"
 : "${GITHUB_TOKEN:=$(pass "github")}"
 get_package_property(){ config.array.get "packages" "$1" "$2";}
+declare -ga _DEFAULT_REGISTERED_PACKAGES_CACHE=()
+declare -g _DEFAULT_PACKAGES_CACHE_CHECKED=false
+is_package_in_default_config_with_repo(){
+local package="$1"
+config.has "packages.$package.repo"
+}
+get_default_registered_packages(){
+if [[ $_DEFAULT_PACKAGES_CACHE_CHECKED == "false" ]];then
+local pkg_key
+_DEFAULT_REGISTERED_PACKAGES_CACHE=()
+for pkg_key in $(config.array.items "packages");do
+if config.has "packages.$pkg_key.repo";then
+_DEFAULT_REGISTERED_PACKAGES_CACHE+=("$pkg_key")
+fi
+done
+_DEFAULT_PACKAGES_CACHE_CHECKED=true
+fi
+printf '%s\n' "${_DEFAULT_REGISTERED_PACKAGES_CACHE[@]}"
+}
 _get_arch_regex(){
 case "$(system.arch)" in
 amd64)echo "(x86_64|x64|amd64)";;
@@ -1130,7 +1149,9 @@ cmd_list(){
 args.init
 args.process "$@"
 console.section "已下载的包"
-for package in $(config.array.items "packages");do
+local -a registered_packages
+mapfile -t registered_packages < <(get_default_registered_packages)
+for package in "${registered_packages[@]}";do
 current_version=$(get_package_property "$package" "current_version")
 latest_version=$(get_package_property "$package" "latest_version")
 file_extension=$(get_package_property "$package" "file_extension")
@@ -1144,6 +1165,7 @@ console.item.mid "文件: $(basename "$file_path")"
 console.item.mid "下载时间: $download_time"
 [[ $current_version == "$latest_version" ]]&&console.item.end "状态: $POWERLINE_OK 已是最新"||console.item.end "状态: $POWERLINE_STAR 有新版本 $latest_version"
 done
+return 0
 }
 cmd_update(){
 args.init
@@ -1152,7 +1174,9 @@ requests.init "-4" 2>/dev/null||{ log.error "Failed to initialize requests modul
 [[ -n ${GITHUB_TOKEN:-} ]]&&requests.headers.append "Authorization" "token $GITHUB_TOKEN"
 console.section "检查更新"
 local has_updates=false
-for package in $(config.array.items "packages");do
+local -a registered_packages
+mapfile -t registered_packages < <(get_default_registered_packages)
+for package in "${registered_packages[@]}";do
 local -a props=()
 for prop in repo version_type file_pattern file_extension current_version;do
 props+=("$(get_package_property "$package" "$prop")")
@@ -1181,6 +1205,7 @@ done
 [[ $has_updates == "true" ]]&&{
 console.footer "运行 \`$_USAGE_SCRIPT_FILENAME upgrade\` 下载更新"
 }
+return 0
 }
 cmd_upgrade(){
 args.init
@@ -1190,14 +1215,14 @@ requests.init 2>/dev/null||{ log.error "Failed to initialize requests module"&&e
 local -n target_packages=$(args.args)
 local packages_to_upgrade=()
 if [[ ${#target_packages[@]} -eq 0 ]];then
-IFS=" " read -r -a packages_to_upgrade <<<"$(config.array.items "packages")"
+mapfile -t packages_to_upgrade < <(get_default_registered_packages)
 else
-local all_packages
-all_packages=$(config.array.items "packages")
 for package in "${target_packages[@]}";do
-if [[ " $all_packages " != *" $package "* ]];then
+if ! is_package_in_default_config_with_repo "$package";then
 log.error "Unknown package: $package"
-log.error "Available packages: $all_packages"
+local available_packages
+available_packages=$(get_default_registered_packages)
+log.error "Available packages: $available_packages"
 exit 1
 fi
 packages_to_upgrade+=("$package")
@@ -1222,7 +1247,7 @@ fi
 if [[ -z $current_version ]];then
 console.item.title 1 "$package: 未下载，将下载 $latest_version"
 elif [[ $current_version != "$latest_version" ]];then
-console.item.title 1 "$package: 有新版本 $current_version $POWERLINE_POINTING_ARROW $latest_version"
+console.item.title 1 "$package: 有新版本 $current_version $POWERLINE_POINTING_ARROW  $latest_version"
 else
 console.item.title 1 "$package: 已是最新版本 $current_version"
 ((packages_skipped++))||true
@@ -1246,6 +1271,7 @@ done
 local total=${#packages_to_upgrade[@]}
 local updated=$((total-packages_skipped))
 ((total>0))&&console.footer "共 $total 个包，$updated 个已更新，$packages_skipped 个跳过"
+return 0
 }
 cmd_install(){
 args.init
@@ -1255,10 +1281,11 @@ local -n target_packages=$(args.args)
 console.section "安装包"
 local success_count=0 fail_count=0
 for package in "${target_packages[@]}";do
-read -ra packages < <(config.array.items "packages")
-if ! printf '%s\n' "${packages[@]}"|grep -q "^$package$";then
+if ! is_package_in_default_config_with_repo "$package";then
 log.error "Unknown package: $package"
-log.error "Available packages: $(config.array.items "packages")"
+local available_packages
+available_packages=$(get_default_registered_packages)
+log.error "Available packages: $available_packages"
 exit 1
 elif _do_install_package "$package";then
 ((success_count++))
