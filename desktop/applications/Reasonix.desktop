@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Reasonix
+GenericName=Agent
+GenericName[zh_CN]=智能体
+Exec=/home/uglyboy/.local/bin/reasonix-desktop
+Icon=/home/uglyboy/.local/bin/reasonix.png
