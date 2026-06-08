@@ -1,0 +1,11 @@
+[[mgr.prepend_keymap]]
+on   = ":"
+for  = "unix"
+run  = 'shell --block "$SHELL"'
+desc = "Open $SHELL in current directory"
+
+[[mgr.prepend_keymap]]
+on   = "U"
+for  = "unix"
+run  = 'shell "ya pkg upgrade --discard"'
+desc = "Upgrade all plugins"

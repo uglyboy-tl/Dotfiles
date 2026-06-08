@@ -1,22 +1,17 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:full-border"
-rev = "babfd0f"
-hash = "6fa6a05a81c98dd000fbca3cca6e9682"
+rev = "598cdb6"
+hash = "7b625412411be411153886894d9acaf"
 
 [[plugin.deps]]
 use = "llanosrocas/yaziline"
-rev = "d9cc2cb"
-hash = "b6073aadf2f9a1d5389a6d389f33f69c"
+rev = "25161c1"
+hash = "5c7802a9ac249be88729978e3b9525bc"
 
 [[plugin.deps]]
 use = "yazi-rs/plugins:git"
-rev = "06b1921"
-hash = "6849444b7c2df08eace83f3f86fb55a3"
-
-[[plugin.deps]]
-use = "Rolv-Apneseth/starship"
-rev = "a837101"
-hash = "635b0feb9215772d22020eb0abf0bb34"
+rev = "598cdb6"
+hash = "88e56a64b7ce7c4314427452343fef17"
 
 [flavor]
 deps = []
