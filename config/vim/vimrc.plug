@@ -14,3 +14,6 @@ Plug 'junegunn/fzf.vim'
 
 " 效率统计
 Plug 'wakatime/vim-wakatime'
+
+" 快速导航
+Plug 'easymotion/vim-easymotion'
