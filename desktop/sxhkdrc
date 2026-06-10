@@ -21,6 +21,10 @@ super + e
 super + {m,h,n}
 	command -v {ncmpcpp,btop,newsboat} >/dev/null && ghostty -e {ncmpcpp,btop,newsboat}
 
+# 从剪贴板 URL 用 mpv 播放视频（需要 xclip）
+super + v
+	command -v xclip >/dev/null && mpv "$(xclip -selection clipboard -o 2>/dev/null)" || notify-send "需要安装 xclip: sudo apt install xclip"
+
 # 蓝牙管理
 super + b
 	~/.local/bin/rofi-bluetooth
