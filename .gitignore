@@ -1,4 +1,6 @@
 .vscode/
 .opencode/
+.codegraph/
+.reasonix/
 .worktrees/
 *__pycache__*
