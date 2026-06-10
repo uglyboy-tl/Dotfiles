@@ -44,10 +44,6 @@ let g:nord_italic_comments = 1
 " Lightline 状态栏
 let g:lightline = {'colorscheme': 'nord'}
 set noshowmode
-" 自动保存
-let g:auto_save = 1
-let g:auto_save_silent = 1
-let g:auto_save_events = ["InsertLeave", "TextChanged"]  " 触发条件
 
 " 鼠标设置
 set mouse=a  " 启用所有鼠标功能
@@ -66,26 +62,6 @@ let mapleader = ','
 nmap <leader>w :w!<cr>
 nnoremap <silent> <leader>f :Rg<CR>
 
-"nnoremap <leader>b :Buffers<CR>
-
 " :W 命令以 sudo 权限保存文件
 " （处理权限拒绝错误时非常有用）
-command! W execute 'w !sudo tee % > /dev/null' <bar> edit!
-
-" EasyMotion
-let g:EasyMotion_do_mapping = 0 " Disable default mappings
-
-" Jump to anywhere you want with minimal keystrokes, with just one key binding.
-" `s{char}{label}`
-nmap s <Plug>(easymotion-overwin-f)
-" or
-" `s{char}{char}{label}`
-" Need one more keystroke, but on average, it may be more comfortable.
-nmap s <Plug>(easymotion-overwin-f2)
-
-" Turn on case-insensitive feature
-let g:EasyMotion_smartcase = 1
-
-" JK motions: Line motions
-map <Leader>j <Plug>(easymotion-j)
-map <Leader>k <Plug>(easymotion-k)
+command! W execute 'w !sudo tee "%:p" > /dev/null' | edit!
