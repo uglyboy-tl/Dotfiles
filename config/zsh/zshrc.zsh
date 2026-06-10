@@ -14,6 +14,12 @@ export ZLOCAL="${XDG_CONFIG_HOME:-$HOME/.config}/local"
 
 # History settings
 export HISTFILE=$XDG_STATE_HOME/zsh/history
+export HISTSIZE=100000
+export SAVEHIST=100000
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_REDUCE_BLANKS
+
 export DOTFILES="$XDG_DATA_HOME/dotfiles"
 export OS_RELEASE="${OS_RELEASE:-$(source /etc/os-release 2>/dev/null && echo $NAME)}"
 export PYTHON_VENV_NAME=".venv"
@@ -29,22 +35,25 @@ export FZF_DEFAULT_OPTS=" \
 --color=border:#6C7086,label:#CDD6F4 \
 --height 50% --preview-window right:60% --layout=reverse --preview '($FZF_PREVIEW_COMMAND) 2> /dev/null'"
 export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!{.git,.idea,.vscode,.sass-cache,node_modules,build,.m2}/*" 2> /dev/null'
-export FZF_ALT_C_COMMAND="rg --sort-files --files --null 2> /dev/null | xargs -0 dirname | uniq"
+export FZF_ALT_C_COMMAND="rg --sort-files --null --files 2> /dev/null | xargs -0 dirname | sort -u"
 
 source "${ZDOTDIR:-$HOME/.config/zsh}/zinit/zinit.zsh"
 
 export ZSH_WAKATIME_PROJECT_DETECTION=true
 
 # Load Oh My Zsh basic functionality
+# completion 必须同步加载（zicompinit 依赖它）
 zi snippet OMZL::completion.zsh
-zi snippet OMZL::key-bindings.zsh
-zi snippet OMZL::directories.zsh
-zi snippet OMZL::history.zsh
-zi snippet OMZL::correction.zsh
-zi snippet OMZL::functions.zsh
-zi snippet OMZL::termsupport.zsh
-zi snippet OMZL::spectrum.zsh
-zi snippet OMZL::theme-and-appearance.zsh
+# 其他模块可以 turbo 延迟加载，加速终端启动
+zi wait lucid for \
+  OMZL::key-bindings.zsh \
+  OMZL::directories.zsh \
+  OMZL::history.zsh \
+  OMZL::correction.zsh \
+  OMZL::functions.zsh \
+  OMZL::termsupport.zsh \
+  OMZL::spectrum.zsh \
+  OMZL::theme-and-appearance.zsh
 
 # Load Oh My Zsh plugins
 zi snippet OMZP::git-auto-fetch
