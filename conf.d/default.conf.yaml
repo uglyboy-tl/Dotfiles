@@ -54,6 +54,9 @@
     $XDG_CONFIG_HOME/vim/vimrc.plug: config/vim/vimrc.plug # 插件配置文件
     $XDG_CONFIG_HOME/vim/plug.vim: config/vim/vim-plug/plug.vim # Vim-plug 插件管理器
 
+    # TMUX 配置
+    $XDG_CONFIG_HOME/tmux/tmux.conf: config/tmux/tmux.conf # tmux 主配置文件
+
     # 系统工具配置
     ## GIT 配置
     $XDG_CONFIG_HOME/git/config: config/git/config # Git 配置文件
