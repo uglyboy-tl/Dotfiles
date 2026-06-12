@@ -119,3 +119,4 @@ done
 # 特殊窗口规则
 _r '*:*:画中画' follow=false state=floating sticky=on # 画中画窗口：不跟随，浮动，置顶
 _r 'Microsoft-edge:*:Bitwarden' state=floating     # Bitwarden 窗口：浮动
+_r 'melonDS' state=floating     # Bitwarden 窗口：浮动

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=melonDS
+GenericName=Agent
+GenericName[zh_CN]=模拟器
+Exec=/home/uglyboy/Downloads/Game/melonDS/melonDS
+Icon=/home/uglyboy/Downloads/Game/melonDS/melon.png
