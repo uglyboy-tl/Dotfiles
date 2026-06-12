@@ -16,10 +16,10 @@
 
 # Shell 命令执行阶段
 - shell:
-    - [
-        git submodule update --init --recursive config dotbot-plugins/crontab,
-        更新基础 submodule 模块
-      ]
+  - [
+      git submodule update --init --recursive config dotbot-plugins/crontab || true,
+      更新基础 submodule 模块
+    ]
 
 # 符号链接创建阶段
 - link:

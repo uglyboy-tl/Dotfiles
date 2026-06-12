@@ -4,10 +4,10 @@
 
 # Shell 命令执行阶段
 - shell:
-    - [
-        git submodule update --init --recursive desktop data,
-        更新桌面相关 submodule 模块,
-      ]
+  - [
+      git submodule update --init --recursive desktop data || true,
+      更新桌面相关 submodule 模块,
+    ]
 
 - link:
     ~/.local/bin/:
@@ -66,7 +66,6 @@
     $XDG_CONFIG_HOME/mpv/scripts/uosc/intl: desktop/mpv/uosc/src/uosc/intl # 国际化
     $XDG_CONFIG_HOME/mpv/scripts/uosc/lib: desktop/mpv/uosc/src/uosc/lib # 库文件
     $XDG_CONFIG_HOME/mpv/scripts/uosc/main.lua: desktop/mpv/uosc/src/uosc/main.lua # uosc 主脚本
-    $XDG_CONFIG_HOME/mpv/scripts/autoload.lua: desktop/mpv/autoload.lua # uosc 主脚本
     $XDG_CONFIG_HOME/mpv/script-opts/uosc.conf: desktop/mpv/uosc.conf # uosc 配置文件
 
 # Crontab 定时任务配置
