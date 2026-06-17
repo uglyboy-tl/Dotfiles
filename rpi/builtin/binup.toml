@@ -16,18 +16,8 @@ repo = "anomalyco/opencode"
 file_pattern = "opencode-{os}-{arch}"
 file_extension = "tar.gz"
 
-[back.lf]
-repo = "gokcehan/lf"
-file_pattern = "lf-{os}-{arch}"
-file_extension = "tar.gz"
-
 [back.yq]
 repo = "mikefarah/yq"
 file_pattern = "yq_{os}_{arch}"
 file_extension = "tar.gz"
 binary_name = "yq"
-
-[back.sonar]
-repo = "raskrebs/sonar"
-file_pattern = "sonar_{os}_{arch}"
-file_extension = "tar.gz"
