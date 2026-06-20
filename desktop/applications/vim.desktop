@@ -1,4 +1,14 @@
 [Desktop Entry]
 Type=Application
-Name=vim
+Name[zh_CN]=Vim
+Name=Vim
+GenericName[zh_CN]=文本编辑器
+GenericName=Text Editor
+Comment[zh_CN]=编辑文本文件
+Comment=Edit text files
+TryExec=vim
+Exec=vim %F
+Terminal=true
+Categories=Utility;TextEditor;
+StartupNotify=false
 NoDisplay=true
