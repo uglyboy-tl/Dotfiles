@@ -21,6 +21,9 @@
       path: desktop/applications/*
       relink: true
 
+    # 打开方式
+    $XDG_CONFIG_HOME/mimeapps.list: desktop/mimeapps.list
+
     # Built-in
     $XDG_CONFIG_HOME/binup/config.toml: desktop/builtin/binup.toml # UV 配置
 

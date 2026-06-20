@@ -1,0 +1,20 @@
+[Default Applications]
+x-scheme-handler/mailto=neomutt.desktop
+message/rfc822=neomutt.desktop
+application/pdf=org.pwmt.zathura-pdf-poppler.desktop
+image/jpeg=feh.desktop
+image/png=feh.desktop
+image/gif=feh.desktop
+image/bmp=feh.desktop
+image/webp=feh.desktop
+image/svg+xml=feh.desktop
+inode/directory=yazi.desktop
+application/x-bittorrent=MotrixNext.desktop
+x-scheme-handler/magnet=MotrixNext.desktop
+
+[Added Associations]
+x-scheme-handler/mailto=neomutt.desktop;
+message/rfc822=neomutt.desktop;
+inode/directory=yazi.desktop;
+application/x-bittorrent=MotrixNext.desktop;
+x-scheme-handler/magnet=MotrixNext.desktop;
