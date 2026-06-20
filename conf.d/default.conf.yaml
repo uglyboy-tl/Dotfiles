@@ -92,6 +92,7 @@
     $XDG_CONFIG_HOME/opencode/commands: config/opencode/commands
     $XDG_CONFIG_HOME/opencode/skills: config/opencode/skills
     $XDG_CONFIG_HOME/opencode/plugins: config/opencode/plugins
+    $XDG_CONFIG_HOME/opencode/tools: config/opencode/tools
 
     # 开发环境配置
     ## Python 包管理配置
