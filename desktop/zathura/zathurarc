@@ -1,10 +1,49 @@
 # Theme
 #include catppuccin-latte
 
-#粘贴版，鼠标选中即复制
+# Database (plain backend 已弃用)
+set database sqlite
+
+# 粘贴板，鼠标选中即复制
 set selection-clipboard clipboard
 
-# See man `man zathurarc'
+# 导航增强
+set scroll-page-aware true
+set scroll-full-overlap 0.01
+set scroll-step 50
+set zoom-min 10
+set zoom-max 300
+
+# 每次翻页保存位置，崩溃不丢进度
+set continuous-hist-save true
+
+# 以宽度自适应打开
+set adjust-open "best-fit"
+
+# 窗口
+set window-height 1350
+set window-width 1400
+set window-title-basename true
+set window-title-home-tilde true
+
+# 状态栏
+set statusbar-basename true
+set statusbar-home-tilde true
+set statusbar-page-percent true
+
+# 页面间距
+set page-padding 1
+
+# 字体与字号
+set font "Sarasa UI SC Regular 10"
+
+# 中文 pdf 需将实时搜索设为 false
+set incremental-search false
+
+# 显示右侧进度条
+set show-v-scrollbar true
+
+# Keybindings
 map r reload
 map - zoom out
 map + zoom in
@@ -13,22 +52,6 @@ map f toggle_fullscreen
 map [fullscreen] f toggle_fullscreen
 map , scroll half-up
 map . scroll half-down
-
-#以宽度自适应打开
-set adjust-open "width"
-#默认高度，像素
-set window-height 1200
-#默认宽度
-set window-width 1080
-
-#字体与字号
-set font "Sarasa UI SC Regular 10"
-
-#只显示文件名，否则显示完整路径
-set window-title-basename true
-
-#中文pdf需将实时搜索设为false
-set incremental-search false
-
-#显示右侧进度条
-set show-v-scrollbar true
+map w adjust_window width
+map h adjust_window best-fit
+map <C-b> feedkeys ":bmark "
