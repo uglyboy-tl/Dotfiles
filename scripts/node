@@ -1,0 +1,6 @@
+#!/usr/bin/env bun
+
+import { spawnSync } from "child_process";
+
+const result = spawnSync("bun", process.argv.slice(2), { stdio: "inherit" });
+process.exit(result.status ?? 1);
