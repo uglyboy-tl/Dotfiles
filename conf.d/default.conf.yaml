@@ -81,8 +81,6 @@
     $XDG_CONFIG_HOME/lf: config/lf
     ## yazi 文件管理器
     $XDG_CONFIG_HOME/yazi: config/yazi
-    ## Newsboat RSS 阅读器
-    $XDG_CONFIG_HOME/newsboat/config: config/newsboat/config
 
     ## OpenCode
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/config/opencode.json
