@@ -9,5 +9,10 @@ prepend_fetchers = [
 sort_by = "natural"
 linemode = "size"
 
+[opener]
+deb = [
+    { run = 'sudo apt install --no-install-recommends -y "$@"', block = true, desc = "Install .deb package" },
+]
+
 [preview]
 max_width = 1200
