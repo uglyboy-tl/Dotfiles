@@ -10,7 +10,10 @@ image/webp=feh.desktop
 image/svg+xml=feh.desktop
 inode/directory=yazi.desktop
 application/x-bittorrent=MotrixNext.desktop
-x-scheme-handler/magnet=MotrixNext.desktop
+x-scheme-handler/magnet=motrix-next-handler.desktop
+x-scheme-handler/ed2k=motrix-next-handler.desktop
+x-scheme-handler/thunder=motrix-next-handler.desktop
+x-scheme-handler/motrixnext=motrix-next-handler.desktop
 
 [Added Associations]
 x-scheme-handler/mailto=neomutt.desktop;
