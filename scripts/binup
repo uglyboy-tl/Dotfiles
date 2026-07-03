@@ -583,7 +583,8 @@ return 0
 }
 args.verify(){
 for option in "${_ARGS_OPTS[@]}";do
-local opt="${option##*-}" another
+local opt="${option#--}" another
+opt="${opt#-}"
 array.contains _ARGS_OPTIONS "$opt"||{
 log.error "未知选项: \"$option\""
 return 1
@@ -767,13 +768,37 @@ local _f _s _k _v _sec _sec_grep _pat _repl _n
 _sec="${_s:+[$_s]}"
 _sec_grep="$(string.escape.regex "$_sec")"
 _pat="^$_k[[:space:]]*=" _repl="$_k = \"$_v\""
-[[ -n $_sec ]]&&_n=$(fs.find "$_f" "^$_sec_grep$")||_n=""&&fs.find "$_f" "$_pat" "$_n" 1>/dev/null&&fs.replace "$_f" "$_pat" "$_repl" "$_n"&&return 0||true
-[[ -n $_n ]]&&fs.insert "$_f" "^$_sec_grep$" "$_repl" "0"&&return 0||true
+config._yq_try "$_f" "$_s" "$_k" "$_v"&&return 0
+if [[ -n $_sec ]];then
+_n=$(fs.find "$_f" "^$_sec_grep$")||_n=""
+[[ -n $_n ]]&&fs.find "$_f" "$_pat" "$_n" 1>/dev/null&&fs.replace "$_f" "$_pat" "$_repl" "$_n"&&return 0
+else
+fs.find "$_f" "$_pat" "" 1>/dev/null&&fs.replace "$_f" "$_pat" "$_repl" "$_n"&&return 0||true
+fi
+[[ -n $_n ]]&&{ fs.insert "$_f" "^$_sec_grep$" "$_repl" "0"&&return 0;}||true
 {
 echo ""
 [[ -n $_s ]]&&echo "$_sec"
 echo "$_repl"
 } >>"$_f"
+}
+config._yq_try(){
+local _f="$1" _s="$2" _k="$3" _v="$4"
+command -v yq &>/dev/null||return 1
+yq --version 2>&1|grep -qi "mikefarah"||return 1
+if [[ -n $_s ]];then
+grep -q "^\[$_s\]" "$_f" 2>/dev/null||return 1
+fi
+local _expr
+if [[ -z $_s ]];then
+_expr=".$_k = \"$_v\""
+elif [[ $_s == *.* ]];then
+local _a="${_s%%.*}" _i="${_s#*.}"
+_expr=".$_a.\"$_i\".$_k = \"$_v\""
+else
+_expr=".$_s.$_k = \"$_v\""
+fi
+yq -o toml -i "$_expr" "$_f" 2>/dev/null
 }
 config.save(){
 local _f="${1:-$(config.path)}" _k _v _s _field _arr _current _last=""
@@ -838,13 +863,14 @@ requests.jq.check(){
 requests.curl.configure(){
 local array_name="$1"
 local timeout="${2:-}"
+local include_auth="${3:-true}"
 [[ -n $timeout ]]&&array.append "$array_name" "--max-time" "$timeout"
 array.append "$array_name" "-A" "$_REQUESTS_USER_AGENT"
 local key
 for key in "${!_REQUESTS_HEADERS[@]}";do
 array.append "$array_name" "-H" "$key: ${_REQUESTS_HEADERS[$key]}"
 done
-if [[ ${#_REQUESTS_AUTH[@]} -gt 0 ]];then
+if [[ $include_auth == "true" && ${#_REQUESTS_AUTH[@]} -gt 0 ]];then
 local auth_key
 for auth_key in "${!_REQUESTS_AUTH[@]}";do
 array.append "$array_name" "-H" "$auth_key: ${_REQUESTS_AUTH[$auth_key]}"
@@ -889,8 +915,8 @@ echo "{\"status_code\":$status_code,\"headers\":$headers_json,\"body\":\"$body_b
 }
 requests.download(){
 requests.curl.check
-local curl_cmd=("$_REQUESTS_CURL" "-L")
-requests.curl.configure curl_cmd
+local curl_cmd=("$_REQUESTS_CURL" "-L" "--globoff")
+requests.curl.configure curl_cmd "" false
 curl_cmd+=("-o" "$2")
 [[ ${3:-true} == "true" ]]&&curl_cmd+=("--progress-bar")
 [[ ${4:-true} == "true" ]]&&curl_cmd+=("-C" "-")
@@ -1044,21 +1070,12 @@ echo "$version|||$url"
 }
 save_latest_info(){
 [[ $# -lt 3 ]]&&return 1
-if system.command.exist "yq";then
-[[ -s $VERSIONS_FILE ]]||echo "[packages]" >"$VERSIONS_FILE"
-yq -o toml -i ".packages.$1.latest_version = \"$2\" | .packages.$1.download_url = \"$3\"" "$VERSIONS_FILE"
-else
 config.update "packages" "$1" "latest_version" "$2" "$VERSIONS_FILE"
 config.update "packages" "$1" "download_url" "$3" "$VERSIONS_FILE"
-fi
 }
 save_version_info(){
 [[ -z $1 ]]&&return 1
-if system.command.exist "yq";then
-yq -o toml -i ".packages.$1.current_version = \"$2\"" "$VERSIONS_FILE"
-else
 config.update "packages" "$1" "current_version" "$2" "$VERSIONS_FILE"
-fi
 }
 download_file(){
 local url="${SETTINGS_PROXY_PREFIX:+$SETTINGS_PROXY_PREFIX${1#https://github.com/}}"
