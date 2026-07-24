@@ -9,7 +9,6 @@ image/bmp=feh.desktop
 image/webp=feh.desktop
 image/svg+xml=feh.desktop
 inode/directory=yazi.desktop
-application/x-bittorrent=MotrixNext.desktop
 x-scheme-handler/magnet=motrix-next-handler.desktop
 x-scheme-handler/ed2k=motrix-next-handler.desktop
 x-scheme-handler/thunder=motrix-next-handler.desktop
