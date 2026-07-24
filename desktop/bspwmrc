@@ -52,12 +52,13 @@ _c presel_feedback_color "#3B4252" # 预选反馈颜色
 # 启动服务
 # 并行启动常规服务
 (
-	_s picom -b              # 启动 Picom (合成器)
+	# _s picom -b              # 启动 Picom (合成器)
 	_s redshift              # 启动 Redshift (色温调节)
 	_s dunst                 # 启动 Dunst (通知守护进程)
 	_s polybar --reload main # 启动 Polybar (状态栏) 并重新加载配置
-	_s lxpolkit              # 启动 LXPolkit (策略工具包)
+	# _s lxpolkit              # 启动 LXPolkit (策略工具包)
 	_s udiskie               # 启动 Udiskie（自动挂载外部设备）
+	_s dex -a               # 启动 XDG Autostart .desktop 文件
 ) &
 
 # 动态壁纸
