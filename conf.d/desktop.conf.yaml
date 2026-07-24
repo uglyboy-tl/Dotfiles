@@ -74,5 +74,5 @@
 # Crontab 定时任务配置
 - crontab:
     - time: 0 * * * * # 每小时执行一次
-      command: DISPLAY=:0 XAUTHORITY="$HOME/.Xauthority" PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin" XDG_DATA_HOME="$HOME/.local/share" TERM=dumb dwall.sh -s lakeside
+      command: env DISPLAY=:0 XAUTHORITY="/var/run/lightdm/uglyboy/xauthority" PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin" XDG_DATA_HOME="$HOME/.local/share" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus" XDG_SESSION_TYPE=x11 DESKTOP_SESSION=bspwm TERM=dumb dwall.sh -s lakeside
       platform: linux # 仅限 Linux 平台
