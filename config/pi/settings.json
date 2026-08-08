@@ -1,0 +1,24 @@
+{
+  "lastChangelogVersion": "0.84.1",
+  "theme": "dark",
+  "npmCommand": [
+    "bun"
+  ],
+  "packages": [
+    "npm:pi-web-access",
+    "npm:pi-powerline-footer",
+    "npm:context-mode",
+    "npm:pi-wakatime"
+  ],
+  "defaultProvider": "opencode-go",
+  "defaultModel": "deepseek-v4-pro",
+  "defaultThinkingLevel": "high",
+  "tuiMode": "fullscreen",
+  "fullscreenScrollbar": "always",
+  "editorPaddingX": 1,
+  "enabledModels": [
+    "opencode-go/deepseek-v4-flash",
+    "opencode-go/deepseek-v4-pro",
+    "opencode-go/kimi-k3"
+  ]
+}

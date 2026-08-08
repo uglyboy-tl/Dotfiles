@@ -156,7 +156,20 @@ PY
   esac
 }
 
-PEON_DIR="${CLAUDE_PEON_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+if [ -n "${CLAUDE_PEON_DIR:-}" ]; then
+  PEON_DIR="$CLAUDE_PEON_DIR"
+else
+  _peon_script="${BASH_SOURCE[0]}"
+  while [ -L "$_peon_script" ]; do
+    _peon_link="$(readlink "$_peon_script")" || break
+    case "$_peon_link" in
+      /*) _peon_script="$_peon_link" ;;
+      *) _peon_script="$(cd "$(dirname "$_peon_script")" && pwd)/$_peon_link" ;;
+    esac
+  done
+  PEON_DIR="$(cd "$(dirname "$_peon_script")" && pwd)"
+  unset _peon_script _peon_link
+fi
 # Save original install directory for finding bundled scripts (Nix, Homebrew)
 _INSTALL_DIR="$PEON_DIR"
 # Homebrew/Nix/adapter installs: script lives in read-only store but packs/config are elsewhere.
@@ -175,6 +188,9 @@ if [ ! -d "$PEON_DIR/packs" ]; then
   fi
   unset _hooks_dir
 fi
+# Ensure the data dir exists before any config/state write (#561: fresh install
+# has no ~/.openpeon yet, and the setup wizard writes config.json directly).
+mkdir -p "$PEON_DIR" 2>/dev/null || true
 # Local project config overrides global config
 _local_config="${PWD}/.claude/hooks/peon-ping/config.json"
 if [ -f "$_local_config" ]; then
@@ -585,12 +601,36 @@ play_sound() {
           Add-Type -AssemblyName PresentationCore
           \$p = New-Object System.Windows.Media.MediaPlayer
           \$p.Volume = $vol
+          Register-ObjectEvent -InputObject \$p -EventName MediaOpened -SourceIdentifier PeonWslOpened | Out-Null
+          Register-ObjectEvent -InputObject \$p -EventName MediaFailed -SourceIdentifier PeonWslFailed | Out-Null
           \$p.Open([Uri]'$wpath')
-          Start-Sleep -Milliseconds 500
           \$p.Play()
-          while (\$p.Position -lt \$p.NaturalDuration.TimeSpan -and \$p.Position.TotalSeconds -lt 10) {
-            Start-Sleep -Milliseconds 100
+          # Pump the WPF dispatcher so MediaOpened fires and NaturalDuration resolves.
+          # Polling \$p.Position against NaturalDuration broke on Windows builds
+          # where the duration is not yet available right after Open (HasTimeSpan
+          # is False, so TimeSpan reads 00:00:00), which cut playback to ~0ms and
+          # left hook events silent (issue #558).
+          \$deadline = [datetime]::UtcNow.AddSeconds(5)
+          \$opened = \$false
+          while ([datetime]::UtcNow -lt \$deadline) {
+            [System.Windows.Threading.Dispatcher]::CurrentDispatcher.Invoke(
+              [System.Windows.Threading.DispatcherPriority]::Background, [Action]{ }
+            )
+            if (Get-Event -SourceIdentifier PeonWslFailed -ErrorAction SilentlyContinue) { break }
+            if (Get-Event -SourceIdentifier PeonWslOpened -ErrorAction SilentlyContinue) { \$opened = \$true; break }
+            Start-Sleep -Milliseconds 50
           }
+          if (\$opened) {
+            if (\$p.NaturalDuration.HasTimeSpan) {
+              \$secs = [math]::Min(\$p.NaturalDuration.TimeSpan.TotalSeconds, 10)
+              Start-Sleep -Seconds ([math]::Ceiling(\$secs))
+            } else {
+              Start-Sleep -Seconds 3
+            }
+          }
+          Unregister-Event -SourceIdentifier PeonWslOpened -ErrorAction SilentlyContinue
+          Unregister-Event -SourceIdentifier PeonWslFailed -ErrorAction SilentlyContinue
+          \$p.Stop()
           \$p.Close()
         " &>/dev/null &
         save_sound_pid $!
@@ -960,6 +1000,8 @@ send_notification() {
       if [ "$PEON_PLATFORM" = "mac" ]; then
         export PEON_BUNDLE_ID="$(_mac_terminal_bundle_id)"
         export PEON_IDE_PID="$(_mac_ide_pid)"
+        # Warp's per-session deep link; opening it on click focuses the exact tab.
+        export PEON_WARP_FOCUS_URL="${WARP_FOCUS_URL:-}"
         _peon_cmux_surface="${CMUX_SURFACE_ID:-${CMUX_PANEL_ID:-}}"
         _peon_cmux_cli="$(_cmux_cli_path)"
         if [ -n "${CMUX_WORKSPACE_ID:-}" ] && [ -n "$_peon_cmux_surface" ] && [ -n "$_peon_cmux_cli" ]; then
@@ -1012,7 +1054,36 @@ send_notification() {
 }
 
 # --- Platform-aware terminal focus check ---
+# Returns 0 if the agent's own tmux pane is the one currently on screen
+# (active pane, active window, attached session); 1 if it's in a background
+# tmux window/pane or a detached session. No-op (returns 0) outside tmux or
+# when the state can't be determined, so callers fall through to app checks.
+_tmux_pane_is_current() {
+  [ -n "${TMUX:-}" ] || return 0
+  local pane info attached window_active pane_active
+  pane="${TMUX_PANE:-}"
+  if [ -n "$pane" ]; then
+    info=$(tmux display-message -p -t "$pane" '#{session_attached} #{window_active} #{pane_active}' 2>/dev/null || true)
+  else
+    info=$(tmux display-message -p '#{session_attached} #{window_active} #{pane_active}' 2>/dev/null || true)
+  fi
+  [ -z "$info" ] && return 0
+  attached=$(printf '%s\n' "$info" | awk '{print $1}')
+  window_active=$(printf '%s\n' "$info" | awk '{print $2}')
+  pane_active=$(printf '%s\n' "$info" | awk '{print $3}')
+  if [ "${attached:-0}" -ge 1 ] 2>/dev/null && [ "$window_active" = "1" ] && [ "$pane_active" = "1" ]; then
+    return 0
+  fi
+  return 1
+}
+
 terminal_is_focused() {
+  # tmux-aware short-circuit: if this agent's pane isn't the one on screen
+  # (background window/pane or detached session), treat as NOT focused so the
+  # notification fires regardless of which terminal app is frontmost.
+  if [ -n "${TMUX:-}" ] && ! _tmux_pane_is_current; then
+    return 1
+  fi
   case "$PEON_PLATFORM" in
     mac)
       local frontmost
@@ -1123,6 +1194,7 @@ print('MOBILE_USER_KEY=' + q(mn.get('user_key', '')))
 print('MOBILE_APP_TOKEN=' + q(mn.get('app_token', '')))
 print('MOBILE_CHAT_ID=' + q(mn.get('chat_id', '')))
 print('MOBILE_BOT_TOKEN=' + q(mn.get('bot_token', '')))
+print('MOBILE_PRIORITY=' + q(str(mn.get('priority', '') or '')))
 " 2>/dev/null) || return 0
 
   safe_eval_python "$mobile_vars" || return 0
@@ -1136,6 +1208,16 @@ print('MOBILE_BOT_TOKEN=' + q(mn.get('bot_token', '')))
     yellow) priority="default" ;;
     blue) priority="low" ;;
   esac
+
+  # An explicit priority in config overrides the color-derived default.
+  # Accepts ntfy priority names (max/urgent, high, default, low, min) or
+  # numbers 1-5. Invalid values are ignored so behavior stays predictable.
+  # Useful on iOS, where lower tiers often arrive silently.
+  if [ -n "${MOBILE_PRIORITY:-}" ]; then
+    case "$MOBILE_PRIORITY" in
+      max|urgent|5|high|4|default|3|low|2|min|1) priority="$MOBILE_PRIORITY" ;;
+    esac
+  fi
 
   # Synchronous mode for tests (avoid race with backgrounded curl)
   local use_bg=true
@@ -1169,8 +1251,10 @@ print('MOBILE_BOT_TOKEN=' + q(mn.get('bot_token', '')))
       [ -z "$MOBILE_USER_KEY" ] || [ -z "$MOBILE_APP_TOKEN" ] && return 0
       local po_priority=0
       case "$priority" in
-        high) po_priority=1 ;;
-        low) po_priority=-1 ;;
+        max|urgent|5) po_priority=1 ;;
+        high|4) po_priority=1 ;;
+        low|2) po_priority=-1 ;;
+        min|1) po_priority=-2 ;;
       esac
       if [ "$use_bg" = true ]; then
         nohup curl -sf \
@@ -1788,7 +1872,8 @@ if os.path.isdir(codex_dir):
             codex_cfg_text = open(codex_config).read()
             codex_installed = (
                 'adapters/codex.sh' in codex_cfg_text or
-                'adapters/codex.ps1' in codex_cfg_text
+                'adapters/codex.ps1' in codex_cfg_text or
+                'adapters\\\\codex.ps1' in codex_cfg_text
             )
         except Exception:
             codex_installed = False
@@ -3433,23 +3518,28 @@ print(msg)
       ntfy)
         TOPIC="${3:-}"
         if [ -z "$TOPIC" ]; then
-          echo "Usage: peon mobile ntfy <topic> [--server=URL] [--token=TOKEN]" >&2
+          echo "Usage: peon mobile ntfy <topic> [--server=URL] [--token=TOKEN] [--priority=max|urgent|high|default|low|min]" >&2
           echo "" >&2
           echo "Setup:" >&2
           echo "  1. Install ntfy app on your phone (ntfy.sh)" >&2
           echo "  2. Subscribe to your topic in the app" >&2
           echo "  3. Run: peon mobile ntfy my-unique-topic" >&2
+          echo "" >&2
+          echo "Tip: on iOS, lower priorities can arrive silently. Use" >&2
+          echo "     --priority=max for an audible alert on every event." >&2
           exit 1
         fi
         NTFY_SERVER="https://ntfy.sh"
         NTFY_TOKEN=""
+        NTFY_PRIORITY=""
         for arg in "${@:4}"; do
           case "$arg" in
-            --server=*) NTFY_SERVER="${arg#--server=}" ;;
-            --token=*)  NTFY_TOKEN="${arg#--token=}" ;;
+            --server=*)   NTFY_SERVER="${arg#--server=}" ;;
+            --token=*)    NTFY_TOKEN="${arg#--token=}" ;;
+            --priority=*) NTFY_PRIORITY="${arg#--priority=}" ;;
           esac
         done
-        export PEON_ENV_NTFY_TOPIC="$TOPIC" PEON_ENV_NTFY_SERVER="$NTFY_SERVER" PEON_ENV_NTFY_TOKEN="$NTFY_TOKEN"
+        export PEON_ENV_NTFY_TOPIC="$TOPIC" PEON_ENV_NTFY_SERVER="$NTFY_SERVER" PEON_ENV_NTFY_TOKEN="$NTFY_TOKEN" PEON_ENV_NTFY_PRIORITY="$NTFY_PRIORITY"
         python3 -c "
 import json, os
 config_path = os.environ.get('PEON_ENV_CONFIG', '')
@@ -3464,11 +3554,15 @@ cfg['mobile_notify'] = {
     'server': os.environ.get('PEON_ENV_NTFY_SERVER', 'https://ntfy.sh'),
     'token': os.environ.get('PEON_ENV_NTFY_TOKEN', '')
 }
+_prio = os.environ.get('PEON_ENV_NTFY_PRIORITY', '')
+if _prio:
+    cfg['mobile_notify']['priority'] = _prio
 json.dump(cfg, open(config_path, 'w'), indent=2)
 "
         echo "peon-ping: mobile notifications enabled via ntfy"
         echo "  Topic:  $TOPIC"
         echo "  Server: $NTFY_SERVER"
+        [ -n "$NTFY_PRIORITY" ] && echo "  Priority: $NTFY_PRIORITY"
         echo ""
         echo "Install the ntfy app and subscribe to '$TOPIC'"
         # Send test notification
@@ -3581,6 +3675,9 @@ else:
         server = mn.get('server', 'https://ntfy.sh')
         print(f'  Topic:  {topic}')
         print(f'  Server: {server}')
+        prio = mn.get('priority')
+        if prio:
+            print(f'  Priority: {prio}')
     elif service == 'pushover':
         ukey = mn.get('user_key', '?')
         print(f'  User:   {ukey[:8]}...')
@@ -4933,6 +5030,12 @@ if focus_detect_mode not in ('all', 'sound', 'notifications'):
     focus_detect_mode = 'all'
 terminal_tab_title = str(cfg.get('terminal_tab_title', True)).lower() != 'false'
 suppress_sound_when_tab_focused = str(cfg.get('suppress_sound_when_tab_focused', False)).lower() == 'true'
+# Opt-in passthrough of the tab title/color escapes through tmux's DCS wrapper.
+# Default off: a tmux client multiplexes many panes onto ONE host terminal tab,
+# so with several concurrent sessions these escapes (which have no per-pane
+# addressing) stomp the single shared tab on a last-writer-wins basis — including
+# from background panes. Off keeps per-session state where tmux can scope it.
+tmux_passthrough = str(cfg.get('tmux_passthrough', False)).lower() == 'true'
 
 log('config', loaded=config_path, volume=volume, pack=active_pack, enabled=True)
 
@@ -4975,6 +5078,9 @@ cwd = event_data.get('cwd', '') or (_roots[0] if _roots else '')
 session_id = event_data.get('session_id', '') or event_data.get('conversation_id', '')
 perm_mode = event_data.get('permission_mode', '')
 session_source = event_data.get('source', '')
+# Claude Code sets agent_id only on hook events fired from inside a Task-tool
+# subagent (PostToolUseFailure, PermissionRequest, ...); absent on parent events
+agent_id = event_data.get('agent_id', '')
 
 IDE_ALIASES = {
     'claude': 'claude',
@@ -5472,6 +5578,23 @@ if event in _dismiss_events and session_id and cfg.get('notification_stacking', 
             os.unlink(_sf)
         except Exception:
             pass
+
+# --- Subagent suppression via agent_id ---
+# Events fired from inside a subagent are identified directly by the agent_id
+# field, so no SubagentStart/SessionStart timing heuristic is needed and
+# parallel subagents cannot race the single pending_subagent_pack slot. This
+# sits after the auto-dismiss block so subagent tool activity still clears
+# stale notifications. SubagentStart/SubagentStop are excluded: their handlers
+# below cover pack inheritance and the flag-gated completion sound.
+if suppress_subagent_complete and agent_id and event not in ('SubagentStart', 'SubagentStop'):
+    log('route', category='none', suppressed=True, reason='subagent_event')
+    log('exit', duration_ms=int((time.monotonic() - _peon_start) * 1000), exit=0)
+    write_state(state, state_file)
+    print('PROJECT=' + q(project or ''))
+    print('STATUS=working')
+    print('MARKER=')
+    print('PEON_EXIT=true')
+    sys.exit(0)
 
 if event == 'SessionStart':
     source = event_data.get('source', '')
@@ -6107,6 +6230,7 @@ print('MEETING_DETECT=' + ('true' if meeting_detect else 'false'))
 print('FOCUS_DETECT=' + ('true' if focus_detect else 'false'))
 print('FOCUS_DETECT_MODE=' + q(focus_detect_mode))
 print('TERMINAL_TAB_TITLE=' + ('true' if terminal_tab_title else 'false'))
+print('TMUX_PASSTHROUGH=' + ('true' if tmux_passthrough else 'false'))
 print('SUPPRESS_SOUND_WHEN_TAB_FOCUSED=' + ('true' if suppress_sound_when_tab_focused else 'false'))
 print('SOUND_FILE=' + q(sound_file))
 print('ICON_PATH=' + q(icon_path))
@@ -6202,7 +6326,10 @@ if [ "${PEON_EXIT:-true}" = "true" ]; then
   if [ "${TERMINAL_TAB_TITLE:-true}" = "true" ] && [ -n "${PROJECT:-}" ] && [ "${EVENT:-}" != "SessionEnd" ]; then
     _peon_title="${NOTIF_MARKER-${MARKER}}${PROJECT}: ${STATUS:-working}"
     [ "${PEON_TEST:-0}" = "1" ] && printf '%s\n' "$_peon_title" > "$PEON_DIR/.tab_title"
-    { printf '\033]0;%s\007' "$_peon_title" > /dev/tty; } 2>/dev/null || true
+    # Target the pane that owns this hook process, not the focused pane (issue #548).
+    _peon_early_tty="/dev/tty"
+    [ -n "${PEON_ENV_HOOK_TTY:-}" ] && [ -w "/dev/${PEON_ENV_HOOK_TTY}" ] && _peon_early_tty="/dev/${PEON_ENV_HOOK_TTY}"
+    { printf '\033]0;%s\007' "$_peon_title" > "$_peon_early_tty"; } 2>/dev/null || true
   fi
   _cmux_update_status_async
   exit 0
@@ -6341,29 +6468,42 @@ NOTIFY_TITLE="${NOTIFY_PROJECT:-$PROJECT}"
 # Inside tmux, /dev/tty may not be available from hook subprocesses;
 # fall back to the tmux pane's TTY in that case.
 _peon_tty=""
-if [ -n "${TMUX:-}" ]; then
+# Prefer the ancestor-walked session TTY: it identifies the pane that actually
+# owns this hook process. Inside tmux, `display-message` with no -t target
+# returns the *active/focused* pane's TTY, which is wrong when the user has
+# switched focus to another pane while the agent works (issue #548). Fall back
+# to tmux's pane lookup, then to /dev/tty.
+if [ -n "${PEON_ENV_HOOK_TTY:-}" ] && [ -w "/dev/${PEON_ENV_HOOK_TTY}" ]; then
+  _peon_tty="/dev/${PEON_ENV_HOOK_TTY}"
+elif [ -n "${TMUX:-}" ]; then
   _peon_tty=$(tmux display-message -p '#{pane_tty}' 2>/dev/null || true)
 fi
 if [ -z "$_peon_tty" ]; then
   # Claude Code (and other agents) run hook commands without a controlling
   # terminal, so /dev/tty is unavailable and escape writes silently fail.
-  # Fall back to the ancestor-walked session TTY we already resolved.
-  if [ -n "${PEON_ENV_HOOK_TTY:-}" ] && [ -w "/dev/${PEON_ENV_HOOK_TTY}" ]; then
-    _peon_tty="/dev/${PEON_ENV_HOOK_TTY}"
-  else
-    _peon_tty="/dev/tty"
-  fi
+  _peon_tty="/dev/tty"
 fi
+# In test mode the real TTY isn't writable, so redirect escapes to a file the
+# BATS suite can read back to assert on what would (or would not) be emitted.
+[ "${PEON_TEST:-0}" = "1" ] && _peon_tty="$PEON_DIR/.osc_out"
 
-# Helper: emit an escape sequence, wrapping in DCS passthrough when inside tmux
-# so the host terminal (iTerm2, Ghostty, etc.) receives it through the tmux layer.
-# Requires tmux 3.3a+ with: set -g allow-passthrough on
+# Helper: emit a terminal escape sequence (tab title / tab color) to the session TTY.
+#
+# Inside tmux the escape only fires when tmux_passthrough is enabled (default off),
+# in which case it's wrapped in tmux's DCS passthrough so the host terminal (iTerm2,
+# Ghostty, etc.) receives it — requires tmux 3.3a+ with `set -g allow-passthrough on`.
+# Passthrough is off by default because a tmux client multiplexes many panes/windows
+# onto a SINGLE host terminal tab with no per-pane addressing: with multiple Claude
+# Code sessions, every hook — including from BACKGROUND panes — would stomp the one
+# visible tab on a last-writer-wins basis, so the tab reflects "most recent hook
+# anywhere", not any single session. Users with a 1-window-per-tab layout can opt back
+# in via "tmux_passthrough": true. Outside tmux (1 tab = 1 session) we always emit.
 _peon_esc() {
-  local seq="$1"
   if [ -n "${TMUX:-}" ]; then
-    { printf '\033Ptmux;\033%s\033\\' "$seq" > "$_peon_tty"; } 2>/dev/null || true
+    [ "${TMUX_PASSTHROUGH:-false}" = "true" ] || return 0
+    { printf '\033Ptmux;\033%s\033\\' "$1" > "$_peon_tty"; } 2>/dev/null || true
   else
-    { printf '%s' "$seq" > "$_peon_tty"; } 2>/dev/null || true
+    { printf '%s' "$1" > "$_peon_tty"; } 2>/dev/null || true
   fi
 }
 
@@ -6377,7 +6517,9 @@ fi
 _cmux_update_status_async
 
 # --- Set iTerm2 tab color (OSC 6) ---
-# Detects iTerm2 via ITERM_SESSION_ID (persists inside tmux where TERM_PROGRAM=tmux).
+# Detects iTerm2 via ITERM_SESSION_ID (persists inside local tmux where TERM_PROGRAM=tmux)
+# or LC_TERMINAL=iTerm2, the only iTerm2 signal that survives SSH — forwarded via the
+# LC_* SendEnv whitelist — and tmux, where ITERM_SESSION_ID and TERM_PROGRAM are lost.
 # In test mode, write resolved values to files for BATS verification.
 if [ "$_PEON_SYNC" = "true" ]; then
   [ -n "$TAB_COLOR_RGB" ] && echo "$TAB_COLOR_RGB" > "$PEON_DIR/.tab_color_rgb"
@@ -6391,7 +6533,7 @@ if [ "$_PEON_SYNC" = "true" ]; then
   echo "${TTS_MODE:-}" > "$PEON_DIR/.tts_mode"
   echo "${TRAINER_TTS_TEXT:-}" > "$PEON_DIR/.trainer_tts_text"
 fi
-if [ -n "$TAB_COLOR_RGB" ] && { [[ "${TERM_PROGRAM:-}" == "iTerm.app" ]] || [ -n "${ITERM_SESSION_ID:-}" ]; }; then
+if [ -n "$TAB_COLOR_RGB" ] && { [[ "${TERM_PROGRAM:-}" == "iTerm.app" ]] || [ -n "${ITERM_SESSION_ID:-}" ] || [ "${LC_TERMINAL:-}" = "iTerm2" ]; }; then
   read -r _R _G _B <<< "$TAB_COLOR_RGB"
   _peon_esc "$(printf '\033]6;1;bg;red;brightness;%d\a' "$_R")"
   _peon_esc "$(printf '\033]6;1;bg;green;brightness;%d\a' "$_G")"
