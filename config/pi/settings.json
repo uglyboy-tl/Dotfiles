@@ -5,13 +5,15 @@
     "bun"
   ],
   "packages": [
+    "npm:pi-mcp-adapter",
     "npm:pi-web-access",
-    "npm:pi-powerline-footer",
+    "npm:pi-wakatime",
     "npm:context-mode",
-    "npm:pi-wakatime"
+    "npm:pi-rounded-tools",
+    "npm:pi-open-tui"
   ],
   "defaultProvider": "opencode-go",
-  "defaultModel": "deepseek-v4-pro",
+  "defaultModel": "deepseek-v4-flash",
   "defaultThinkingLevel": "high",
   "tuiMode": "fullscreen",
   "fullscreenScrollbar": "always",
