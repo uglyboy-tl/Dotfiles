@@ -27,6 +27,9 @@
     # Built-in
     $XDG_CONFIG_HOME/binup/config.toml: desktop/builtin/binup.toml # UV 配置
 
+    # Pi
+    $XDG_CONFIG_HOME/pi/settings.json: desktop/pi/settings.json # Pi 主配置(含 powerline 等插件配置,运行时会自动写入)
+
     ## Zathura PDF 阅读器
     $XDG_CONFIG_HOME/zathura: desktop/zathura
 

@@ -93,7 +93,6 @@
     $XDG_CONFIG_HOME/opencode/tools: config/opencode/tools
 
     ## Pi
-    $XDG_CONFIG_HOME/pi/settings.json: config/pi/settings.json # Pi 主配置(含 powerline 等插件配置,运行时会自动写入)
     $XDG_CONFIG_HOME/pi/extensions: config/pi/extensions # 自定义扩展
     $XDG_CONFIG_HOME/pi/prompts: config/pi/prompts # 提示词模板
     $XDG_CONFIG_HOME/pi/skills: config/pi/skills # 自定义技能
