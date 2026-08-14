@@ -11,9 +11,14 @@ repo = "astral-sh/uv"
 file_pattern = "uv-{arch}-unknown-{os}-gnu"
 file_extension = "tar.gz"
 
-[packages.opencode]
+[back.opencode]
 repo = "anomalyco/opencode"
 file_pattern = "opencode-{os}-{arch}"
+file_extension = "tar.gz"
+
+[packages.rtk]
+repo = "rtk-ai/rtk"
+file_pattern = "rtk-{arch}-unknown-{os}-gnu"
 file_extension = "tar.gz"
 
 [back.yq]

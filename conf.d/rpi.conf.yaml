@@ -7,6 +7,8 @@
 
     # Built-in
     $XDG_CONFIG_HOME/binup/config.toml: rpi/builtin/binup.toml # UV 配置
+    # bash login shell（pi-feishu-lark daemon 等 bash -lc 场景需要）
+    ~/.profile: rpi/profile
 
 # Crontab 定时任务配置
 - crontab:
