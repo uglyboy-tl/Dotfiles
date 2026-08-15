@@ -8,11 +8,6 @@
     # Built-in
     $XDG_CONFIG_HOME/binup/config.toml: rpi/builtin/binup.toml # UV 配置
 
-    # Pi
-    $XDG_CONFIG_HOME/pi/settings.json: rpi/pi/settings.json # Pi 主配置(含 powerline 等插件配置,运行时会自动写入)
-    # bash login shell（pi-feishu-lark daemon 等 bash -lc 场景需要）
-    ~/.profile: rpi/profile
-
 # Crontab 定时任务配置
 - crontab:
     - time: 0 0 * * * # 每天执行一次

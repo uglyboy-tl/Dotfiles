@@ -1,6 +1,6 @@
 {
   "lastChangelogVersion": "0.84.2",
-  "theme": "dark",
+  "theme": "catppuccin-macchiato",
   "npmCommand": [
     "bun"
   ],
@@ -8,11 +8,10 @@
     "npm:pi-mcp-adapter",
     "npm:pi-web-access",
     "npm:pi-wakatime",
-    "npm:context-mode",
     "npm:pi-rounded-tools",
     "npm:pi-open-tui",
-    "npm:pi-feishu-lark"
-
+    "npm:@sherif-fanous/pi-catppuccin",
+    "npm:@tintinweb/pi-subagents"
   ],
   "defaultProvider": "opencode-go",
   "defaultModel": "deepseek-v4-flash",
