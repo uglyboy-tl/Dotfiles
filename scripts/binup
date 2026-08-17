@@ -1053,9 +1053,9 @@ pattern="${pattern//\?/.}"
 [[ -n ${2:-} ]]&&echo "$pattern[.][^.]*$2$"||echo "$pattern$"
 }
 _github_fetch_release(){
-local response=$(requests.get "https://api.github.com/repos/$1/releases")
+local response=$(requests.get "https://api.github.com/repos/$1/releases/latest")
 requests.raise_for_status "$response"||return 1
-[[ ${2:-release} == "release" ]]&&requests.json "$response" '[.[] | select(.prerelease == false)][0]'||requests.json "$response" '.[0]'
+[[ ${2:-release} == "release" ]]&&requests.json "$response" '.'||requests.json "$response" '.[0]'
 }
 get_latest_version_and_url(){
 local latest=$(_github_fetch_release "$1" "${2:-release}")||return 1

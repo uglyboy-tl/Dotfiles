@@ -5,7 +5,6 @@
     "bun"
   ],
   "packages": [
-    "npm:pi-mcp-adapter",
     "npm:pi-web-access",
     "npm:pi-wakatime",
     "npm:pi-open-tui",
