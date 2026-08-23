@@ -14,5 +14,14 @@ deb = [
     { run = 'sudo apt install --no-install-recommends -y "$@"', block = true, desc = "Install .deb package" },
 ]
 
+image-feh = [
+    { run = 'feh --scale-down --start-at %s1 --auto-zoom --geometry 1600x900+920+270', orphan = true, desc = "Feh" },
+]
+
+[open]
+prepend_rules = [
+    { mime = "image/*", use = ["image-feh", "open", "reveal"] },
+]
+
 [preview]
 max_width = 1200

@@ -62,7 +62,7 @@ listview {
 }
 
 element {
-  padding:	17px 11px 17px 29px;
+  padding:	17px 20px 23px 20px;
   border-radius:                  100%;
   border: 1px;
   border-color: @nord10;
@@ -78,6 +78,7 @@ element-text {
   text-color:       inherit;
   height:	38px;
   width:	38px;
+  horizontal-align: 0.35;
 }
 
 element selected {
