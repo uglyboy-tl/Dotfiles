@@ -41,12 +41,17 @@ source "${ZDOTDIR:-$HOME/.config/zsh}/zinit/zinit.zsh"
 
 export ZSH_WAKATIME_PROJECT_DETECTION=true
 
-# Load Oh My Zsh basic functionality
-# completion 必须同步加载（zicompinit 依赖它）
+# --- 同步加载（必须，且尽量靠前）---
+# 补全系统：compinit 依赖它，必须同步加载
 zi snippet OMZL::completion.zsh
 
-# Turbo 延迟加载：OMZ 模块 + 语法高亮 + 自动补全合并为单个调度
-# fast-syntax-highlighting 的 atinit 触发 compinit 并回放补全
+# 本地插件列表（按平台在 ~/.config/local/ 中定义；tmux 自动 attach 也在此处理）
+[ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
+
+# Turbo 延迟加载（prompt 显示后才加载，绝不阻塞登录）：
+# OMZ 基础模块 + 语法高亮 + 自动补全 + 常用 OMZP 插件，合并为单个调度。
+# fast-syntax-highlighting 的 atinit 触发 compinit 并回放补全；
+# zsh-autosuggestions 的 atload 在加载后启动。
 zi wait lucid for \
   OMZL::key-bindings.zsh \
   OMZL::directories.zsh \
@@ -59,10 +64,7 @@ zi wait lucid for \
   atinit'zicompinit; zicdreplay' \
     zdharma-continuum/fast-syntax-highlighting \
   atload'_zsh_autosuggest_start' \
-    zsh-users/zsh-autosuggestions
-
-# Load Oh My Zsh plugins (turbo)
-zi wait lucid for \
+    zsh-users/zsh-autosuggestions \
   OMZP::git-auto-fetch \
   OMZP::extract \
   OMZP::zoxide \
@@ -76,8 +78,6 @@ case "$OS_RELEASE" in
     zi ice wait lucid; zi snippet OMZP::archlinux
     ;;
 esac
-
-[ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
 
 # Load powerlevel10k theme last for better performance
 zi ice depth=1; zi light romkatv/powerlevel10k
