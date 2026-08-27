@@ -1,6 +1,4 @@
 .vscode/
 .opencode/
-.codegraph/
-.reasonix/
-.worktrees/
 *__pycache__*
+desktop/applications/melonDS.desktop

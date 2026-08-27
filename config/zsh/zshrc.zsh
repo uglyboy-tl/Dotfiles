@@ -44,7 +44,9 @@ export ZSH_WAKATIME_PROJECT_DETECTION=true
 # Load Oh My Zsh basic functionality
 # completion 必须同步加载（zicompinit 依赖它）
 zi snippet OMZL::completion.zsh
-# 其他模块可以 turbo 延迟加载，加速终端启动
+
+# Turbo 延迟加载：OMZ 模块 + 语法高亮 + 自动补全合并为单个调度
+# fast-syntax-highlighting 的 atinit 触发 compinit 并回放补全
 zi wait lucid for \
   OMZL::key-bindings.zsh \
   OMZL::directories.zsh \
@@ -53,34 +55,29 @@ zi wait lucid for \
   OMZL::functions.zsh \
   OMZL::termsupport.zsh \
   OMZL::spectrum.zsh \
-  OMZL::theme-and-appearance.zsh
-
-# Load Oh My Zsh plugins
-zi snippet OMZP::git-auto-fetch
-zi snippet OMZP::extract
-zi snippet OMZP::zoxide
-zi snippet OMZP::fzf
-
-case "$OS_RELEASE" in
-  "Ubuntu"|"Raspbian GNU/Linux"|"Debian GNU/Linux")
-    zi snippet OMZP::ubuntu
-    ;;
-  "Arch Linux"|"Arch Linux ARM")
-    zi snippet OMZP::archlinux
-    ;;
-  *)
-    ;;
-esac
-
-
-[ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
-
-# Enable autosuggestions and syntax highlighting with zinit's turbo mode for faster startup
-zinit wait lucid for \
+  OMZL::theme-and-appearance.zsh \
   atinit'zicompinit; zicdreplay' \
     zdharma-continuum/fast-syntax-highlighting \
   atload'_zsh_autosuggest_start' \
-    zsh-users/zsh-autosuggestions \
+    zsh-users/zsh-autosuggestions
+
+# Load Oh My Zsh plugins (turbo)
+zi wait lucid for \
+  OMZP::git-auto-fetch \
+  OMZP::extract \
+  OMZP::zoxide \
+  OMZP::fzf
+
+case "$OS_RELEASE" in
+  "Ubuntu"|"Raspbian GNU/Linux"|"Debian GNU/Linux")
+    zi ice wait lucid; zi snippet OMZP::ubuntu
+    ;;
+  "Arch Linux"|"Arch Linux ARM")
+    zi ice wait lucid; zi snippet OMZP::archlinux
+    ;;
+esac
+
+[ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
 
 # Load powerlevel10k theme last for better performance
 zi ice depth=1; zi light romkatv/powerlevel10k

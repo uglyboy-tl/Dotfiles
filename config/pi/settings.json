@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.2",
+  "lastChangelogVersion": "0.84.3",
   "theme": "dark",
   "npmCommand": [
     "bun"
@@ -11,15 +11,14 @@
     "npm:@tintinweb/pi-subagents",
     "npm:pi-hashline-edit"
   ],
-  "defaultProvider": "opencode-go",
-  "defaultModel": "ox-alpha-free",
+  "defaultProvider": "opencode",
+  "defaultModel": "hy3-free",
   "enabledModels": [
-    "opencode-go/deepseek-v4-flash",
-    "opencode-go/mimo-v2.5",
-    "opencode-go/hy3",
-    "opencode-go/ox-alpha-free",
     "opencode/hy3-free",
-    "opencode/mimo-v2.5-free"
+    "opencode/mimo-v2.5-free",
+    "opencode-go/hy3",
+    "opencode-go/mimo-v2.5",
+    "opencode-go/deepseek-v4-flash"
   ],
   "defaultThinkingLevel": "high",
   "tuiMode": "fullscreen",
