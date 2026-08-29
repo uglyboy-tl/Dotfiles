@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.3",
+  "lastChangelogVersion": "0.84.4",
   "theme": "dark",
   "npmCommand": [
     "bun"
@@ -8,8 +8,7 @@
     "npm:pi-web-access",
     "npm:pi-wakatime",
     "npm:pi-open-tui",
-    "npm:@tintinweb/pi-subagents",
-    "npm:pi-hashline-edit"
+    "npm:@tintinweb/pi-subagents"
   ],
   "defaultProvider": "opencode",
   "defaultModel": "hy3-free",

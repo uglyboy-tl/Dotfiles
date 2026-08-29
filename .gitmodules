@@ -24,3 +24,7 @@
 	path = config/opencode
 	url = git@github.com:uglyboy-tl/everything-open-code.git
 	ignore = dirty
+[submodule "data/rime-ice"]
+	path = data/rime-ice
+	url = git@github.com:iDvel/rime-ice.git
+	depth = 1

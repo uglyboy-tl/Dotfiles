@@ -57,8 +57,10 @@
     $XDG_CONFIG_HOME/ghostty: desktop/ghostty
 
     ## FCITX5-RIME 输入法
+    $XDG_DATA_HOME/fcitx5/rime: data/rime-ice # 默认输入方案
     $XDG_DATA_HOME/fcitx5/rime/default.custom.yaml: desktop/fcitx5-rime/default.custom.yaml # 默认输入方案
     $XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml: desktop/fcitx5-rime/luna_pinyin.custom.yaml # 拼音输入方案
+    $XDG_DATA_HOME/fcitx5/rime/rime_ice.custom.yaml: desktop/fcitx5-rime/rime_ice.custom.yaml # 拼音输入方案
 
     ## MPV 媒体播放器
     $XDG_CONFIG_HOME/mpv/mpv.conf: desktop/mpv/mpv.conf # MPV 主配置

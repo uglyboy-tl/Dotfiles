@@ -1,0 +1,4 @@
+patch:
+  # 关闭候选词后的拼音注释（corrector.lua 的纠错拼音提示也会一并关闭）
+  translator/comment_format: {}
+  translator/spelling_hints: 0
