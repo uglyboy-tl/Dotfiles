@@ -20,3 +20,4 @@ message/rfc822=neomutt.desktop;
 inode/directory=yazi.desktop;
 application/x-bittorrent=MotrixNext.desktop;
 x-scheme-handler/magnet=MotrixNext.desktop;
+x-scheme-handler/nxm=modorganizer2-nxm-handler.desktop

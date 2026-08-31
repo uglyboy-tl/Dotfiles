@@ -8,16 +8,16 @@
     "npm:pi-web-access",
     "npm:pi-wakatime",
     "npm:pi-open-tui",
-    "npm:@tintinweb/pi-subagents"
+    "npm:@gotgenes/pi-subagents",
+    "npm:@juicesharp/rpiv-ask-user-question"
   ],
-  "defaultProvider": "opencode",
-  "defaultModel": "hy3-free",
+  "defaultProvider": "opencode-go",
+  "defaultModel": "mimo-v2.5",
   "enabledModels": [
-    "opencode/hy3-free",
     "opencode/mimo-v2.5-free",
-    "opencode-go/hy3",
     "opencode-go/mimo-v2.5",
-    "opencode-go/deepseek-v4-flash"
+    "opencode-go/deepseek-v4-flash",
+    "minimax/MiniMax-M3"
   ],
   "defaultThinkingLevel": "high",
   "tuiMode": "fullscreen",
