@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.4",
+  "lastChangelogVersion": "0.85.0",
   "theme": "dark",
   "npmCommand": [
     "bun"
@@ -9,7 +9,9 @@
     "npm:pi-wakatime",
     "npm:pi-open-tui",
     "npm:@gotgenes/pi-subagents",
-    "npm:@juicesharp/rpiv-ask-user-question"
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:@narumitw/pi-usage",
+    "npm:@ff-labs/pi-fff"
   ],
   "defaultProvider": "opencode-go",
   "defaultModel": "mimo-v2.5",
@@ -17,7 +19,7 @@
     "opencode/mimo-v2.5-free",
     "opencode-go/mimo-v2.5",
     "opencode-go/deepseek-v4-flash",
-    "minimax/MiniMax-M3"
+    "opencode-go/minimax-m3"
   ],
   "defaultThinkingLevel": "high",
   "tuiMode": "fullscreen",
