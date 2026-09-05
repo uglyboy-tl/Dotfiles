@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PI_DIR="$HOME/.local/share/pi"
+PI_BIN="$PI_DIR/pi"
+REPO="earendil-works/pi"
+ARCHIVE_NAME="pi-linux-x64.tar.gz"
+
+log() { printf "\033[36m[Pi]\033[0m %s\n" "$*"; }
+err() { printf "\033[31m[Error]\033[0m %s\n" "$*" >&2; exit 1; }
+
+current_version() {
+    [[ -f "$PI_BIN" ]] && "$PI_BIN" --version 2>/dev/null || echo ""
+}
+
+latest_version() {
+    gh release view --repo "$REPO" --json tagName -q '.tagName' | sed 's/^v//'
+}
+
+download_url() {
+    local ver="$1"
+    echo "https://github.com/$REPO/releases/download/v${ver}/$ARCHIVE_NAME"
+}
+
+main() {
+    [[ -d "$PI_DIR" ]] || err "目录不存在: $PI_DIR"
+
+    local cur
+    cur=$(current_version)
+    log "当前版本: ${cur:-未知}"
+
+    log "检查最新版本..."
+    local latest
+    latest=$(latest_version) || err "获取版本信息失败"
+    log "最新版本: $latest"
+
+    if [[ "$cur" == "$latest" ]]; then
+        log "已是最新版本"
+        return 0
+    fi
+
+    local url
+    url=$(download_url "$latest")
+
+    log "下载 $url ..."
+    local tmpfile
+    tmpfile=$(mktemp /tmp/pi-XXXXXX.tar.gz)
+    trap 'rm -f "${tmpfile:-}"' EXIT
+
+    curl -fSL --progress-bar -o "$tmpfile" "$url" || err "下载失败"
+
+    log "备份当前版本..."
+    local backup_dir="$PI_DIR.backup.$(date +%Y%m%d%H%M%S)"
+    cp -r "$PI_DIR" "$backup_dir"
+    log "备份到: $backup_dir"
+
+    log "解压新版本..."
+    tar -xzf "$tmpfile" -C "$PI_DIR" --strip-components=1 || err "解压失败"
+
+    chmod +x "$PI_BIN"
+
+    local new_ver
+    new_ver=$(current_version)
+    log "升级完成: ${cur:-未知} -> ${new_ver:-未知}"
+}
+
+main "$@"
