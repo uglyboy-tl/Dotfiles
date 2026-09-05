@@ -11,7 +11,7 @@ echo "=== update-peon ==="
 # Step 1: Download upstream peon.sh, insert CLAUDE_PEON_DIR hardcode
 echo "-> peon.sh"
 curl -fsSL "$REPO/peon.sh" -o /tmp/peon-new.sh
-sed -i '4a\CLAUDE_PEON_DIR="${XDG_DATA_HOME}/openpeon/"' /tmp/peon-new.sh
+sed -i '/^CLAUDE_PEON_DIR=/d; /^# --- Platform detection ---/a\CLAUDE_PEON_DIR="${CLAUDE_PEON_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/openpeon}"' /tmp/peon-new.sh
 cp /tmp/peon-new.sh "$DOTFILES_PEON"
 chmod +x "$DOTFILES_PEON"
 
@@ -24,14 +24,7 @@ curl -fsSL "$REPO/VERSION" -o "$PEON_DIR/VERSION"
 #   - skip cmux-* hook-handle-* lint-* (cmux, Claude hooks, dev tools)
 echo "-> scripts"
 mkdir -p "$PEON_DIR/scripts"
-UPSTREAM_SCRIPTS=$(curl -fsSL "https://api.github.com/repos/PeonPing/peon-ping/contents/scripts" | python3 -c "
-import json, sys, re
-for f in json.load(sys.stdin):
-    n = f['name']
-    if not n.endswith('.sh'): continue
-    if re.match(r'^(cmux-|hook-handle-|lint-)', n): continue
-    print(n)
-")
+UPSTREAM_SCRIPTS=$(gh api repos/PeonPing/peon-ping/contents/scripts --paginate -q '.[].name' | grep '\.sh$' | grep -vE '^(cmux-|hook-handle-|lint-)')
 [ -z "$UPSTREAM_SCRIPTS" ] && { echo "   (no scripts to download)" >&2; } || \
 while IFS= read -r s; do
     curl -fsSL "$REPO/scripts/$s" -o "$PEON_DIR/scripts/$s"
