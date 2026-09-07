@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.85.0",
+  "lastChangelogVersion": "0.85.1",
   "theme": "dark",
   "npmCommand": [
     "bun"
@@ -19,6 +19,7 @@
     "opencode/mimo-v2.5-free",
     "opencode-go/mimo-v2.5",
     "opencode-go/deepseek-v4-flash",
+    "opencode-go/deepseek-v4-flash-vision-exp",
     "opencode-go/minimax-m3"
   ],
   "defaultThinkingLevel": "high",
