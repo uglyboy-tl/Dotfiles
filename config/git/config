@@ -1,27 +1,73 @@
+# ──────────────────────────────────────────────
+# 用户信息
+# ──────────────────────────────────────────────
 [user]
 	email = 25730357+uglyboy-tl@users.noreply.github.com
 	name = Uglyboy
 	username = Uglyboy
+
 [credential]
 	helper = store
+
+# ──────────────────────────────────────────────
+# 仓库默认设置
+# ──────────────────────────────────────────────
+[init]
+	defaultBranch = main
+
 [pull]
 	rebase = false
 
 [push]
 	autoSetupRemote = true
 
-# Allow local customizations in the .gitconfig_local file
-[include]
-    path=~/.config/git/local
+# ──────────────────────────────────────────────
+# 差异比较与冲突
+# ──────────────────────────────────────────────
+[diff]
+	algorithm = histogram    # 更清晰的 diff
+	colorMoved = plain       # 移动代码高亮
+	mnemonicPrefix = true    # 更直观的 ref 前缀（stash^2 而非 a/b）
 
-[alias]
-	lg = log --oneline --graph --decorate --all
-	st = status -sb
+[merge]
+	conflictstyle = zdiff3   # 冲突时显示共同祖先
+
+[rerere]
+	enabled = true           # 记录冲突解决方案，重复冲突自动应用
+
+# ──────────────────────────────────────────────
+# 日志与输出
+# ──────────────────────────────────────────────
+[log]
+	date = iso               # 日志使用 ISO 格式时间
+
+[branch]
+	sort = -committerdate    # 分支按提交时间排序
+
+[column]
+	ui = auto                # 列式输出（git branch 更整齐）
+
+# ──────────────────────────────────────────────
+# 网络与加速
+# ──────────────────────────────────────────────
+[http]
+	postBuffer = 524288000   # 大仓库推送缓冲区（500MB）
+	maxRequests = 10
 
 [url "https://xget.uglyboy.cn/gh/"]
 	insteadOf = https://github.com/
-[init]
-	defaultBranch = main
-[http]
-	postBuffer = 524288000
-	maxRequests = 10
+
+# ──────────────────────────────────────────────
+# 快捷别名
+# ──────────────────────────────────────────────
+[alias]
+	st = status -sb
+	lg = log --oneline --graph --decorate --all
+	dfs = diff --stat
+	df = diff
+
+# ──────────────────────────────────────────────
+# 本地覆盖（不纳入版本控制）
+# ──────────────────────────────────────────────
+[include]
+	path = ~/.config/git/local
