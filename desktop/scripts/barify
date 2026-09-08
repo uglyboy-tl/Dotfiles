@@ -136,7 +136,7 @@ function send_notification {
 			dunstify -i "$icon" -r 2593 "$ICON_MUTE  Muted" -h int:value:"$1"
 		else
 			bar=$(seq -s "─" $(($1/5)) | sed 's/[0-9]//g')
-			dunstify -i "$icon" -r 2593 "$icon $1%" -h int:value:"$1"
+			dunstify -i "$icon" -r 2593 "$icon  $1%" -h int:value:"$1"
 		fi
 		return
 	fi
