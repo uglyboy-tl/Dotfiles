@@ -1,18 +1,24 @@
-#!/usr/bin/env bash
-
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.config/zsh/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-# Disable in tmux to avoid SSH "Connection reset" issues
+# ──────────────────────────────────────────────
+# Powerlevel10k 即时提示（必须最顶部）
+# ──────────────────────────────────────────────
 if [[ -z "$TMUX" && -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# ──────────────────────────────────────────────
+# 基础环境变量
+# ──────────────────────────────────────────────
 export PATH="$HOME/.local/bin:$PATH"
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 export ZLOCAL="${XDG_CONFIG_HOME:-$HOME/.config}/local"
+export DOTFILES="$XDG_DATA_HOME/dotfiles"
+export OS_RELEASE="${OS_RELEASE:-$(source /etc/os-release 2>/dev/null && echo $NAME)}"
+export PYTHON_VENV_NAME=".venv"
+export ZSH_WAKATIME_PROJECT_DETECTION=true
 
-# History settings
+# ──────────────────────────────────────────────
+# 历史记录
+# ──────────────────────────────────────────────
 export HISTFILE=$XDG_STATE_HOME/zsh/history
 export HISTSIZE=100000
 export SAVEHIST=100000
@@ -20,13 +26,9 @@ setopt SHARE_HISTORY
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_REDUCE_BLANKS
 
-export DOTFILES="$XDG_DATA_HOME/dotfiles"
-export OS_RELEASE="${OS_RELEASE:-$(source /etc/os-release 2>/dev/null && echo $NAME)}"
-export PYTHON_VENV_NAME=".venv"
-
-[ -f "$ZLOCAL/zshrc.before" ] && source "$ZLOCAL/zshrc.before"
-
-# fzf options
+# ──────────────────────────────────────────────
+# FZF 配置
+# ──────────────────────────────────────────────
 export FZF_PREVIEW_COMMAND="bat --style=numbers,header --color=always {} || batcat --style=numbers,header --color=always {} || cat {}"
 export FZF_DEFAULT_OPTS=" \
 --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC \
@@ -37,21 +39,23 @@ export FZF_DEFAULT_OPTS=" \
 export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob "!{.git,.idea,.vscode,.sass-cache,node_modules,build,.m2}/*" 2> /dev/null'
 export FZF_ALT_C_COMMAND="rg --sort-files --null --files 2> /dev/null | xargs -0 dirname | sort -u"
 
+# ──────────────────────────────────────────────
+# 本地覆盖（before）
+# ──────────────────────────────────────────────
+[ -f "$ZLOCAL/zshrc.before" ] && source "$ZLOCAL/zshrc.before"
+
+# ──────────────────────────────────────────────
+# Zinit 插件管理
+# ──────────────────────────────────────────────
 source "${ZDOTDIR:-$HOME/.config/zsh}/zinit/zinit.zsh"
 
-export ZSH_WAKATIME_PROJECT_DETECTION=true
-
-# --- 同步加载（必须，且尽量靠前）---
-# 补全系统：compinit 依赖它，必须同步加载
+# 同步加载：补全系统（compinit 依赖）
 zi snippet OMZL::completion.zsh
 
-# 本地插件列表（按平台在 ~/.config/local/ 中定义；tmux 自动 attach 也在此处理）
+# 本地插件列表
 [ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
 
-# Turbo 延迟加载（prompt 显示后才加载，绝不阻塞登录）：
-# OMZ 基础模块 + 语法高亮 + 自动补全 + 常用 OMZP 插件，合并为单个调度。
-# fast-syntax-highlighting 的 atinit 触发 compinit 并回放补全；
-# zsh-autosuggestions 的 atload 在加载后启动。
+# Turbo 延迟加载：OMZ 基础模块 + 语法高亮 + 常用插件
 zi wait lucid for \
   OMZL::key-bindings.zsh \
   OMZL::directories.zsh \
@@ -70,6 +74,7 @@ zi wait lucid for \
   OMZP::zoxide \
   OMZP::fzf
 
+# 平台特定插件
 case "$OS_RELEASE" in
   "Ubuntu"|"Raspbian GNU/Linux"|"Debian GNU/Linux")
     zi ice wait lucid; zi snippet OMZP::ubuntu
@@ -79,15 +84,24 @@ case "$OS_RELEASE" in
     ;;
 esac
 
-# Load powerlevel10k theme last for better performance
+# ──────────────────────────────────────────────
+# 主题与提示符
+# ──────────────────────────────────────────────
 zi ice depth=1; zi light romkatv/powerlevel10k
 
+# ──────────────────────────────────────────────
+# 别名与本地覆盖（after）
+# ──────────────────────────────────────────────
 [ -f "$ZDOTDIR/zshrc.alias" ] && source "$ZDOTDIR/zshrc.alias"
 [ -f "$ZLOCAL/zshrc.after" ] && source "$ZLOCAL/zshrc.after"
 
+# ──────────────────────────────────────────────
+# 工具初始化
+# ──────────────────────────────────────────────
 setopt no_nomatch
-
 eval "$(atuin init zsh --disable-up-arrow)"
 
-# To customize prompt, run `p10k configure` or edit ~/.config/zsh/.p10k.zsh.
+# ──────────────────────────────────────────────
+# Powerlevel10k 配置
+# ──────────────────────────────────────────────
 [[ ! -f ~/.config/zsh/.p10k.zsh ]] || source ~/.config/zsh/.p10k.zsh
