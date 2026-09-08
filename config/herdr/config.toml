@@ -1,0 +1,28 @@
+onboarding = false
+
+[theme]
+name = "terminal"
+auto_switch = false
+
+[ui]
+accent = "blue"
+pane_gaps = false
+pane_outer_borders = false
+confirm_close = false
+window_title = "{hostname}: {workspace}"
+
+status_indicators = "symbols"
+[keys]
+prefix = "ctrl+a"
+detach = "prefix+d"
+
+# Panes
+split_horizontal = ["prefix+-", "alt+enter"]
+split_vertical = ["prefix+|", "alt+shift+enter"]
+close_pane = ["prefix+x", "alt+esc"]
+
+new_tab = "prefix+c"
+new_workspace = "prefix+shift+c"
+
+[ui.toast]
+delivery = "system"

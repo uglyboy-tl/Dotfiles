@@ -82,6 +82,9 @@
     ## yazi 文件管理器
     $XDG_CONFIG_HOME/yazi: config/yazi
 
+    ## herdr
+    $XDG_CONFIG_HOME/herdr/config.toml: config/herdr/config.toml
+
     ## OpenCode
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/config/opencode.json
     $XDG_CONFIG_HOME/opencode/tui.json: config/opencode/config/tui.json
