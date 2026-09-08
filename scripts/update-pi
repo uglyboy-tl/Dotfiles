@@ -59,6 +59,17 @@ main() {
 
     chmod +x "$PI_BIN"
 
+    log "清理旧备份，仅保留最新..."
+    local backups=("$PI_DIR".backup.*)
+    if [[ -e "${backups[0]}" ]]; then
+        local keep
+        keep=$(printf '%s\n' "${backups[@]}" | sort | tail -1)
+        for d in "${backups[@]}"; do
+            [[ "$d" == "$keep" ]] || rm -rf "$d"
+        done
+        log "保留备份: $keep"
+    fi
+
     local new_ver
     new_ver=$(current_version)
     log "升级完成: ${cur:-未知} -> ${new_ver:-未知}"
