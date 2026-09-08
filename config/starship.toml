@@ -1,285 +1,71 @@
-# Starship 提示符的自定义配置
+# ──────────────────────────────────────────────
+# Starship 提示符配置
+# ──────────────────────────────────────────────
 palette = "catppuccin_macchiato"
 command_timeout = 3600
+format = "[$directory$git_branch$git_status$character]($style)"
 
-# 目录模块配置
+# ──────────────────────────────────────────────
+# 提示符字符
+# ──────────────────────────────────────────────
+[character]
+error_symbol = "[✗](bold cyan)"
+success_symbol = "[❯](bold cyan)"
+
+# ──────────────────────────────────────────────
+# 目录
+# ──────────────────────────────────────────────
 [directory]
 truncation_length = 4
 truncation_symbol = "…/"
 repo_root_style = "bold cyan"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 
-# 目录替换规则
 [directory.substitutions]
-"~" = "🏠 ~"   # 将 "~" 替换为家目录 emoji 图标和 "~"
+"~" = "🏠 ~"
 
-# AWS 模块配置
-[aws]
-format = '\[[$symbol($profile)(\($region\))(\[$duration\])]($style)\]' # AWS 提示符格式，显示配置文件、区域和持续时间
-
-# Bun 模块配置
-[bun]
-format = '\[[$symbol($version)]($style)\]' # Bun 版本显示格式
-
-# C 语言模块配置
-[c]
-format = '\[[$symbol($version(-$name))]($style)\]' # C 语言版本和名称显示格式
-
-# CMake 模块配置
-[cmake]
-format = '\[[$symbol($version)]($style)\]' # CMake 版本显示格式
-
-# 命令执行时间模块配置
-[cmd_duration]
-format = '\[[ $duration]($style)\]' # 命令执行时间显示格式，显示一个时钟图标和持续时间
-
-# Cobol 模块配置
-[cobol]
-format = '\[[$symbol($version)]($style)\]' # Cobol 版本显示格式
-
-# Conda 模块配置
-[conda]
-format = '\[[$symbol$environment]($style)\]' # Conda 环境显示格式
-
-# Crystal 模块配置
-[crystal]
-format = '\[[$symbol($version)]($style)\]' # Crystal 版本显示格式
-
-# Daml 模块配置
-[daml]
-format = '\[[$symbol($version)]($style)\]' # Daml 版本显示格式
-
-# Dart 模块配置
-[dart]
-format = '\[[$symbol($version)]($style)\]' # Dart 版本显示格式
-
-# Deno 模块配置
-[deno]
-format = '\[[$symbol($version)]($style)\]' # Deno 版本显示格式
-
-# Docker 上下文模块配置
-[docker_context]
-format = '\[[$symbol$context]($style)\]' # Docker 上下文显示格式
-
-# Dotnet 模块配置
-[dotnet]
-format = '\[[$symbol($version)(🎯 $tfm)]($style)\]' # Dotnet 版本和目标框架显示格式
-
-# Elixir 模块配置
-[elixir]
-format = '\[[$symbol($version \(OTP $otp_version\))]($style)\]' # Elixir 版本和 OTP 版本显示格式
-
-# Elm 模块配置
-[elm]
-format = '\[[$symbol($version)]($style)\]' # Elm 版本显示格式
-
-# Erlang 模块配置
-[erlang]
-format = '\[[$symbol($version)]($style)\]' # Erlang 版本显示格式
-
-# Fennel 模块配置
-[fennel]
-format = '\[[$symbol($version)]($style)\]' # Fennel 版本显示格式
-
-# Fossil 分支模块配置
-[fossil_branch]
-format = '\[[$symbol$branch]($style)\]' # Fossil 分支显示格式
-
-# GCloud 模块配置
-[gcloud]
-format = '\[[$symbol$account(@$domain)(\($region\))]($style)\]' # GCloud 账户、域名和区域显示格式
-
-# Git 分支模块配置
+# ──────────────────────────────────────────────
+# Git
+# ──────────────────────────────────────────────
 [git_branch]
-format = '\[[$symbol$branch]($style)\]' # Git 分支显示格式
+format = "[$symbol$branch]($style) "
+style = "italic cyan"
 
 [git_status]
-format     = '([\[$all_status$ahead_behind\]]($style))' # Git 状态显示格式，包括所有状态和超前/落后信息
-style      = "cyan"
-ahead      = "⇡${count} "
-diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
-behind     = "⇣${count} "
-conflicted = " "
-up_to_date = " "
-untracked  = "? "
-modified   = " "
-stashed    = ""
-staged     = ""
-renamed    = ""
-deleted    = ""
+format = "[$all_status$ahead_behind]($style)"
+style = "cyan"
+ahead = "⇡${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
+behind = "⇣${count} "
+conflicted = " "
+untracked = "? "
+modified = " "
 
-# Golang 模块配置
-[golang]
-format = '\[[$symbol($version)]($style)\]' # Golang 版本显示格式
+# ──────────────────────────────────────────────
+# 命令执行时间
+# ──────────────────────────────────────────────
+[cmd_duration]
+min_time = 2000
+format = "[$duration]($style) "
 
-# Gradle 模块配置
-[gradle]
-format = '\[[$symbol($version)]($style)\]' # Gradle 版本显示格式
-
-# Guix Shell 模块配置
-[guix_shell]
-format = '\[[$symbol]($style)\]' # Guix Shell 状态显示格式
-
-# Haskell 模块配置
-[haskell]
-format = '\[[$symbol($version)]($style)\]' # Haskell 版本显示格式
-
-# Haxe 模块配置
-[haxe]
-format = '\[[$symbol($version)]($style)\]' # Haxe 版本显示格式
-
-# Helm 模块配置
-[helm]
-format = '\[[$symbol($version)]($style)\]' # Helm 版本显示格式
-
-# Mercurial (Hg) 分支模块配置
-[hg_branch]
-format = '\[[$symbol$branch]($style)\]' # Mercurial 分支显示格式
-
-# Java 模块配置
-[java]
-format = '\[[$symbol($version)]($style)\]' # Java 版本显示格式
-
-# Julia 模块配置
-[julia]
-format = '\[[$symbol($version)]($style)\]' # Julia 版本显示格式
-
-# Kotlin 模块配置
-[kotlin]
-format = '\[[$symbol($version)]($style)\]' # Kotlin 版本显示格式
-
-# Kubernetes 模块配置
-[kubernetes]
-format = '\[[$symbol$context( \($namespace\))]($style)\]' # Kubernetes 上下文和命名空间显示格式
-
-# Lua 模块配置
-[lua]
-format = '\[[$symbol($version)]($style)\]' # Lua 版本显示格式
-
-# 内存使用模块配置
-[memory_usage]
-format = '\[$symbol[$ram( | $swap)]($style)\]' # 内存使用显示格式，包括 RAM 和 Swap
-
-# Meson 模块配置
-[meson]
-format = '\[[$symbol$project]($style)\]' # Meson 项目显示格式
-
-# Nim 模块配置
-[nim]
-format = '\[[$symbol($version)]($style)\]' # Nim 版本显示格式
-
-# Nix Shell 模块配置
-[nix_shell]
-format = '\[[$symbol$state( \($name\))]($style)\]' # Nix Shell 状态和名称显示格式
-
-# Node.js 模块配置
-[nodejs]
-format = '\[[$symbol($version)]($style)\]' # Node.js 版本显示格式
-
-# OCaml 模块配置
-[ocaml]
-format = '\[[$symbol($version)(\($switch_indicator$switch_name\))]($style)\]' # OCaml 版本和切换器信息显示格式
-
-# OPA 模块配置
-[opa]
-format = '\[[$symbol($version)]($style)\]' # OPA 版本显示格式
-
-# OpenStack 模块配置
-[openstack]
-format = '\[[$symbol$cloud(\($project\))]($style)\]' # OpenStack 云和项目显示格式
-
-# 操作系统模块配置
-[os]
-format = '\[[$symbol]($style)\]' # 操作系统符号显示格式
-
-# 包模块配置
-[package]
-format = '\[[$symbol$version]($style)\]' # 包版本显示格式
-
-# Perl 模块配置
-[perl]
-format = '\[[$symbol($version)]($style)\]' # Perl 版本显示格式
-
-# PHP 模块配置
-[php]
-format = '\[[$symbol($version)]($style)\]' # PHP 版本显示格式
-
-# Pijul Channel 模块配置
-[pijul_channel]
-format = '\[[$symbol$channel]($style)\]' # Pijul Channel 显示格式
-
-# Pulumi 模块配置
-[pulumi]
-format = '\[[$symbol$stack]($style)\]' # Pulumi 堆栈显示格式
-
-# PureScript 模块配置
-[purescript]
-format = '\[[$symbol($version)]($style)\]' # PureScript 版本显示格式
-
-# Python 模块配置
+# ──────────────────────────────────────────────
+# 语言版本（按需启用）
+# ──────────────────────────────────────────────
 [python]
-format = '\[[${symbol}${pyenv_prefix}(${version})(\($virtualenv\))]($style)\]' # Python 版本、pyenv 前缀和虚拟环境显示格式
+format = "[$symbol$pyenv_prefix($version)(\($virtualenv\))]($style) "
 
-# Raku 模块配置
-[raku]
-format = '\[[$symbol($version-$vm_version)]($style)\]' # Raku 版本和 VM 版本显示格式
+[nodejs]
+format = "[$symbol($version)]($style) "
 
-# Red 模块配置
-[red]
-format = '\[[$symbol($version)]($style)\]' # Red 版本显示格式
+[package]
+format = "[$symbol$version]($style) "
 
-# Ruby 模块配置
-[ruby]
-format = '\[[$symbol($version)]($style)\]' # Ruby 版本显示格式
+[git_commit]
+format = "[$symbol$hash]($style) "
 
-# Rust 模块配置
-[rust]
-format = '\[[$symbol($version)]($style)\]' # Rust 版本显示格式
-
-# Scala 模块配置
-[scala]
-format = '\[[$symbol($version)]($style)\]' # Scala 版本显示格式
-
-# Spack 模块配置
-[spack]
-format = '\[[$symbol$environment]($style)\]' # Spack 环境显示格式
-
-# Sudo 模块配置
-[sudo]
-format = '\[[as $symbol]($style)\]' # Sudo 用户显示格式
-
-# Swift 模块配置
-[swift]
-format = '\[[$symbol($version)]($style)\]' # Swift 版本显示格式
-
-# Terraform 模块配置
-[terraform]
-format = '\[[$symbol$workspace]($style)\]' # Terraform 工作区显示格式
-
-# 时间模块配置
-[time]
-format = '\[[$time]($style)\]' # 时间显示格式
-
-# 用户名模块配置
-[username]
-format = '\[[$user]($style)\]' # 用户名显示格式
-
-# Vagrant 模块配置
-[vagrant]
-format = '\[[$symbol($version)]($style)\]' # Vagrant 版本显示格式
-
-# Vlang 模块配置
-[vlang]
-format = '\[[$symbol($version)]($style)\]' # Vlang 版本显示格式
-
-# Zig 模块配置
-[zig]
-format = '\[[$symbol($version)]($style)\]' # Zig 版本显示格式
-
-# Solidity 模块配置
-[solidity]
-format = '\[[$symbol($version)]($style)\]' # Solidity 版本显示格式
-
+# ──────────────────────────────────────────────
+# 配色方案
+# ──────────────────────────────────────────────
 [palettes.catppuccin_macchiato]
 rosewater = "#f4dbd6"
 flamingo = "#f0c6c6"
