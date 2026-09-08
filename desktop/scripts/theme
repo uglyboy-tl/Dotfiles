@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# 主题切换脚本
+# 用法:
+#   theme              用 fzf 选择主题
+#   theme <主题名>      直接切换到指定主题
+#
+# 从 desktop/colors/ 下读取主题（子文件夹名），将各软件的软链接
+# 更新为指向 colors/<主题>/<对应颜色文件>。
+
+set -euo pipefail
+
+# colors 目录位于 dotfiles 项目下（根据 XDG_DATA_HOME 推演，而非脚本位置，
+# 因为脚本可能通过 ~/.local/bin 下的软链接被调用）
+: "${XDG_DATA_HOME:=$HOME/.local/share}"
+: "${XDG_CONFIG_HOME:=$HOME/.config}"
+COLORS_DIR="$XDG_DATA_HOME/dotfiles/desktop/colors"
+DESKTOP_DIR="$(dirname "$COLORS_DIR")"
+
+# desktop 下各软件的颜色文件映射: "软件目录:主题下的颜色文件名:软链接文件名"
+# 格式: <软件目录>:<颜色文件>:<软链接>
+declare -A THEME_FILES=(
+  ["rofi"]="rofi.rasi:colors.rasi"
+  ["polybar"]="polybar.ini:colors.ini"
+  ["alacritty"]="alacritty.toml:colors.toml"
+)
+
+# config 下各软件的 drop-in 映射: "软链接完整路径:主题下的颜色文件名"
+# 用于放在 ~/.config 目录下、由 dunst 等程序自动读取的 drop-in 文件
+# 格式: <软链接路径>:<颜色文件>
+declare -A CONFIG_DROPINS=(
+  ["$XDG_CONFIG_HOME/dunst/dunstrc.d/colors.conf"]="dunst.conf"
+)
+
+# 列出可用主题（colors 下的子文件夹）
+get_themes() {
+  find "$COLORS_DIR" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort
+}
+
+# 选择主题
+if [ $# -ge 1 ]; then
+  THEME="$1"
+else
+  THEME=$(get_themes | fzf --prompt="选择主题: " --height=40% --border)
+  [ -z "$THEME" ] && { echo "已取消"; exit 0; }
+fi
+
+# 校验主题存在
+if [ ! -d "$COLORS_DIR/$THEME" ]; then
+  echo "错误: 主题 '$THEME' 不存在（可用主题见 desktop/colors/）" >&2
+  exit 1
+fi
+
+# 更新各软件软链接
+updated=0
+for app in "${!THEME_FILES[@]}"; do
+  IFS=':' read -r file link <<< "${THEME_FILES[$app]}"
+  src="$COLORS_DIR/$THEME/$file"
+  dst="$DESKTOP_DIR/$app/$link"
+
+  if [ -f "$src" ]; then
+    # 计算相对路径（软链接位于软件目录下）
+    rel="$(realpath --relative-to="$(dirname "$dst")" "$src")"
+    ln -sfn "$rel" "$dst"
+    echo "已更新: $app/$link -> $rel"
+    updated=$((updated + 1))
+  else
+    echo "跳过: $app（主题 '$THEME' 缺少 $file）"
+  fi
+done
+
+if [ "$updated" -eq 0 ]; then
+  echo "警告: 主题 '$THEME' 没有可用的颜色文件" >&2
+  exit 1
+fi
+
+# 更新 config 目录下的 drop-in 软链接（如 dunst 的 dunstrc.d/colors.conf）
+for linkpath in "${!CONFIG_DROPINS[@]}"; do
+  file="${CONFIG_DROPINS[$linkpath]}"
+  src="$COLORS_DIR/$THEME/$file"
+
+  if [ -f "$src" ]; then
+    mkdir -p "$(dirname "$linkpath")"
+    # drop-in 位于 config 目录，使用绝对路径指向主题颜色文件
+    ln -sfn "$src" "$linkpath"
+    echo "已更新: ${linkpath#${XDG_CONFIG_HOME}/} -> $src"
+    updated=$((updated + 1))
+  else
+    echo "跳过: ${linkpath#${XDG_CONFIG_HOME}/}（主题 '$THEME' 缺少 $file）"
+  fi
+done
+
+echo "已切换到主题: $THEME"
+
+# 通知 polybar 重新加载（polybar 以 --reload 运行，需 IPC 重启以应用新颜色）
+if command -v polybar-msg >/dev/null 2>&1; then
+  if polybar-msg cmd restart >/dev/null 2>&1; then
+    echo "已通知 polybar 重新加载"
+  else
+    echo "警告: 未检测到运行的 polybar，跳过" >&2
+  fi
+fi
+
+# 通知 dunst 重新加载配置（dunstctl reload 会重读配置文件）
+if command -v dunstctl >/dev/null 2>&1; then
+  if dunstctl reload >/dev/null 2>&1; then
+    echo "已通知 dunst 重新加载"
+  else
+    echo "警告: dunst 未运行，跳过" >&2
+  fi
+fi

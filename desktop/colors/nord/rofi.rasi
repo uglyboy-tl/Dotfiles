@@ -1,0 +1,34 @@
+/*
+ * Nord - Rofi Color Definition
+ * Omarchy color variable naming convention (dash-connected)
+ */
+
+* {
+  /* Background colors */
+  background: #2e3440;
+  dark-background: #3b4252;
+  darker-background: #434c5e;
+  lighter-background: #4c566a;
+
+  /* Foreground colors */
+  foreground: #8fbcbb;
+  dark-foreground: #88c0d0;
+  light-foreground: #81a1c1;
+  bright-foreground: #eceff4;
+
+  /* Semantic colors */
+  accent: #bf616a;
+  selection: #5e81ac;
+  muted: #4c566a;
+
+  /* ANSI colors */
+  red: #bf616a;
+  green: #a3be8c;
+  yellow: #ebcb8b;
+  blue: #5e81ac;
+  purple: #b48ead;
+  cyan: #88c0d0;
+  orange: #d08770;
+
+  background-color: @background;
+}
