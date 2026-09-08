@@ -1,3 +1,10 @@
+* {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  spacing: 0;
+}
+
 configuration {
   hover-select: true;
   me-select-entry: "";
@@ -7,9 +14,9 @@ configuration {
 
 window {
   transparency:		"real";
-  background-color:		@bg;
-  text-color:			@fg;
-  border-radius:		6px;
+  background-color:		@background;
+  text-color:			@foreground;
+  border-radius:		11px;
   width:			371px;
   x-offset:			-10px;
   y-offset:			46px;
@@ -24,38 +31,36 @@ inputbar {
   padding: 4px;
   expand: false;
   border: 4px;
-  border-color: @nord6;
-  border-radius: 8px;
-  margin: 20px 20px 0 20px;
-  color: @nord6;
-  background-color: @nord2;
-
-  border-color: @nord2;
+  border-color: @lighter-background;
+  border-radius: 11px;
+  margin: 25px 20px 0 20px;
+  color: @dark-foreground;
+  background-color: @dark-background;
 
   children: [textbox-prompt-colon, prompt];
 }
 
 textbox-prompt-colon {
-  expand:                                                 false;
-  str:                                                    " |";
-  background-color:                               inherit;
-  text-color:                                     @nord11;
-  margin: 0 6px 0 6px;
+  expand: false;
+  str: " ";
+  background-color: inherit;
+  text-color: @red;
+  margin: 0 8px 0 8px;
 }
 
 prompt {
   location: center;
   expand: false;
   text-font: inherit;
-  text-color: @nord4;
+  text-color: @dark-foreground;
   background-color: inherit;
+  padding: 0 4px;
   margin-right: 6px;
 }
 
 listview {
-  background-color:               @bg;
-  margin:                         35px 20px;
-  /*spacing:                        12px;*/
+  background-color:               @background;
+  margin:                         25px 20px;
   cycle:                          true;
   dynamic:                        true;
   layout:                         horizontal;
@@ -65,9 +70,9 @@ element {
   padding:	17px 20px 23px 20px;
   border-radius:                  100%;
   border: 1px;
-  border-color: @nord10;
-  background-color:               @transparent;
-  text-color: rgb(216, 222, 233);
+  border-color: @lighter-background;
+  background-color:               rgba(30,30,46,0);
+  text-color: @foreground;
   orientation:                    horizontal;
   margin: 0 15px;
 }
@@ -82,9 +87,9 @@ element-text {
 }
 
 element selected {
-  text-color: @nord0;
-  background-color: @nord7;
+  text-color: @background;
+  background-color: @accent;
   border-radius: 100%;
 }
 
-@import "color-nord"
+@import "colors"

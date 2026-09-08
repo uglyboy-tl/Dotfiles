@@ -1,24 +1,20 @@
-configuration {
-  show-icons:		true;
-  display-drun:		"";
-  icon-theme:			"Numix";
-  /*drun-display-format:	" {name}";*/
-  hover-select: true;
-  me-select-entry: "";
-  me-accept-entry: "MousePrimary";
-  location:			1;
-}
+/*
+ * ROFI theme - 自定义主题
+ * 布局定义，颜色通过 color.rasi 导入
+ */
 
 @import "colors"
 
 window {
-  transparency:		"real";
-  background-color:		@background;
-  text-color:			@foreground;
-  border-radius:		11px;
-  width:			400px;
-  x-offset:			10px;
-  y-offset:			46px;
+  location: center;
+  anchor:   center;
+  border-radius: 11px;
+  width: 1024px;
+
+  background-color: rgba(30,30,46,0);
+  spacing: 0;
+  children:  [mainbox];
+  orientation: horizontal;
 }
 
 mainbox {
@@ -29,9 +25,9 @@ inputbar {
   color: @dark-foreground;
   background-color: @lighter-background;
 
-  border: 1px;
+  border: 0px;
   border-radius:  11px 11px 0px 0px;
-  border-color: @darker-background;
+  border-color: @blue;
 
   children: [prompt, entry];
 }
@@ -66,7 +62,6 @@ element {
 element-icon {
   background-color: inherit;
   text-color:       inherit;
-  font-size: 24px;
   padding: 10px;
 }
 
@@ -82,6 +77,6 @@ element selected {
 }
 
 element-text, element-icon {
-  background-color: inherit;
-  text-color:       inherit;
+    background-color: inherit;
+    text-color:       inherit;
 }

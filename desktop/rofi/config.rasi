@@ -9,4 +9,4 @@ configuration {
   display-window: "";
 }
 
-@theme "nord"
+@theme "custom"
