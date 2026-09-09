@@ -1,6 +1,6 @@
 " 基础优化
 Plug 'tpope/vim-sensible'
-Plug 'arcticicestudio/nord-vim'
+Plug 'tinted-theming/tinted-vim'
 Plug 'itchyny/lightline.vim'
 
 " 文件导航

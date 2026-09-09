@@ -91,8 +91,36 @@ unhdr_order *
 hdr_order from: to: cc: date: subject: reply-to:
 
 # =============================================================================
-# 3. Catppuccin for Neomutt: https://github.com/catppuccin/neomutt
+# 3. 颜色主题 (使用终端 16 色索引, 跟随终端主题)
 # =============================================================================
+color normal          default default
+color error           color1  default
+color message         color4  default
+color indicator       color0 color4
+color tree            color15 default
+color status          color15 color8
+color index           color15 default
+color index_number    color8  default
+color index_author    color13 default
+color index_subject   color15 default
+color index_date      color3  default
+color index_flags     color1  default
+color index           color1  default "~D"
+color index           color3  default "~T"
+color hdrdefault      color15 default
+color header          color4  default "^From:"
+color header          color4  default "^To:"
+color header          color3  default "^Subject:"
+color header          color3  default "^Date:"
+color quoted0         color2  default
+color quoted1         color6  default
+color signature       color8  default
+color search          default color3
+color tilde           color8  default
+color attachment      color5  default
+color sidebar_flagged color1  default
+color sidebar_new     color10 default
+color sidebar_indicator color0 color4
 
 # =============================================================================
 # 4. 快捷键

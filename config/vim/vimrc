@@ -44,10 +44,8 @@ call plug#end()
 " ──────────────────────────────────────────────
 " 外观设置
 " ──────────────────────────────────────────────
-colorscheme nord
-let g:nord_cursor_line_number_background = 1
-let g:nord_italic_comments = 1
-let g:lightline = {'colorscheme': 'nord'}
+colorscheme base16-catppuccin-mocha
+let g:lightline = {'colorscheme': '16color'}
 set noshowmode
 
 " ──────────────────────────────────────────────

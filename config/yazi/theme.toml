@@ -1,0 +1,132 @@
+# Yazi Color Theme
+# Uses terminal 16-color palette - colors follow terminal theme automatically
+
+[mgr]
+cwd = { fg = "cyan" }
+
+find_keyword  = { fg = "yellow", bold = true }
+find_position = { fg = "magenta", bold = true }
+
+marker_copied   = { fg = "lightgreen",  bg = "lightgreen" }
+marker_cut      = { fg = "lightred",    bg = "lightred" }
+marker_marked   = { fg = "lightcyan",   bg = "lightcyan" }
+marker_selected = { fg = "lightyellow", bg = "lightyellow" }
+marker_symbol   = "│"
+
+count_copied   = { fg = "black", bg = "lightgreen" }
+count_cut      = { fg = "black", bg = "lightred" }
+count_selected = { fg = "black", bg = "lightyellow" }
+
+border_symbol = "│"
+border_style  = { fg = "darkgray" }
+
+[tabs]
+active   = { bg = "blue", bold = true }
+inactive = { fg = "blue", bg = "darkgray" }
+
+sep_inner = { open = "", close = "" }
+sep_outer = { open = "", close = "" }
+
+[mode]
+normal_main = { bg = "blue", bold = true }
+normal_alt  = { fg = "blue", bg = "darkgray" }
+
+select_main = { bg = "red", bold = true }
+select_alt  = { fg = "red", bg = "darkgray" }
+
+unset_main = { bg = "lightmagenta", bold = true }
+unset_alt  = { fg = "red", bg = "darkgray" }
+
+[indicator]
+parent  = { reversed = true }
+current = { reversed = true }
+preview = { underline = true }
+
+[status]
+overall   = {}
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }
+
+perm_type  = { fg = "lightgreen" }
+perm_read  = { fg = "yellow" }
+perm_write = { fg = "lightred" }
+perm_exec  = { fg = "cyan" }
+perm_sep   = { fg = "darkgray" }
+
+progress_label  = { bold = true }
+progress_normal = { fg = "green", bg = "black" }
+progress_error  = { fg = "yellow", bg = "lightred" }
+
+[input]
+border   = { fg = "blue" }
+title    = { fg = "blue" }
+value    = {}
+selected = { reversed = true }
+
+[select]
+border   = { fg = "blue" }
+title    = { fg = "blue" }
+active   = { reversed = true }
+inactive = {}
+
+[which]
+cols            = 3
+mask            = {}
+cand            = { fg = "lightcyan" }
+rest            = { fg = "darkgray" }
+desc            = { fg = "lightmagenta" }
+separator       = " → "
+separator_style = { fg = "darkgray" }
+
+[confirm]
+border     = { fg = "blue" }
+title      = { fg = "blue" }
+body       = {}
+list       = {}
+btn_yes    = { reversed = true }
+btn_no     = {}
+btn_labels = [ "  [Y]es  ", "  (N)o  " ]
+
+[spot]
+border = { fg = "blue" }
+title  = { fg = "blue" }
+
+tbl_col  = { fg = "blue" }
+tbl_cell = { fg = "yellow", reversed = true }
+
+[notify]
+title_info  = { fg = "green" }
+title_warn  = { fg = "yellow" }
+title_error = { fg = "lightred" }
+
+[pick]
+border   = { fg = "blue" }
+active   = { fg = "magenta", bold = true }
+inactive = {}
+
+[cmp]
+border   = { fg = "blue" }
+active   = { reversed = true }
+inactive = {}
+
+[tasks]
+border  = { fg = "blue" }
+title   = {}
+hovered = { fg = "magenta", bold = true }
+
+[help]
+border  = { fg = "blue" }
+chord   = { fg = "cyan" }
+action  = {}
+hovered = { reversed = true, bold = true }
+
+[filetype]
+rules = [
+	{ mime = "**/image/*", fg = "yellow" },
+	{ mime = "**/{audio,video}/*", fg = "magenta" },
+	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive}", fg = "lightred" },
+	{ mime = "**/application/{pdf,doc,rtf}", fg = "cyan" },
+	{ url = "*", is = "orphan", bg = "lightred" },
+	{ url = "*", is = "exec", fg = "lightgreen" },
+	{ url = "*/", fg = "blue" }
+]
