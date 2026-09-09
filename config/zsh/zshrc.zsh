@@ -93,6 +93,7 @@ zi ice depth=1; zi light romkatv/powerlevel10k
 # 别名与本地覆盖（after）
 # ──────────────────────────────────────────────
 [ -f "$ZDOTDIR/zshrc.alias" ] && source "$ZDOTDIR/zshrc.alias"
+[ -f "$ZDOTDIR/zshrc.rpi" ] && source "$ZDOTDIR/zshrc.rpi"
 [ -f "$ZLOCAL/zshrc.after" ] && source "$ZLOCAL/zshrc.after"
 
 # ──────────────────────────────────────────────

@@ -7,7 +7,7 @@
 
     # Built-in
     $XDG_CONFIG_HOME/binup/config.toml: rpi/builtin/binup.toml # UV 配置
-    $XDG_CONFIG_HOME/local/zshrc.plugins: rpi/local/zshrc.plugins
+    $XDG_CONFIG_HOME/zsh/zshrc.rpi: rpi/zshrc.rpi
 
 # Crontab 定时任务配置
 - crontab:
