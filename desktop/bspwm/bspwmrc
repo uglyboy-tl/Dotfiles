@@ -70,7 +70,7 @@ _c presel_feedback_color "#3B4252" # 预选反馈颜色
 bspc rule -r "*:*"
 
 ## 浮动窗口规则 (终端)
-declare -a terminal=(Alacritty com.mitchellh.ghostty) # 定义终端模拟器数组
+declare -a terminal=(Alacritty com.mitchellh.ghostty URxvt) # 定义终端模拟器数组
 for i in "${terminal[@]}"; do
 	_r "$i" state=floating rectangle=1600x900+920+100 focus=on # 将终端设置为浮动窗口，并设置大小和位置
 done
