@@ -2,109 +2,173 @@
 # 主题切换脚本
 # 用法:
 #   theme              用 fzf 选择主题
+#   theme --gui        用 rofi 选择主题
 #   theme <主题名>      直接切换到指定主题
 #
-# 从 desktop/colors/ 下读取主题（子文件夹名），将各软件的软链接
-# 更新为指向 colors/<主题>/<对应颜色文件>。
+# 从 colors/ 下读取主题，通过模板渲染生成各软件颜色配置。
 
+# 严格模式。
+# 注意: 交互式命令(fzf/rofi)的返回码用 if/|| 处理，
+# 避免 set -e 在用户取消时误触发退出。
 set -euo pipefail
 
-# colors 目录位于 dotfiles 项目下（根据 XDG_DATA_HOME 推演，而非脚本位置，
-# 因为脚本可能通过 ~/.local/bin 下的软链接被调用）
+# ============================================================
+# 配置
+# ============================================================
+
 : "${XDG_DATA_HOME:=$HOME/.local/share}"
 : "${XDG_CONFIG_HOME:=$HOME/.config}"
-COLORS_DIR="$XDG_DATA_HOME/dotfiles/desktop/colors"
-DESKTOP_DIR="$(dirname "$COLORS_DIR")"
+: "${XDG_STATE_HOME:=$HOME/.local/state}"
 
-# desktop 下各软件的颜色文件映射: "软件目录:主题下的颜色文件名:软链接文件名"
-# 格式: <软件目录>:<颜色文件>:<软链接>
-declare -A THEME_FILES=(
-  ["rofi"]="rofi.rasi:colors.rasi"
-  ["polybar"]="polybar.ini:colors.ini"
-  ["alacritty"]="alacritty.toml:colors.toml"
+DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
+COLORS_DIR="$DOTFILES_DIR/themes/colors"
+TEMPLATES_DIR="$DOTFILES_DIR/themes/templates"
+RENDER_SCRIPT="$DOTFILES_DIR/themes/render.sh"
+STATE_FILE="$XDG_STATE_HOME/theme/current"
+
+# 模板映射: "软件名:模板文件名:输出路径(相对于 XDG_CONFIG_HOME)"
+# 渲染时先判断软件是否存在（command -v），不存在则跳过
+declare -A THEME_TEMPLATES=(
+  ["rofi"]="rofi.rasi.tpl:rofi/colors.rasi"
+  ["polybar"]="polybar.ini.tpl:polybar/colors.ini"
+  ["dunst"]="dunst.conf.tpl:dunst/dunstrc.d/colors.conf"
+  ["alacritty"]="alacritty.toml.tpl:alacritty/colors.toml"
+  ["ghostty"]="ghostty.conf.tpl:ghostty/colors.conf"
+  ["urxvt"]="rxvt.tpl:X11/Xresources.d/rxvt-colors"
+  ["zathura"]="zathura.conf.tpl:zathura/colors.conf"
 )
 
-# config 下各软件的 drop-in 映射: "软链接完整路径:主题下的颜色文件名"
-# 用于放在 ~/.config 目录下、由 dunst 等程序自动读取的 drop-in 文件
-# 格式: <软链接路径>:<颜色文件>
-declare -A CONFIG_DROPINS=(
-  ["$XDG_CONFIG_HOME/dunst/dunstrc.d/colors.conf"]="dunst.conf"
+# 需要重载的软件: "软件名:重载命令"
+# ghostty 通过 SIGUSR2 信号重载配置
+# urxvt 通过重新加载 XResources 更新颜色（新窗口生效）
+declare -A RELOAD_CMDS=(
+  ["polybar"]="polybar-msg cmd restart"
+  ["dunst"]="dunstctl reload"
+  ["ghostty"]="pkill -USR2 -x ghostty"
+  ["urxvt"]="xrdb -merge $XDG_CONFIG_HOME/X11/Xresources"
 )
 
-# 列出可用主题（colors 下的子文件夹）
+# ============================================================
+# 函数
+# ============================================================
+
+# 列出可用主题
 get_themes() {
   find "$COLORS_DIR" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort
 }
 
+# 读取当前主题（从状态文件）
+get_current_theme() {
+  if [ -f "$STATE_FILE" ]; then
+    cat "$STATE_FILE"
+  fi
+}
+
+# 保存当前主题
+save_current_theme() {
+  mkdir -p "$(dirname "$STATE_FILE")"
+  echo "$1" > "$STATE_FILE"
+}
+
 # 选择主题
-if [ $# -ge 1 ]; then
-  THEME="$1"
-else
-  THEME=$(get_themes | fzf --prompt="选择主题: " --height=40% --border)
-  [ -z "$THEME" ] && { echo "已取消"; exit 0; }
-fi
+select_theme() {
+  local current
+  current="$(get_current_theme)"
 
-# 校验主题存在
-if [ ! -d "$COLORS_DIR/$THEME" ]; then
-  echo "错误: 主题 '$THEME' 不存在（可用主题见 desktop/colors/）" >&2
-  exit 1
-fi
-
-# 更新各软件软链接
-updated=0
-for app in "${!THEME_FILES[@]}"; do
-  IFS=':' read -r file link <<< "${THEME_FILES[$app]}"
-  src="$COLORS_DIR/$THEME/$file"
-  dst="$DESKTOP_DIR/$app/$link"
-
-  if [ -f "$src" ]; then
-    # 计算相对路径（软链接位于软件目录下）
-    rel="$(realpath --relative-to="$(dirname "$dst")" "$src")"
-    ln -sfn "$rel" "$dst"
-    echo "已更新: $app/$link -> $rel"
-    updated=$((updated + 1))
+  if [ $# -ge 1 ] && [ "$1" = "--gui" ]; then
+    THEME=$(
+      get_themes | while read -r t; do
+        [ "$t" = "$current" ] && echo "● $t" || echo "  $t"
+      done | rofi -dmenu -theme custom -p "切换主题"
+    )
+    if [ -z "$THEME" ]; then
+      echo "已取消"
+      exit 0
+    fi
+    THEME="${THEME#● }"
+    THEME="${THEME#  }"
+  elif [ $# -ge 1 ]; then
+    THEME="$1"
   else
-    echo "跳过: $app（主题 '$THEME' 缺少 $file）"
+    # 管道命令用 || true 防止 pipefail + set -e 在取消/异常时导致脚本退出
+    THEME="$(get_themes | fzf --prompt="选择主题: " --height=40% --border \
+      --no-preview --header="当前主题: $current" 2>/dev/null)" || true
+    if [ -z "$THEME" ]; then
+      echo "已取消"
+      exit 0
+    fi
   fi
-done
+}
 
-if [ "$updated" -eq 0 ]; then
-  echo "警告: 主题 '$THEME' 没有可用的颜色文件" >&2
-  exit 1
-fi
-
-# 更新 config 目录下的 drop-in 软链接（如 dunst 的 dunstrc.d/colors.conf）
-for linkpath in "${!CONFIG_DROPINS[@]}"; do
-  file="${CONFIG_DROPINS[$linkpath]}"
-  src="$COLORS_DIR/$THEME/$file"
-
-  if [ -f "$src" ]; then
-    mkdir -p "$(dirname "$linkpath")"
-    # drop-in 位于 config 目录，使用绝对路径指向主题颜色文件
-    ln -sfn "$src" "$linkpath"
-    echo "已更新: ${linkpath#${XDG_CONFIG_HOME}/} -> $src"
-    updated=$((updated + 1))
-  else
-    echo "跳过: ${linkpath#${XDG_CONFIG_HOME}/}（主题 '$THEME' 缺少 $file）"
+# 校验主题
+validate_theme() {
+  if [ ! -d "$COLORS_DIR/$1" ]; then
+    echo "错误: 主题 '$1' 不存在" >&2
+    exit 1
   fi
-done
-
-echo "已切换到主题: $THEME"
-
-# 通知 polybar 重新加载（polybar 以 --reload 运行，需 IPC 重启以应用新颜色）
-if command -v polybar-msg >/dev/null 2>&1; then
-  if polybar-msg cmd restart >/dev/null 2>&1; then
-    echo "已通知 polybar 重新加载"
-  else
-    echo "警告: 未检测到运行的 polybar，跳过" >&2
+  if [ ! -f "$COLORS_DIR/$1/colors.toml" ]; then
+    echo "错误: 主题 '$1' 缺少 colors.toml" >&2
+    exit 1
   fi
-fi
+}
 
-# 通知 dunst 重新加载配置（dunstctl reload 会重读配置文件）
-if command -v dunstctl >/dev/null 2>&1; then
-  if dunstctl reload >/dev/null 2>&1; then
-    echo "已通知 dunst 重新加载"
-  else
-    echo "警告: dunst 未运行，跳过" >&2
+# 渲染模板
+render_templates() {
+  local theme="$1"
+  local rendered=0
+
+  for app in "${!THEME_TEMPLATES[@]}"; do
+    # 软件未安装则跳过
+    if ! command -v "$app" >/dev/null 2>&1; then
+      echo "跳过: $app（未安装）"
+      continue
+    fi
+
+    IFS=':' read -r template_file output_path <<< "${THEME_TEMPLATES[$app]}"
+    local src="$TEMPLATES_DIR/$template_file"
+    local dst="$XDG_CONFIG_HOME/$output_path"
+
+    if [ -f "$src" ]; then
+      mkdir -p "$(dirname "$dst")"
+      "$RENDER_SCRIPT" "$COLORS_DIR/$theme/colors.toml" "$src" "$dst"
+      rendered=$((rendered + 1))
+    else
+      echo "跳过: $app（模板 $template_file 不存在）"
+    fi
+  done
+
+  if [ "$rendered" -eq 0 ]; then
+    echo "警告: 主题 '$theme' 没有可用的模板" >&2
+    exit 1
   fi
-fi
+}
+
+# 重载软件
+reload_apps() {
+  for app in "${!RELOAD_CMDS[@]}"; do
+    local cmd="${RELOAD_CMDS[$app]}"
+    local cmd_name="${cmd%% *}"
+    if command -v "$cmd_name" >/dev/null 2>&1; then
+      if $cmd >/dev/null 2>&1; then
+        echo "已通知 $app 重新加载"
+      else
+        echo "警告: $app 未运行，跳过" >&2
+      fi
+    fi
+  done
+}
+
+# ============================================================
+# 主函数
+# ============================================================
+
+main() {
+  select_theme "$@"
+  validate_theme "$THEME"
+  render_templates "$THEME"
+  save_current_theme "$THEME"
+  echo "已切换到主题: $THEME"
+  reload_apps
+}
+
+main "$@"

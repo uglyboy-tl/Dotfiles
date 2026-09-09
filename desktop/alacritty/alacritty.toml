@@ -13,9 +13,9 @@ opacity = 0.9
 blur = true
 
 [font]
-normal = { family = "Maple Mono SC NF", style = "Regular" }
-bold = { family = "Maple Mono SC NF", style = "Bold" }
-italic = { family = "Maple Mono SC NF", style = "Italic" }
+normal = { family = "monospace", style = "Regular" }
+bold = { family = "monospace", style = "Bold" }
+italic = { family = "monospace", style = "Italic" }
 size = 11
 
 [selection]
