@@ -67,7 +67,7 @@ listview {
 }
 
 element {
-  padding:	17px 20px 23px 20px;
+  padding:	17px 20px 17px 20px;
   border-radius:                  100%;
   border: 1px;
   border-color: @lighter-background;
@@ -78,7 +78,7 @@ element {
 }
 
 element-text {
-  font: "Maple Mono SC NF 19";
+  font: "Maple Mono Normal NF CN 20";
   background-color: inherit;
   text-color:       inherit;
   height:	38px;
