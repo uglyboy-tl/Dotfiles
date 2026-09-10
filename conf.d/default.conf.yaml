@@ -76,8 +76,6 @@
     $XDG_CONFIG_HOME/offlineimap/config: config/mail/offlineimap.conf # 邮件同步
     $XDG_CONFIG_HOME/systemd/user/offlineimap-oneshot.service: config/mail/offlineimap-oneshot.service
     $XDG_CONFIG_HOME/systemd/user/offlineimap-oneshot.timer: config/mail/offlineimap-oneshot.timer
-    ## LF 文件管理器
-    $XDG_CONFIG_HOME/lf: config/lf
     ## yazi 文件管理器
     $XDG_CONFIG_HOME/yazi: config/yazi
 
