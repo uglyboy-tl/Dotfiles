@@ -42,3 +42,27 @@
 配置文件中，**左侧是目标路径**（系统实际位置），**右侧是源文件路径**（本项目中的文件）。
 
 例如: `$XDG_CONFIG_HOME/zsh/.zshrc: config/zsh/zshrc.zsh` 表示系统的 `~/.config/zsh/.zshrc` 链接到本项目的 `config/zsh/zshrc.zsh`。
+
+## 环境变量
+
+`config/environment`（shell 语法）是唯一源头，作用是把各软件的配置/数据/缓存从默认位置重定向到 XDG 目录。被 dotbot 链接到三个加载点：
+
+- `$XDG_CONFIG_HOME/zsh/.zshenv` - Shell 环境（全量）
+- `~/.xsessionrc` - X session（全量）
+- `$XDG_CONFIG_HOME/environment.d/60-xdg.conf` - systemd --user（源文件 `config/environment.d/xdg.conf`，systemd 语法的**子集**，缺少 GNUPGHOME、DOCKER_CONFIG、NPM_* 等变量，某些 systemd 服务读不到）
+
+环境变量与实际路径不匹配时，优先检查 `config/environment`。
+
+## 主题系统
+
+自研主题渲染：`themes/colors/<theme>/colors.toml` + `themes/templates/<app>.tpl` → `~/.config/<app>/`。
+
+- CLI 工具跟随终端 16 色，不需要模板
+- GUI 应用（Polybar/Rofi/Dunst/Zathura）需要独立模板
+- 通过 `settings` 菜单切换（主题/壁纸/字体/快捷键，`--gui` 走 rofi），详见 `docs/themes.md`
+
+## 脚本约定
+
+- 用户入口在 `scripts/`（链接到 `~/.local/bin/`），被调用的公共组件放 `scripts/common/`
+- 选择器统一走 `selectors.sh`：界面类型由 `SELECTOR_UI`（gui/tui）决定，调用 `select_ui` 即可，组件不感知 rofi/fzf
+- 消息统一走 `notify.sh`：GUI 下走桌面通知，不可用时回退命令行输出（`notify`/`notify_error`）
