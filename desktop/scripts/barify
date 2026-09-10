@@ -132,11 +132,12 @@ function send_notification {
 	# and is therefore at least somewhat portable between hidpi and
 	# normal screens.
 	if pgrep dunst &>/dev/null; then
+		# -t 1500(ms): 音量/亮度指示快速消失, 不继承 dunst 常规通知时长
 		if [ $mode == $MODE_VOLUME ] && is_mute; then
-			dunstify -i "$icon" -r 2593 "$ICON_MUTE  Muted" -h int:value:"$1"
+			dunstify -i "$icon" -r 2593 -t 1500 "$ICON_MUTE  Muted" -h int:value:"$1"
 		else
 			bar=$(seq -s "─" $(($1/5)) | sed 's/[0-9]//g')
-			dunstify -i "$icon" -r 2593 "$icon  $1%" -h int:value:"$1"
+			dunstify -i "$icon" -r 2593 -t 1500 "$icon  $1%" -h int:value:"$1"
 		fi
 		return
 	fi
