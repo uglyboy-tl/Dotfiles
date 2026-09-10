@@ -25,13 +25,17 @@ super + {m,h,n}
 super + v
 	command -v xclip >/dev/null && mpv "$(xclip -selection clipboard -o 2>/dev/null)" || notify-send "需要安装 xclip: sudo apt install xclip"
 
+# 设置菜单 (rofi 选单)
+super + semicolon
+	~/.local/bin/settings --gui
+
 # 蓝牙管理
 super + b
 	~/.local/bin/rofi-bluetooth
 
-# 重载配置
+# 重载配置（杀掉重启，避免 USR1 重载后按键失效）
 super + Escape
-	pkill -USR1 -x sxhkd
+	pkill -x sxhkd; sleep 0.1; sxhkd & disown
 
 # === 音量控制 ===
 # 音量 +/-/静音
@@ -42,6 +46,10 @@ XF86Audio{RaiseVolume,LowerVolume,Mute}
 # 退出重启
 super + alt + q
 	bspc quit
+
+# 重载配置
+super + alt + r
+	bspc wm -r
 
 # 关闭/强制关闭
 super + {_,shift+}w

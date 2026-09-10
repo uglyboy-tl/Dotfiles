@@ -5,7 +5,7 @@ export TERM=linux
 # 设置刷新率和分辨率
 xrandr --output DP-0 --mode 3440x1440 --rate 120
 # 检查并启动 sxhkd (快捷键守护进程)
-pgrep -x sxhkd > /dev/null || sxhkd &
+_o sxhkd
 # 加载 Xresources 配置
 xrdb ~/.config/X11/Xresources
 # 设置鼠标光标
@@ -18,6 +18,8 @@ _c() { bspc config "$@"; }
 _m() { bspc monitor "$@"; }
 # 定义 bspc rule -a 的简化函数 (添加窗口规则)
 _r() { bspc rule -a "$@"; }
+# 定义一个函数，如果某个服务未启动，则启动服务
+_o() { pgrep -x "$1" > /dev/null || "$1" & }
 # 定义一个函数来停止并重新启动服务
 _s() {
 	pkill -x "$1" # 杀死指定进程
@@ -43,17 +45,14 @@ _c pointer_action1 resize_side   # 鼠标动作1：调整窗口边缘大小
 _c pointer_action2 resize_corner # 鼠标动作1：调整窗口角落大小
 _c pointer_action3 move          # 鼠标动作3：移动窗口
 
-# 边框颜色配置
-_c normal_border_color "#4C566A"   # 普通窗口边框颜色
-_c active_border_color "#434C5E"   # 活动窗口边框颜色
-_c focused_border_color "#2E3440"  # 焦点窗口边框颜色
-_c presel_feedback_color "#3B4252" # 预选反馈颜色
+# 边框颜色配置（由 theme 脚本生成）
+[[ -f "$HOME/.config/bspwm/colors.sh" ]] && source "$HOME/.config/bspwm/colors.sh"
 
 # 启动服务
 # 并行启动常规服务
 (
 	# _s picom -b              # 启动 Picom (合成器)
-	_s redshift              # 启动 Redshift (色温调节)
+	_o redshift              # 启动 Redshift (色温调节)
 	_s dunst                 # 启动 Dunst (通知守护进程)
 	_s polybar --reload main # 启动 Polybar (状态栏) 并重新加载配置
 	# _s lxpolkit              # 启动 LXPolkit (策略工具包)
@@ -61,9 +60,9 @@ _c presel_feedback_color "#3B4252" # 预选反馈颜色
 	_s dex -a               # 启动 XDG Autostart .desktop 文件
 ) &
 
-# 动态壁纸
-#_s ~/.fehbg # 示例：使用 feh 设置壁纸 (当前未启用)
-"$HOME"/.local/bin/dwall.sh -s lakeside & # 启动动态壁纸脚本，使用 'lakeside' 主题
+# 动态壁纸：读取当前保存的风格，未保存则默认 lakeside，应用并同步 crontab
+_current_wall=$(cat "$HOME/.local/state/wallpaper/current" 2>/dev/null || echo lakeside)
+"$XDG_DATA_HOME/dotfiles/scripts/common/setting-wallpaper.sh" "$_current_wall" >/dev/null 2>&1 &
 
 ## 窗口规则 ----------------------------------------------#
 # 首先移除所有现有规则
