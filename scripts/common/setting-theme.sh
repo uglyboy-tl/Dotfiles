@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # 主题切换脚本
 # 用法:
-#   theme              用 fzf 选择主题
-#   theme --gui        用 rofi 选择主题
-#   theme <主题名>      直接切换到指定主题
+#   theme <主题名>      直接切换到指定主题（单次）
+#   theme              交互式选择/循环切换（界面由 SELECTOR_UI 决定: gui=rofi, tui=fzf）
 #
 # 从 colors/ 下读取主题，通过模板渲染生成各软件颜色配置。
 
@@ -21,9 +20,15 @@ set -euo pipefail
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
 
 DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
+
+# 加载公共函数(含 epipe_init)并初始化 stdout 安全
+source "$DOTFILES_DIR/scripts/common/selectors.sh"
+source "$DOTFILES_DIR/scripts/common/render.sh"
+source "$DOTFILES_DIR/scripts/common/notify.sh"
+epipe_init
+
 COLORS_DIR="$DOTFILES_DIR/themes/colors"
 TEMPLATES_DIR="$DOTFILES_DIR/themes/templates"
-RENDER_SCRIPT="$DOTFILES_DIR/themes/render.sh"
 STATE_FILE="$XDG_STATE_HOME/theme/current"
 
 # 模板映射: "软件名:模板文件名:输出路径(相对于 XDG_CONFIG_HOME)"
@@ -36,6 +41,7 @@ declare -A THEME_TEMPLATES=(
   ["ghostty"]="ghostty.conf.tpl:ghostty/colors.conf"
   ["urxvt"]="rxvt.tpl:X11/Xresources.d/rxvt-colors"
   ["zathura"]="zathura.conf.tpl:zathura/colors.conf"
+  ["bspwm"]="bspwm.sh.tpl:bspwm/colors.sh"
 )
 
 # 需要重载的软件: "软件名:重载命令"
@@ -46,6 +52,7 @@ declare -A RELOAD_CMDS=(
   ["dunst"]="dunstctl reload"
   ["ghostty"]="pkill -USR2 -x ghostty"
   ["urxvt"]="xrdb -merge $XDG_CONFIG_HOME/X11/Xresources"
+  ["bspwm"]="bspc wm -r"
 )
 
 # ============================================================
@@ -70,46 +77,28 @@ save_current_theme() {
   echo "$1" > "$STATE_FILE"
 }
 
-# 选择主题
+# 选择主题（设置全局 THEME；用户取消时退出脚本）
 select_theme() {
-  local current
+  local current themes_data
   current="$(get_current_theme)"
-
-  if [ $# -ge 1 ] && [ "$1" = "--gui" ]; then
-    THEME=$(
-      get_themes | while read -r t; do
-        [ "$t" = "$current" ] && echo "● $t" || echo "  $t"
-      done | rofi -dmenu -theme custom -p "切换主题"
-    )
-    if [ -z "$THEME" ]; then
-      echo "已取消"
-      exit 0
-    fi
-    THEME="${THEME#● }"
-    THEME="${THEME#  }"
-  elif [ $# -ge 1 ]; then
-    THEME="$1"
-  else
-    # 管道命令用 || true 防止 pipefail + set -e 在取消/异常时导致脚本退出
-    THEME="$(get_themes | fzf --prompt="选择主题: " --height=40% --border \
-      --no-preview --header="当前主题: $current" 2>/dev/null)" || true
-    if [ -z "$THEME" ]; then
-      echo "已取消"
-      exit 0
-    fi
-  fi
+  themes_data="$(get_themes)"
+  THEME=$(select_ui \
+    -p "当前主题：${current:-无}" \
+    -d "$themes_data" \
+    -s "$current") || exit 0
 }
 
-# 校验主题
+# 校验主题（失败返回1，不退出进程，供循环内忽略非法输入）
 validate_theme() {
   if [ ! -d "$COLORS_DIR/$1" ]; then
-    echo "错误: 主题 '$1' 不存在" >&2
-    exit 1
+    notify_error "主题 '$1' 不存在，已忽略"
+    return 1
   fi
   if [ ! -f "$COLORS_DIR/$1/colors.toml" ]; then
-    echo "错误: 主题 '$1' 缺少 colors.toml" >&2
-    exit 1
+    notify_error "主题 '$1' 缺少 colors.toml，已忽略"
+    return 1
   fi
+  return 0
 }
 
 # 渲染模板
@@ -129,8 +118,7 @@ render_templates() {
     local dst="$XDG_CONFIG_HOME/$output_path"
 
     if [ -f "$src" ]; then
-      mkdir -p "$(dirname "$dst")"
-      "$RENDER_SCRIPT" "$COLORS_DIR/$theme/colors.toml" "$src" "$dst"
+      render "$COLORS_DIR/$theme/colors.toml" "$src" "$dst"
       rendered=$((rendered + 1))
     else
       echo "跳过: $app（模板 $template_file 不存在）"
@@ -138,7 +126,7 @@ render_templates() {
   done
 
   if [ "$rendered" -eq 0 ]; then
-    echo "警告: 主题 '$theme' 没有可用的模板" >&2
+    notify_error "主题 '$theme' 没有可用的模板"
     exit 1
   fi
 }
@@ -162,13 +150,57 @@ reload_apps() {
 # 主函数
 # ============================================================
 
-main() {
-  select_theme "$@"
-  validate_theme "$THEME"
-  render_templates "$THEME"
-  save_current_theme "$THEME"
-  echo "已切换到主题: $THEME"
+# 等待 dunst 重启完成：bspc wm -r 会重跑 bspwmrc，其中 ( _s dunst ) & 是
+# 异步子 shell，旧 dunst 稍后才被杀。检测 PID 变化 + DBus 就绪后再发通知，
+# 避免通知落在重启窗口期被吞。dunst 未运行或未重启则直接返回。
+wait_dunst_ready() {
+  local old_pid="$1" i j new_pid
+  [ -z "$old_pid" ] && return 0
+  for i in $(seq 1 15); do # 最多 1.5s 等 PID 变化
+    new_pid=$(pgrep -x dunst | head -n1 || true)
+    if [ -n "$new_pid" ] && [ "$new_pid" != "$old_pid" ]; then
+      # dunst 已重启，等它注册 DBus 可用
+      for j in $(seq 1 20); do
+        dunstctl count >/dev/null 2>&1 && return 0
+        sleep 0.1
+      done
+      return 0
+    fi
+    sleep 0.1
+  done
+  return 0
+}
+
+# 应用指定主题（单次）
+apply_theme() {
+  local theme="$1" old_dunst_pid
+  validate_theme "$theme" || return 1
+  render_templates "$theme"
+  save_current_theme "$theme"
+  # 先重载各软件(含 bspc wm -r，会重启 dunst)，等新 dunst 就绪后再发通知
+  old_dunst_pid=$(pgrep -x dunst | head -n1 || true)
   reload_apps
+  wait_dunst_ready "$old_dunst_pid"
+  notify "已切换到主题: $theme"
+}
+
+# 循环模式：选择 → 应用 → 回到选择界面
+# 非法输入(validate 失败)时 apply_theme 返回非零，此处不退出，继续回到选择界面
+loop_mode() {
+  while true; do
+    select_theme
+    apply_theme "$THEME" || continue
+  done
+}
+
+main() {
+  if [ "$#" -ge 1 ]; then
+    # 指定主题名，单次应用
+    apply_theme "$1"
+  else
+    # 交互式循环
+    loop_mode
+  fi
 }
 
 main "$@"
