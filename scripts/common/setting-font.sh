@@ -59,7 +59,7 @@ apply_font() {
       if (font != "Hack Nerd Font Mono") print "      <string>Hack Nerd Font Mono</string>"
       if (font != "Sarasa Mono SC") print "      <string>Sarasa Mono SC</string>"
       if (font != "Noto Sans Mono CJK SC") print "      <string>Noto Sans Mono CJK SC</string>"
-      if (font != "Maple Mono Normal NF CN") print "      <string>Maple Mono Normal NF CN</string>"
+      if (font != "Maple Mono Normal CN") print "      <string>Maple Mono Normal CN</string>"
     }
     # 标记: 检测到 monospace 的 test 块(避免与其他字体族混淆)
     /<string>monospace<\/string>/ { in_mono_test = 1 }

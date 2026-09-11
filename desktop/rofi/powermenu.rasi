@@ -78,7 +78,7 @@ element {
 }
 
 element-text {
-  font: "Maple Mono Normal NF CN 20";
+  font: "Hack Nerd Font Mono 22";
   background-color: inherit;
   text-color:       inherit;
   height:	38px;
