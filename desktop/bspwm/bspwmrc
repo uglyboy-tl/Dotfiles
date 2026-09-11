@@ -2,15 +2,6 @@
 # 设置终端类型
 export TERM=linux
 
-# 设置刷新率和分辨率
-xrandr --output DP-0 --mode 3440x1440 --rate 120
-# 检查并启动 sxhkd (快捷键守护进程)
-_o sxhkd
-# 加载 Xresources 配置
-xrdb ~/.config/X11/Xresources
-# 设置鼠标光标
-xsetroot -cursor_name left_ptr
-
 # 灵感来源于 gk
 # 定义 bspc config 的简化函数
 _c() { bspc config "$@"; }
@@ -28,6 +19,15 @@ _s() {
 		"$@" &    # 在后台重新启动服务
 	}
 }
+
+# 设置刷新率和分辨率
+xrandr --output DP-0 --mode 3440x1440 --rate 120
+# 检查并启动 sxhkd (快捷键守护进程)
+_o sxhkd
+# 加载 Xresources 配置
+xrdb ~/.config/X11/Xresources
+# 设置鼠标光标
+xsetroot -cursor_name left_ptr
 
 # 配置显示器和桌面
 _m -d I II III IV V VI # 设置六个桌面
