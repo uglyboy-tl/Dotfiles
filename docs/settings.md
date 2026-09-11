@@ -27,10 +27,11 @@ scripts/
 └── common/
     ├── selectors.sh                 # 选择器：select_ui / selector_gui_supported / epipe_init
     ├── notify.sh                    # 消息：notify / notify_error
+    ├── render.sh                    # 模板渲染（主题脚本使用）
     ├── setting-theme.sh             # 主题切换
     ├── setting-wallpaper.sh         # 壁纸切换
     ├── setting-font.sh              # 字体切换
-    └── setting-keybindings.sh       # 快捷键速查
+    └── setting-keybindings.sh       # 快捷键速查（只读）
 ```
 
 ## 界面分派
@@ -43,23 +44,23 @@ scripts/
 
 ## 新增设置项
 
-在 `scripts/common/` 新建 `setting-<name>.sh`，按四函数模板：
+在 `scripts/common/` 新建 `setting-<name>.sh`，按 `setting-theme.sh` 的函数模板：
 
 ```bash
 source "$DOTFILES_DIR/scripts/common/selectors.sh"
 source "$DOTFILES_DIR/scripts/common/notify.sh"
 epipe_init
 
-select_<name>() {                    # 选择（用户取消 → 退出）
-  X=$(select_ui -p "..." -d "$(get_items)") || exit 0
+select_<name>() {                    # 选择：调用 select_ui，用户取消 → exit 0
+  X=$(select_ui -p "..." -d "$(get_items)" -s "$(get_current)") || exit 0
 }
 
 validate_<name>() { ...; return 1 }  # 校验失败返回 1，不退出进程
 
 apply_<name>() {                     # 应用（校验失败返回非零）
-  validate_<name> "$X" || return 1
+  validate_<name> "$1" || return 1
   # ... 生效逻辑 ...
-  notify "已切换$name: $X"
+  notify "已切换$name: $1"
 }
 
 loop_mode() {                        # 循环：非法输入继续选择，取消才退出
@@ -75,6 +76,18 @@ main "$@"
 
 然后注册进 `scripts/settings` 的 `get_settings_items` 与 `case`。
 
+> 变体：`setting-font.sh` / `setting-wallpaper.sh` 拆成 `apply_<name>`（纯生效）与
+> `apply_<name>_run`（校验+生效+通知），因为 `setting-wallpaper.sh` 会被 `bspwmrc` 直接调用。
+
+## 状态文件
+
+主题、壁纸脚本把当前值写入 `~/.local/state/<name>/current`，用于在菜单里高亮当前项：
+
+| 脚本 | 状态文件 |
+|------|----------|
+| 主题 | `~/.local/state/theme/current` |
+| 壁纸 | `~/.local/state/wallpaper/current` |
+
 ## 语义约定
 
 | 场景 | 行为 |
@@ -83,9 +96,4 @@ main "$@"
 | 非法输入 | `validate` 返回 1 → 提示"已忽略"，回到选择界面 |
 | 致命错误（如主题无可用模板） | `exit 1` |
 
-消息一律走 `notify` / `notify_error`：GUI 下桌面通知，不可用或命令行下回退输出（`notify.py` 见 `scripts/common/notify.sh`）。
-
-## 已知坑
-
-- **sxhkd 启动 EPIPE**：快捷键启动时 stdout 是 socket，`echo` 会触发 SIGPIPE 中断脚本（`set -e` 下直接退出）。`epipe_init()` 忽略 SIGPIPE，且非 tty 时把输出重定向到 `~/.local/state/settings/logs/<脚本名>.log`。
-- **bspwm 重载吞通知**：`bspc wm -r` 会重跑 bspwmrc，其中 `_s dunst` 会重启 dunst，导致刚发的通知被吞。主题切换因此先重载各软件、等新 dunst 就绪（`wait_dunst_ready`）再 `notify`。
+消息一律走 `notify` / `notify_error`：GUI 下桌面通知，不可用或命令行下回退输出。
