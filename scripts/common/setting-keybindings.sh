@@ -20,23 +20,22 @@ epipe_init
 # 精选快捷键列表: "描述<TAB>键位<TAB>命令"
 get_shortcuts() {
   cat <<'EOF'
+设置菜单	Super + ;	settings --gui
 打开终端	Super + Return	ghostty
+关闭窗口	Super + w	bspc node -c
+全屏	Super + f	bspc node -t fullscreen
+退出重启	Super + Alt + q	bspc quit
+重载窗口管理	Super + Alt + r	bspc wm -r
+重载快捷键	Super + Escape	pkill -USR1 -x sxhkd
+区域截图	PrtSc	截图并保存+复制
+全屏截图	Shift + PrtSc	截图并保存+复制
 启动应用	Super + r	rofi -show drun
 切换窗口	Alt + Tab	rofi -show window
 文件管理器	Super + e	ghostty --x11-instance-name=yazi -e yazi
 音乐播放器	Super + m	ghostty -e ncmpcpp
 系统监控	Super + h	ghostty -e btop
-新闻阅读	Super + n	ghostty -e newsboat
 剪贴板播放	Super + v	mpv "$(xclip -selection clipboard -o)"
 蓝牙管理	Super + b	~/.local/bin/rofi-bluetooth
-关闭窗口	Super + w	bspc node -c
-强制关闭	Super + Shift + w	bspc node -k
-全屏	Super + f	bspc node -t fullscreen
-浮动/平铺	Super + Space	bspc node -t "~"{floating,tiled}
-切换布局	Super + Shift + f	bspc desktop -l next
-退出重启	Super + Alt + q	bspc quit
-重载窗口管理	Super + Alt + r	bspc wm -r
-重载快捷键	Super + Escape	pkill -USR1 -x sxhkd
 EOF
 }
 

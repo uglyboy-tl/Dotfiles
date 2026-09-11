@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# 截图脚本：区域/全屏，保存到 ~/Pictures/Screenshots + 复制到剪贴板 + 通知
+# 用法:
+#   screenshot           区域截图（保存+复制+通知，默认）
+#   screenshot region    同上
+#   screenshot full      全屏截图（保存+复制+通知）
+#   screenshot copy      区域截图（仅复制到剪贴板，不保存）
+#   screenshot copy-full 全屏截图（仅复制到剪贴板，不保存）
+
+set -euo pipefail
+
+: "${XDG_DATA_HOME:=$HOME/.local/share}"
+: "${XDG_PICTURES_DIR:=$HOME/Pictures}"
+
+DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
+SAVE_DIR="$XDG_PICTURES_DIR/Screenshots"
+
+# 加载公共函数（notify + epipe_init）
+source "$DOTFILES_DIR/scripts/common/selectors.sh"
+source "$DOTFILES_DIR/scripts/common/notify.sh"
+epipe_init
+
+# 截图始终走桌面通知
+SELECTOR_UI=gui
+
+# 确保保存目录存在
+mkdir -p "$SAVE_DIR"
+
+# 文件名：时间戳
+timestamp() { date '+%Y-%m-%d_%H%M%S'; }
+
+# 截图 → 保存文件 → 复制到剪贴板 → 通知
+save_and_clip() {
+  local file="$1"
+  xclip -selection clipboard -t image/png < "$file"
+  notify "截图已保存: $(basename "$file")"
+}
+
+# 截图 → 仅复制到剪贴板 → 通知（不落盘）
+clip_only() {
+  xclip -selection clipboard -t image/png
+  notify "截图已复制到剪贴板"
+}
+
+case "${1:-region}" in
+  region|r|"")
+    file="$SAVE_DIR/$(timestamp).png"
+    maim -s "$file" && save_and_clip "$file"
+    ;;
+  full|f)
+    file="$SAVE_DIR/$(timestamp).png"
+    maim "$file" && save_and_clip "$file"
+    ;;
+  copy)
+    maim -s | clip_only
+    ;;
+  copy-full)
+    maim | clip_only
+    ;;
+  *)
+    echo "用法: screenshot [region|full|copy|copy-full]"
+    echo "  region   区域截图（保存+复制，默认）"
+    echo "  full     全屏截图（保存+复制）"
+    echo "  copy     区域截图（仅复制）"
+    echo "  copy-full 全屏截图（仅复制）"
+    exit 1
+    ;;
+esac

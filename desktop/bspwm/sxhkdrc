@@ -37,6 +37,23 @@ super + b
 super + Escape
 	pkill -x sxhkd; sleep 0.1; sxhkd & disown
 
+# === 截图 ===
+# 区域截图（保存+复制）
+Print
+	~/.local/bin/screenshot
+
+# 全屏截图（保存+复制）
+shift + Print
+	~/.local/bin/screenshot full
+
+# 区域截图（仅复制）
+ctrl + Print
+	~/.local/bin/screenshot copy
+
+# 全屏截图（仅复制）
+ctrl + shift + Print
+	~/.local/bin/screenshot copy-full
+
 # === 音量控制 ===
 # 音量 +/-/静音
 XF86Audio{RaiseVolume,LowerVolume,Mute}
