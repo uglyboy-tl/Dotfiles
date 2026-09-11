@@ -57,7 +57,7 @@ render_deepseek() {
     [ -z "$data" ] && echo "--" && return
     local bal=$(echo "$data" | jq -r '.balance_infos[0].total_balance // empty')
     [ -z "$bal" ] && echo "--" && return
-    echo " ${bal}"
+    echo " ¥${bal}"
 }
 
 render() {
