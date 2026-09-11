@@ -9,14 +9,14 @@ conf.d/          声明「哪个文件链接到哪里」——唯一的装配清
    │
    ├── config/    命令行源文件（shell/vim/tmux/git/mail/...）
    ├── desktop/   桌面源文件（bspwm/polybar/rofi/...）
+   │   └── scripts/  桌面脚本（settings/screenshot/common/...）
    ├── data/      随仓库分发的外部数据（壁纸、RIME 词库）
    └── rpi/       树莓派专用
 scripts/         用户入口脚本（链接到 ~/.local/bin）
-   └── common/    被脚本复用的函数库（选择器/通知/渲染/设置项）
 themes/          主题颜色 + 模板，渲染生成各应用颜色文件
 ```
 
-设计遵循三点：**声明与内容分离**（`conf.d` 只声明映射，源文件各自独立）、**入口与库分离**（`scripts/` 面向用户，`scripts/common/` 被复用）、**渲染而非手改**（颜色由模板生成，不直接编辑产物）。
+设计遵循三点：**声明与内容分离**（`conf.d` 只声明映射，源文件各自独立）、**入口与库分离**（`scripts/` 面向用户，`desktop/scripts/common/` 被复用）、**渲染而非手改**（颜色由模板生成，不直接编辑产物）。
 
 ## dotbot 装配层
 
@@ -52,8 +52,11 @@ $XDG_CONFIG_HOME/git/config: config/git/config
 
 ```
 scripts/                 用户入口（被链接到 ~/.local/bin）
-├── settings             设置菜单入口
 ├── binup / peon / ...   独立工具
+
+desktop/scripts/         桌面脚本（被链接到 ~/.local/bin）
+├── settings             设置菜单入口
+├── screenshot           截图工具
 └── common/              函数库，不直接暴露给用户
     ├── selectors.sh     界面抽象：select_ui / selector_gui_supported / epipe_init
     ├── notify.sh       消息抽象：notify / notify_error

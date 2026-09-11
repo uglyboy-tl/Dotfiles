@@ -22,8 +22,9 @@ settings --gui      # GUI（rofi）；rofi 不可用或无图形会话时自动�
 ## 目录结构
 
 ```
-scripts/
+desktop/scripts/
 ├── settings                         # 入口：解析 --gui → SELECTOR_UI，菜单循环
+├── screenshot                       # 截图脚本
 └── common/
     ├── selectors.sh                 # 选择器：select_ui / selector_gui_supported / epipe_init
     ├── notify.sh                    # 消息：notify / notify_error
@@ -44,11 +45,11 @@ scripts/
 
 ## 新增设置项
 
-在 `scripts/common/` 新建 `setting-<name>.sh`，按 `setting-theme.sh` 的函数模板：
+在 `desktop/scripts/common/` 新建 `setting-<name>.sh`，按 `setting-theme.sh` 的函数模板：
 
 ```bash
-source "$DOTFILES_DIR/scripts/common/selectors.sh"
-source "$DOTFILES_DIR/scripts/common/notify.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/selectors.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/notify.sh"
 epipe_init
 
 select_<name>() {                    # 选择：调用 select_ui，用户取消 → exit 0
@@ -74,7 +75,7 @@ main() { [ $# -ge 1 ] && apply_<name> "$1" || loop_mode }
 main "$@"
 ```
 
-然后注册进 `scripts/settings` 的 `get_settings_items` 与 `case`。
+然后注册进 `desktop/scripts/settings` 的 `get_settings_items` 与 `case`。
 
 > 变体：`setting-font.sh` / `setting-wallpaper.sh` 拆成 `apply_<name>`（纯生效）与
 > `apply_<name>_run`（校验+生效+通知），因为 `setting-wallpaper.sh` 会被 `bspwmrc` 直接调用。

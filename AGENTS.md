@@ -63,6 +63,7 @@
 
 ## 脚本约定
 
-- 用户入口在 `scripts/`（链接到 `~/.local/bin/`），被调用的公共组件放 `scripts/common/`
+- 用户入口在 `scripts/`（链接到 `~/.local/bin/`），桌面相关入口在 `desktop/scripts/`（也链接到 `~/.local/bin/`）
+- 桌面公共组件放 `desktop/scripts/common/`，被 `settings`/`screenshot` 等脚本复用
 - 选择器统一走 `selectors.sh`：界面类型由 `SELECTOR_UI`（gui/tui）决定，调用 `select_ui` 即可，组件不感知 rofi/fzf
 - 消息统一走 `notify.sh`：GUI 下走桌面通知，不可用时回退命令行输出（`notify`/`notify_error`）

@@ -14,8 +14,8 @@ WALLPAPER_DIR="$XDG_DATA_HOME/dynamic-wallpaper/images"
 STATE_FILE="$XDG_STATE_HOME/wallpaper/current"
 
 # 加载公共函数(含 epipe_init)并初始化 stdout 安全
-source "$DOTFILES_DIR/scripts/common/selectors.sh"
-source "$DOTFILES_DIR/scripts/common/notify.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/selectors.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/notify.sh"
 epipe_init
 
 # 列出可用壁纸风格

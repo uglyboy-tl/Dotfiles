@@ -13,8 +13,8 @@ set -euo pipefail
 DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
 
 # 加载公共函数(含 epipe_init)并初始化 stdout 安全
-source "$DOTFILES_DIR/scripts/common/selectors.sh"
-source "$DOTFILES_DIR/scripts/common/notify.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/selectors.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/notify.sh"
 epipe_init
 
 # 精选快捷键列表: "描述<TAB>键位<TAB>命令"

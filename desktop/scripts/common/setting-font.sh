@@ -17,8 +17,8 @@ DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
 FONTS_CONF="${FONTS_CONF:-$XDG_CONFIG_HOME/fontconfig/fonts.conf}"
 
 # 加载公共函数(含 epipe_init)并初始化 stdout 安全
-source "$DOTFILES_DIR/scripts/common/selectors.sh"
-source "$DOTFILES_DIR/scripts/common/notify.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/selectors.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/notify.sh"
 epipe_init
 
 # 列出可用等宽字体（去重，取 family[0]）

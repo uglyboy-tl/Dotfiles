@@ -16,8 +16,8 @@ DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
 SAVE_DIR="$XDG_PICTURES_DIR/Screenshots"
 
 # 加载公共函数（notify + epipe_init）
-source "$DOTFILES_DIR/scripts/common/selectors.sh"
-source "$DOTFILES_DIR/scripts/common/notify.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/selectors.sh"
+source "$DOTFILES_DIR/desktop/scripts/common/notify.sh"
 epipe_init
 
 # 截图始终走桌面通知
