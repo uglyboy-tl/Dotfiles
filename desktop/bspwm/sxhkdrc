@@ -29,6 +29,10 @@ super + v
 super + semicolon
 	~/.local/bin/settings --gui
 
+# 快捷键执行菜单（选中即执行，仿 Omarchy）
+super + k
+	~/.local/bin/keybindings --gui
+
 # 蓝牙管理
 super + b
 	~/.local/bin/rofi-bluetooth
@@ -58,6 +62,11 @@ ctrl + shift + Print
 # 音量 +/-/静音
 XF86Audio{RaiseVolume,LowerVolume,Mute}
 	~/.local/bin/barify v {i,d,m}
+
+# === 亮度控制 ===
+# 亮度 +/-（外接显示器 DDC/CI，走 ddcutil）
+XF86MonBrightness{Up,Down}
+	~/.local/bin/brightness {up,down}
 
 # === bspwm 窗管 ===
 # 退出重启

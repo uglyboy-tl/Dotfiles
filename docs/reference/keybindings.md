@@ -14,6 +14,7 @@
 | `Super + v` | 用 mpv 播放剪贴板 URL |
 | `Super + b` | 蓝牙菜单 |
 | `Super + ;` | 设置菜单 |
+| `Super + k` | 快捷键执行菜单（选中即执行，仿 Omarchy） |
 | `Super + w` / `Shift + w` | 关闭 / 强制关闭窗口 |
 | `Super + t` / `Shift + t` / `s` / `f` | 平铺 / 伪平铺 / 浮动 / 全屏 |
 | `Super + Space` | 浮动 ↔ 平铺 |
@@ -24,7 +25,7 @@
 | `Super + Alt + q` | 退出 BSPWM |
 | `Super + Escape` | 重启 sxhkd |
 
-音量/亮度用多媒体键，经 `barify` 显示指示条。
+音量用多媒体键（经 `barify` 显示指示条）。亮度用多媒体键：台式机外接显示器走 `brightness`（DDC/CI，经 `ddcutil`），需要 `i2c-dev` 且用户在 `i2c` 组；DDC 单次往返有 ~300ms 硬件延迟，通知先本地即时反馈、调节在后台执行。
 
 ## TMUX
 

@@ -19,6 +19,7 @@
 | 命令 | 源文件 | 用途 |
 |------|--------|------|
 | `barify` | `desktop/scripts/barify` | 音量/亮度指示条（走 dunst/mako） |
+| `brightness` | `desktop/scripts/brightness` | 外接显示器亮度（DDC/CI，经 ddcutil）+ 通知指示 |
 | `dwall.sh` | `desktop/scripts/dwall.sh` | 动态壁纸，按时间切换，由 cron 每小时调用 |
 | `rofi-bluetooth` | `desktop/scripts/rofi-bluetooth` | 蓝牙设备 rofi 菜单（sxhkd `Super + b`） |
 | `rofi-powermenu` | `desktop/scripts/rofi-powermenu` | 电源 rofi 菜单 |

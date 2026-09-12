@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# 外接显示器亮度控制（DDC/CI，经 ddcutil）+ 通知指示
+# 用法: brightness up|down|get
+#
+# 台式机无内部背光，走 ddcutil 控制外接显示器；访问 /dev/i2c-* 需要 i2c 组权限，
+# 未加入组时回退免密 sudo。
+#
+# DDC/I2C 单次往返有 ~300ms 硬件下限，故：通知按本地状态立即反馈，真正的 setvcp
+# 丢到后台串行执行，避免按键卡顿。状态存于 ~/.local/state/brightness/current，
+# 首次使用时从显示器读一次同步。
+
+set -euo pipefail
+
+: "${XDG_STATE_HOME:=$HOME/.local/state}"
+
+VCP=10      # MCCS 亮度代码
+STEP=5      # 每次增减
+STATE="$XDG_STATE_HOME/brightness/current"
+LOCK="${XDG_RUNTIME_DIR:-/tmp}/brightness.lock"
+
+# 访问 /dev/i2c-*：已在 i2c 组则直接调用，否则免密 sudo
+_ddc() {
+	if id -nG 2>/dev/null | grep -qw i2c; then
+		ddcutil "$@"
+	else
+		sudo -n ddcutil "$@"
+	fi
+}
+
+read_state() { [ -f "$STATE" ] && cat "$STATE" 2>/dev/null || true; }
+
+write_state() {
+	mkdir -p "$(dirname "$STATE")"
+	printf '%s' "$1" > "$STATE"
+}
+
+# 当前亮度：优先本地状态，缺失时从显示器读一次并落盘
+current_value() {
+	local v
+	v="$(read_state)"
+	if [ -z "$v" ]; then
+		v="$(_ddc getvcp "$VCP" --terse 2>/dev/null | awk '{print $4}')"
+		v="${v:-50}"
+		write_state "$v"
+	fi
+	printf '%s' "$v"
+}
+
+# 后台串行执行真正的调节（flock 防止连按并发访问 I2C）
+set_async() {
+	(
+		flock -x 9
+		_ddc --noverify setvcp "$VCP" "$1" "$STEP"
+	) 9>"$LOCK" >/dev/null 2>&1 &
+}
+
+notify_brightness() {
+	local val="$1"
+	[ -n "$val" ] || return 0
+	if command -v dunstify >/dev/null 2>&1 && pgrep -x dunst >/dev/null 2>&1; then
+		dunstify -i "󰃠" -r 2593 -t 1500 "󰃠  ${val}%" -h int:value:"$val"
+	elif command -v notify-send >/dev/null 2>&1; then
+		notify-send -i "󰃠" "亮度 ${val}%"
+	fi
+}
+
+command -v ddcutil >/dev/null 2>&1 || exit 0
+
+case "${1:-}" in
+	up | down)
+		cur="$(current_value)"
+		if [ "$1" = up ]; then
+			new=$((cur + STEP))
+			[ "$new" -gt 100 ] && new=100
+			sign=+
+		else
+			new=$((cur - STEP))
+			[ "$new" -lt 0 ] && new=0
+			sign=-
+		fi
+		write_state "$new"
+		notify_brightness "$new"   # 立即反馈
+		[ "$new" -ne "$cur" ] && set_async "$sign"
+		;;
+	get)
+		val="$(_ddc getvcp "$VCP" --terse 2>/dev/null | awk '{print $4}')"
+		[ -n "$val" ] && write_state "$val"
+		printf '%s' "$val"
+		;;
+	*)
+		echo "用法: $(basename "$0") up|down|get" >&2
+		exit 1
+		;;
+esac
