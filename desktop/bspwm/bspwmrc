@@ -20,8 +20,18 @@ _s() {
 	}
 }
 
-# 设置刷新率和分辨率
-xrandr --output DP-0 --mode 3440x1440 --rate 120
+# 设置刷新率和分辨率（仅在当前不符时才设置，避免每次重载触发 mode set 黑屏）
+_want_mode="3440x1440"
+_want_rate="120"
+read -r _cur_mode _cur_rate < <(
+	xrandr --query | awk '
+		/^DP-0 connected/ { c=1; next }
+		c && /\*/ { r=""; for (i=1;i<=NF;i++) if ($i ~ /\*/) { r=$i; gsub(/[*+]/,"",r) } print $1, int(r); exit }
+	'
+)
+if [ "$_cur_mode" != "$_want_mode" ] || [ "$_cur_rate" != "$_want_rate" ]; then
+	xrandr --output DP-0 --mode "$_want_mode" --rate "$_want_rate"
+fi
 # 检查并启动 sxhkd (快捷键守护进程)
 _o sxhkd
 # 加载 Xresources 配置
