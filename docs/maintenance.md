@@ -13,14 +13,14 @@
 | 你要做的事 | 需要改的地方 |
 |------------|--------------|
 | 新增一个软件配置 | 源文件放到 `config/` 或 `desktop/`，在对应 `conf.d/*.yaml` 加链接声明 |
-| 新增脚本 | 放进 `scripts/`（自动链接）；桌面相关复用逻辑放 `desktop/scripts/common/` |
+| 新增脚本 | 放进 `scripts/`（自动链接）；桌面相关复用逻辑放 `settings/` |
 | 新增环境变量 | `config/environment`（必要时同步 `config/environment.d/xdg.conf`） |
 | 新增主题 / 应用模板 | 见 [主题系统](theming.md) |
 | 新增设置项 | 见 [设置菜单](settings.md#新增设置项) |
 
 面向 AI 助手与本仓库的通用约定另见根目录 [`AGENTS.md`](../AGENTS.md)。
 
-## 内部脚本 API（`desktop/scripts/common/`）
+## 内部脚本 API（`settings/`）
 
 这些是函数库，不作为用户命令暴露，被 `settings` 与各设置项 source：
 

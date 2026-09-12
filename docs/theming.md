@@ -34,7 +34,7 @@ themes/
     └── <app>.tpl
 ```
 
-渲染逻辑由 `desktop/scripts/common/render.sh`（函数库）提供；切换实现见 `desktop/scripts/common/setting-theme.sh`。渲染产物位于 `~/.config/<app>/colors.*`，由脚本生成、不纳入版本控制（见 [架构与设计](architecture.md#生成物与版本控制)）。
+渲染逻辑由 `settings/lib/render.sh`（函数库）提供；切换实现见 `settings/setting-theme.sh`。渲染产物位于 `~/.config/<app>/colors.*`，由脚本生成、不纳入版本控制（见 [架构与设计](architecture.md#生成物与版本控制)）。
 
 ## 主题列表
 
@@ -54,10 +54,10 @@ themes/
 ```bash
 settings                       # 设置菜单（默认 TUI/fzf）
 settings --gui                 # GUI（rofi；不可用时自动回退 TUI）
-~/.local/share/dotfiles/desktop/scripts/common/setting-theme.sh <主题名>   # 直接切换（单次）
+~/.local/share/dotfiles/settings/setting-theme.sh <主题名>   # 直接切换（单次）
 ```
 
-渲染流程：`themes/colors/<theme>/colors.toml` → `desktop/scripts/common/render.sh` → `~/.config/<app>/`
+渲染流程：`themes/colors/<theme>/colors.toml` → `settings/lib/render.sh` → `~/.config/<app>/`
 
 仅渲染已安装（`command -v`）的应用；无任何可用模板时报错退出。
 
@@ -117,7 +117,7 @@ green = "#a3be8c"
 ```bash
 mkdir -p themes/colors/my-theme
 # 创建 colors.toml 后运行
-~/.local/share/dotfiles/desktop/scripts/common/setting-theme.sh my-theme
+~/.local/share/dotfiles/settings/setting-theme.sh my-theme
 ```
 
 > 注意 `.gitignore` 的 `**/colors.*` 会误伤主题源文件，提交前确认它被纳入版本控制，见 [维护者笔记](maintenance.md#版本控制)。
@@ -125,5 +125,5 @@ mkdir -p themes/colors/my-theme
 ## 添加新应用
 
 1. 创建 `themes/templates/<app>.tpl`
-2. 在 `desktop/scripts/common/setting-theme.sh` 的 `THEME_TEMPLATES` 添加映射 `"应用:模板:输出路径"`
+2. 在 `settings/setting-theme.sh` 的 `THEME_TEMPLATES` 添加映射 `"应用:模板:输出路径"`
 3. 如需重载，在 `RELOAD_CMDS` 添加命令
