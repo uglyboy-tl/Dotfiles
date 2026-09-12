@@ -1,0 +1,54 @@
+/*
+ * ROFI theme - 只读内容查看窗
+ * 无 inputbar，纯 listview；内容自带 Pango 着色。
+ * 供 lib/show.sh 的 show_gui 复用：高度按内容条目数自适应。
+ */
+
+@import "colors"
+
+configuration {
+    kb-move-char-back: "";
+    kb-move-char-forward: "";
+    kb-cancel: "Escape,Left,Right";
+}
+
+* {
+  font: "Maple Mono Normal CN 8";
+}
+
+window {
+  location: center;
+  anchor:   center;
+  border-radius: 11px;
+  width: 1024px;
+  background-color: @background;
+  spacing: 0;
+  children: [mainbox];
+  orientation: horizontal;
+}
+
+mainbox {
+  children: [listview];
+}
+
+listview {
+  lines: 60;          /* 高度上限；fixed-height: false 时按条目数自适应 */
+  columns: 1;
+  fixed-height: false;
+  padding: 8px;
+}
+
+element {
+  padding: 0;
+  background-color: transparent;
+}
+
+element selected {
+  background-color: transparent;
+}
+
+element-text {
+  background-color: inherit;
+  text-color: @foreground;
+  padding: 0;
+}

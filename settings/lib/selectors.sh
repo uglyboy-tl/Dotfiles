@@ -130,6 +130,21 @@ fzf_selector() {
   echo "$result"
 }
 
+# rofi 图标并行解析的 worker（经 export -f 供 xargs 的子 bash 调用）。
+# 独立成函数而非内联到 bash -c 的多行单引号串，避免编辑器语法高亮错乱。
+_rofi_icon_worker() {
+  local i="$1" line quoted_line icon
+  line="$(cat "${ROFI_TMPDIR}/in.${i}")"
+  quoted_line="$(printf %q "$line")"
+  icon="$(eval "${ROFI_IMAGE_CMD//\{\}/$quoted_line}" 2>/dev/null || true)"
+  if [ -n "$icon" ] && [ -f "$icon" ]; then
+    printf '%s\0icon\x1f%s' "$line" "$icon" > "${ROFI_TMPDIR}/out.${i}"
+  else
+    printf '%s' "$line" > "${ROFI_TMPDIR}/out.${i}"
+  fi
+}
+export -f _rofi_icon_worker
+
 # rofi 选择器
 # 用法: rofi_selector [选项]
 #   -p, --prompt <提示>    选择提示（默认"选择"）
@@ -179,23 +194,33 @@ rofi_selector() {
   # 执行 rofi
   local result
   if [[ -n "$image_cmd" ]]; then
-    # 每行附加预览图标: \0icon\x1f 由 rofi 解析, 不进入返回值
+    # 每行附加预览图标: \0icon\x1f 由 rofi 解析, 不进入返回值。
+    # 并行解析(保持顺序): 条目多时逐项串行 spawn 子进程会让菜单弹出明显变慢。
+    local tmpdir n=0 line
+    tmpdir="$(mktemp -d)"
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      printf '%s' "$line" > "$tmpdir/in.$n"
+      n=$((n + 1))
+    done <<< "$data"
+
+    if [ "$n" -gt 0 ]; then
+      ROFI_IMAGE_CMD="$image_cmd" ROFI_TMPDIR="$tmpdir" \
+        xargs -P "${ROFI_IMAGE_JOBS:-8}" -I{} bash -c '_rofi_icon_worker "$@"' _ {} < <(seq 0 $((n - 1)))
+    fi
+
     result=$(
       {
-        while IFS= read -r line; do
-          [[ -z "$line" ]] && continue
-          quoted_line="$(printf '%q' "$line")"
-          icon=$(eval "${image_cmd//\{\}/$quoted_line}" 2>/dev/null || true)
-          if [[ -n "$icon" && -f "$icon" ]]; then
-            printf '%s\0icon\x1f%s\n' "$line" "$icon"
-          else
-            printf '%s\n' "$line"
-          fi
-        done <<< "$data"
+        local i
+        for ((i = 0; i < n; i++)); do
+          cat "$tmpdir/out.$i"
+          printf '\n'
+        done
       } | rofi -dmenu -theme "$ROFI_PREVIEW_THEME" -p "$prompt" -selected-row "$selected_row" \
             -kb-move-char-back "$kb_move_back" -kb-move-char-forward "$kb_move_forward" \
             -kb-accept-entry "$accept_keys" -kb-cancel "$cancel_keys"
-    ) || return 1
+    ) || { rm -rf "$tmpdir"; return 1; }
+    rm -rf "$tmpdir"
   else
     result=$(echo "$data" | rofi -dmenu -theme "$ROFI_SETTINGS_THEME" -p "$prompt" -selected-row "$selected_row" \
       -kb-move-char-back "$kb_move_back" -kb-move-char-forward "$kb_move_forward" \

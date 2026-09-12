@@ -2,7 +2,7 @@
 
 ## 概述
 
-统一入口，管理桌面可切换设置：**主题 / 壁纸 / 字体 / 快捷键**。同一套代码提供两种界面：
+统一入口，管理桌面可切换设置与帮助：**主题 / 壁纸 / 字体 / 帮助**。其中"帮助"是子菜单，收纳纯查看类条目（快捷键、关于）。同一套代码提供两种界面：
 
 | 界面 | 工具 | 启用方式 |
 |------|------|----------|
@@ -23,17 +23,66 @@ settings --gui      # GUI（rofi）；rofi 不可用或无图形会话时自动�
 
 ```
 settings/                              # 设置菜单（独立目录，入口链接到 ~/.local/bin/settings）
-├── settings                         # 入口：解析 --gui → SELECTOR_UI，菜单循环
-├── selectors.sh                     # 选择器：select_ui / selector_gui_supported / epipe_init
-├── notify.sh                        # 消息：notify / notify_error
-├── render.sh                        # 模板渲染（主题脚本使用）
+├── settings                         # 入口：解析 --gui → SELECTOR_UI，主菜单循环
 ├── setting-theme.sh                 # 主题切换
 ├── setting-wallpaper.sh             # 壁纸切换
 ├── setting-font.sh                  # 字体切换
-├── setting-keybindings.sh           # 快捷键速查（只读）
-├── img-preview.py / font-sample.sh / wallpaper-image.sh / sxhkd-shortcuts.py  # 预览与解析 helper
-└── LICENSE.kittytgp                 # img-preview.py 的第三方许可
+├── setting-help.sh                  # 帮助子菜单（快捷键 / 关于）
+├── setting-help-keybindings.sh      # 快捷键速查（条目式，只读）
+├── setting-help-about.sh            # 关于（fastfetch 系统信息，经 show 层双端展示）
+├── rofi/                            # 设置 rofi 主题
+│   ├── settings.rasi                # 主菜单
+│   ├── preview.rasi                 # 带图片预览的选择界面
+│   └── viewer.rasi                  # 只读内容查看窗（show_gui 使用）
+└── lib/                             # 库与 helper
+    ├── selectors.sh                 # 选择器：select_ui / selector_gui_supported / epipe_init
+    ├── menu.sh                       # 通用菜单循环 menu_loop + 退出整栈传播 MENU_EXIT_ALL
+    ├── notify.sh                     # 消息：notify / notify_error
+    ├── render.sh                     # 模板渲染（主题脚本使用）
+    ├── show.sh                       # 内容展示层：show_content / show_terminal / show_gui
+    ├── ansi_parse.py                 # ANSI 解析核心（共享）：光标模拟 + SGR
+    ├── ansi-to-pango.py              # ANSI → Pango 转换器（rofi 展示用）
+    ├── ansi-to-ansi.py               # ANSI → ANSI 转换器（fzf 预览用）
+    ├── sxhkd-shortcuts.py            # sxhkdrc 解析（快捷键速查使用）
+    ├── image_cache.py                # fzf 预览图缓存（img-preview 使用）
+    ├── img-preview.py / font-sample.sh / wallpaper-image.sh  # 预览 helper
+    └── LICENSE.kittytgp              # img-preview.py 的第三方许可
 ```
+
+## 帮助子菜单
+
+`setting-help.sh` 把查看/执行类条目收拢在一起（区别于"设置"）：
+
+| 条目 | 脚本 | 说明 |
+|------|------|------|
+| 快捷键 | `setting-help-keybindings.sh` | 列出精选快捷键，**选中即执行**对应命令；`Super + k` 直接打开（链接为 `~/.local/bin/keybindings`） |
+| 关于 | `setting-help-about.sh` | 展示 fastfetch 彩色输出，经内容展示层（`show_content`）按界面双端呈现 |
+
+快捷键界面执行命令后返回 `MENU_EXIT_ALL`，由 `menu_loop`（`lib/menu.sh`）逐级向上传播，入口菜单（`--root`）捕获后整体退出。这是通用约定：**任何菜单子项只要返回 `MENU_EXIT_ALL` 即可退出整个菜单栈**，中间层无需写传播代码；左键/Esc 取消则正常返回上级。该脚本独立运行时默认用 rofi（无 `SELECTOR_UI` 继承时）。
+
+## 内容展示层（show）
+
+`lib/show.sh` 把「带 ANSI 颜色的命令输出」按界面统一呈现，是**展示类**功能的通用层：
+
+| 函数 | 界面 | 实现 |
+|------|------|------|
+| `show_terminal <命令>` | TUI | fzf 预览窗格；`ansi-to-ansi.py` 把光标移动转为空格填充，保留颜色与对齐 |
+| `show_gui <命令>` | GUI | rofi 只读窗（`settings/rofi/viewer.rasi`，`fixed-height: false` 按条目数自适应高度）；`ansi-to-pango.py` 转 Pango markup |
+| `show_content <命令>` | 自动分派 | 按 `SELECTOR_UI` 选 `show_gui` 或 `show_terminal` |
+
+约定：
+
+- 传入**完整命令**（含 `--pipe false` 这类强制彩色输出的参数），展示层不假设输出工具
+- 调色板取自当前主题 `themes/colors/<theme>/colors.toml`；GUI 字体从 `viewer.rasi` 读取，作为宽度测量的单一来源
+- `--prompt <提示>` 可选；TUI 以 Esc/← 返回，GUI 以 Esc/← /→ 关闭
+
+新增展示项只需一行：
+
+```bash
+show_content "fastfetch --pipe false" --prompt "关于"
+```
+
+转换器分工：`ansi_parse.py` 是共享核心（光标模拟、SGR），`ansi-to-ansi.py`（fzf）与 `ansi-to-pango.py`（rofi）是各自的薄输出层。
 
 ## 界面分派
 

@@ -10,8 +10,9 @@ set -euo pipefail
 
 DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
 
-# 加载公共函数(含 epipe_init/select_ui/selector_gui_supported)并初始化 stdout 安全
+# 加载公共函数(含 epipe_init/select_ui/selector_gui_supported/menu_loop)并初始化 stdout 安全
 source "$DOTFILES_DIR/settings/lib/selectors.sh"
+source "$DOTFILES_DIR/settings/lib/menu.sh"
 epipe_init
 
 # 解析 --gui: 确定 UI 模式并导出给子脚本(子脚本不再接收 --gui)
@@ -37,48 +38,22 @@ get_settings_items() {
 主题
 壁纸
 字体
-快捷键
+帮助
 EOF
 }
 
-# 显示设置选单
-show_settings() {
-  local items last=""
-  items="$(get_settings_items)"
-
-  while true; do
-    local choice
-
-    # -s: 从子菜单返回时把焦点停在上次进入的选项上
-    choice=$(select_ui \
-      -p "设置" \
-      -d "$items" \
-      -s "$last") || break
-
-    case "$choice" in
-      主题)
-        "$DOTFILES_DIR/settings/setting-theme.sh"
-        ;;
-      壁纸)
-        "$DOTFILES_DIR/settings/setting-wallpaper.sh"
-        ;;
-      快捷键)
-        "$DOTFILES_DIR/settings/setting-keybindings.sh"
-        ;;
-      字体)
-        "$DOTFILES_DIR/settings/setting-font.sh"
-        ;;
-      *)
-        break
-        ;;
-    esac
-
-    last="$choice"
-  done
+# 处理设置项
+handle_settings() {
+  case "$1" in
+    主题) "$DOTFILES_DIR/settings/setting-theme.sh" ;;
+    壁纸) "$DOTFILES_DIR/settings/setting-wallpaper.sh" ;;
+    字体) "$DOTFILES_DIR/settings/setting-font.sh" ;;
+    帮助) "$DOTFILES_DIR/settings/setting-help.sh" ;;
+  esac
 }
 
 main() {
-  show_settings
+  menu_loop "设置" get_settings_items handle_settings --root
 }
 
 main "$@"

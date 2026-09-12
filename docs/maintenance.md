@@ -27,8 +27,20 @@
 | 文件 | 提供 |
 |------|------|
 | `selectors.sh` | `select_ui`（rofi/fzf 统一选择器）、`selector_gui_supported`、`epipe_init` |
+| `menu.sh` | `menu_loop`（通用菜单循环）、`MENU_EXIT_ALL`（退出整栈的约定退出码） |
 | `notify.sh` | `notify` / `notify_error`（GUI 桌面通知，否则回退命令行） |
 | `render.sh` | `render <colors.toml> <tpl> <out>`（主题模板渲染） |
+| `show.sh` | `show_content` / `show_terminal` / `show_gui`（带 ANSI 颜色的命令输出双端展示，见 `settings.md`） |
+| `image_cache.py` | fzf 预览图缓存（img-preview 使用；见下节） |
+
+## 预览缓存
+
+预览图按 UI 分工，各取所长：
+
+- **fzf（TUI）**：`img-preview.py` 导入 `image_cache.py`，把缩放后的预览 PNG 缓存到 `$XDG_CACHE_HOME/image-cache/`（默认 `~/.cache/image-cache/`）。缓存键 = sha1(源路径 + mtime + 大小 + 目标尺寸)，源变化自动失效；写入时清理 14 天未过期的条目。JPEG 大图首次缩放开销大（约 150ms），命中约 0.2ms。
+- **rofi（GUI）**：直接传原图路径（`wallpaper-image.sh` 返回源图，`font-sample.sh` 返回自渲染样张），由 rofi 自行加载与缓存图片——避免 rofi 弹出前串行为每项 spawn 子进程导致打开变慢。
+
+> 清空 fzf 缓存：`rm -rf ~/.cache/image-cache`。
 
 ## 已知问题
 
