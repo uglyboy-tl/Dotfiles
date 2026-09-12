@@ -21,6 +21,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO
 
+# 统一预览图缓存模块（同目录）
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import image_cache  # noqa: E402
+
 try:
     import fcntl
     import termios
@@ -714,49 +718,6 @@ def build_render_bytes(
 DELETE_ALL = b"\x1b_Ga=d,d=A\x1b\\"
 
 
-def _is_png_file(path):
-    try:
-        with open(path, "rb") as f:
-            return f.read(8) == PNG_SIGNATURE
-    except OSError:
-        return False
-
-
-def _prepare_png(path, max_w, max_h):
-    """转成 PNG 并缩到不超过 max_w x max_h（能缩小不放大）。
-
-    PNG 且尺寸在目标 2 倍以内时直接用原字节，跳过 ImageMagick 子进程——
-    字体样张等缓存图因此可以秒出，避免 fzf 快速移动时预览被掐断。
-    """
-    if _is_png_file(path):
-        with open(path, "rb") as f:
-            data = f.read()
-        try:
-            w, h = _parse_png_size(data)
-            if w <= max_w * 2 and h <= max_h * 2:
-                return data
-        except Exception:
-            pass
-
-    magick = shutil.which("magick") or shutil.which("convert")
-    if magick:
-        try:
-            proc = subprocess.run(
-                [magick, path, "-auto-orient", "-resize", f"{max_w}x{max_h}>", "png:-"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                check=True,
-            )
-            if proc.stdout.startswith(PNG_SIGNATURE):
-                return proc.stdout
-        except Exception:
-            pass
-    if _is_png_file(path):
-        with open(path, "rb") as f:
-            return f.read()
-    raise RuntimeError("cannot decode image")
-
-
 def _fallback(path):
     try:
         proc = subprocess.run(["file", "--brief", "--dereference", "--mime", "--", path],
@@ -803,7 +764,7 @@ def main(argv=None):
     )
 
     try:
-        png = _prepare_png(path, pcols * geom.cell_width_px, prows * geom.cell_height_px)
+        png = image_cache.get_png_bytes(path, pcols * geom.cell_width_px, prows * geom.cell_height_px)
         _data, img_w, img_h = _read_png(png)
         cols, rows = _fit_cells(img_w, img_h, preview, cols=None, rows=None, newline=True)
         payload = build_render_bytes(png, cols=cols, rows=rows, passthrough="none", newline=True)
