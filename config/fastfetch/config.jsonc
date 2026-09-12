@@ -54,7 +54,8 @@
             "type": "users",
             "myselfOnly": true,
             "keyIcon": "",
-            "key": "│{#cyan}│ {icon}  Login     │{$4}│{#keys}│{$2}"
+            "key": "│{#cyan}│ {icon}  Login     │{$4}│{#keys}│{$2}",
+            "format": "{1}@{2}"
         },
         {
             "type": "custom",
@@ -82,7 +83,8 @@
         },
         {
             "type": "memory",
-            "key": "│{#green}│ {icon}  RAM       │{$4}│{#keys}│{$2}"
+            "key": "│{#green}│ {icon}  RAM       │{$4}│{#keys}│{$2}",
+            "keyIcon": ""
         },
         {
             "type": "battery",
@@ -160,15 +162,18 @@
         },
         {
             "type": "icons",
-            "key": "│{#magenta}│ {icon}  Icons     │{$4}│{#keys}│{$2}"
+            "key": "│{#magenta}│ {icon}  Icons     │{$4}│{#keys}│{$2}",
+            "keyIcon": ""
         },
         {
             "type": "cursor",
-            "key": "│{#magenta}│ {icon}  Cursor    │{$4}│{#keys}│{$2}"
+            "key": "│{#magenta}│ {icon}  Cursor    │{$4}│{#keys}│{$2}",
+            "keyIcon": ""
         },
         {
             "type": "colors",
             "key": "│{#magenta}│ {icon}  Colors    │{$4}│{#keys}│{$2}",
+            "keyIcon": "",
             "symbol": "circle"
         },
         {
