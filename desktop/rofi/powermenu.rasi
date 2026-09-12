@@ -83,7 +83,7 @@ element-text {
   text-color:       inherit;
   height:	38px;
   width:	38px;
-  horizontal-align: 0.35;
+  horizontal-align: 0.5;
 }
 
 element selected {
