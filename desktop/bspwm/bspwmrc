@@ -62,7 +62,7 @@ _c pointer_action3 move          # 鼠标动作3：移动窗口
 
 # 动态壁纸：读取当前保存的风格，未保存则默认 lakeside，应用并同步 crontab
 _current_wall=$(cat "$HOME/.local/state/wallpaper/current" 2>/dev/null || echo lakeside)
-"$XDG_DATA_HOME/dotfiles/desktop/scripts/common/setting-wallpaper.sh" "$_current_wall" >/dev/null 2>&1 &
+"$XDG_DATA_HOME/dotfiles/settings/setting-wallpaper.sh" "$_current_wall" >/dev/null 2>&1 &
 
 ## 窗口规则 ----------------------------------------------#
 # 首先移除所有现有规则

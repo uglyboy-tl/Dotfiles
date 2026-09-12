@@ -14,8 +14,8 @@ WALLPAPER_DIR="$XDG_DATA_HOME/dynamic-wallpaper/images"
 STATE_FILE="$XDG_STATE_HOME/wallpaper/current"
 
 # 加载公共函数(含 epipe_init)并初始化 stdout 安全
-source "$DOTFILES_DIR/desktop/scripts/common/selectors.sh"
-source "$DOTFILES_DIR/desktop/scripts/common/notify.sh"
+source "$DOTFILES_DIR/settings/lib/selectors.sh"
+source "$DOTFILES_DIR/settings/lib/notify.sh"
 epipe_init
 
 # 列出可用壁纸风格
@@ -54,7 +54,8 @@ select_style() {
   STYLE=$(select_ui \
     -p "当前壁纸：${current:-无}" \
     -d "$styles_data" \
-    -s "$current") || exit 0
+    -s "$current" \
+    -i "$DOTFILES_DIR/settings/lib/wallpaper-image.sh {}") || exit 0
 }
 
 # 校验壁纸风格（失败返回1，不退出进程）

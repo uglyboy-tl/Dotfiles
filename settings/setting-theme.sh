@@ -22,9 +22,9 @@ set -euo pipefail
 DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
 
 # 加载公共函数(含 epipe_init)并初始化 stdout 安全
-source "$DOTFILES_DIR/desktop/scripts/common/selectors.sh"
-source "$DOTFILES_DIR/desktop/scripts/common/render.sh"
-source "$DOTFILES_DIR/desktop/scripts/common/notify.sh"
+source "$DOTFILES_DIR/settings/lib/selectors.sh"
+source "$DOTFILES_DIR/settings/lib/render.sh"
+source "$DOTFILES_DIR/settings/lib/notify.sh"
 epipe_init
 
 COLORS_DIR="$DOTFILES_DIR/themes/colors"
@@ -47,8 +47,9 @@ declare -A THEME_TEMPLATES=(
 # 需要重载的软件: "软件名:重载命令"
 # ghostty 通过 SIGUSR2 信号重载配置
 # urxvt 通过重新加载 XResources 更新颜色（新窗口生效）
+# polybar 不单独重启：下方 bspc wm -r 会重跑 bspwmrc，其中的 _s polybar 已重启它，
+# 两处都做会产生重复实例（重影）。
 declare -A RELOAD_CMDS=(
-  ["polybar"]="polybar-msg cmd restart"
   ["dunst"]="dunstctl reload"
   ["ghostty"]="pkill -USR2 -x ghostty"
   ["urxvt"]="xrdb -merge $XDG_CONFIG_HOME/X11/Xresources"
@@ -85,7 +86,8 @@ select_theme() {
   THEME=$(select_ui \
     -p "当前主题：${current:-无}" \
     -d "$themes_data" \
-    -s "$current") || exit 0
+    -s "$current" \
+    -i "printf '%s' $COLORS_DIR/{}/preview.jpg") || exit 0
 }
 
 # 校验主题（失败返回1，不退出进程，供循环内忽略非法输入）

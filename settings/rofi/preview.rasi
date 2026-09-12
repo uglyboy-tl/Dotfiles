@@ -1,0 +1,121 @@
+/*
+ * ROFI theme - 带预览图的选择界面
+ * 左侧列表，右侧预览窗格显示当前高亮项对应的图片
+ * （icon-current-entry 由 rofi 在光标移动时自动刷新）
+ * 颜色通过 colors.rasi 导入
+ */
+
+@import "colors"
+
+/* 等宽字体：中文恰好是英文 2 倍宽，便于列对齐 */
+* {
+  font: "Maple Mono Normal CN 12";
+}
+
+window {
+  location: center;
+  anchor:   center;
+  border-radius: 11px;
+  width: 1024px;
+  /* 锁死高度：预览图异步加载期间尺寸会从正方形变横向，不锁窗口会跳动 */
+  height: 480px;
+
+  background-color: rgba(30,30,46,0);
+  spacing: 0;
+  children:  [mainbox];
+  orientation: horizontal;
+}
+
+mainbox {
+  children: [inputbar, content];
+}
+
+content {
+  orientation: horizontal;
+  spacing: 8px;
+  /* 填满窗口剩余高度，使左右两栏高度固定，不随预览图加载状态变化 */
+  expand: true;
+  children: [listwrap, preview];
+}
+
+/* 包一层定宽 box：列表保持自身行高，高度由外层统一拉伸 */
+listwrap {
+  orientation: vertical;
+  width: 352px;
+  expand: false;
+  children: [listview];
+}
+
+/* 固定宽度的预览框：宽高都由外层决定，不受图片比例影响 */
+preview {
+  orientation: vertical;
+  width: 656px;
+  expand: false;
+
+  padding: 8px;
+  background-color: @lighter-background;
+  border-radius: 11px;
+
+  children: [icon-current-entry];
+}
+
+inputbar {
+  color: @dark-foreground;
+  background-color: @lighter-background;
+
+  border: 0px;
+  border-radius:  11px 11px 0px 0px;
+  border-color: @blue;
+
+  children: [prompt, entry];
+}
+
+entry, prompt, case-indicator {
+  text-font: inherit;
+  text-color: inherit;
+}
+
+entry {
+  background-color: inherit;
+  padding: 16px 6px;
+}
+
+prompt {
+  background-color: inherit;
+  padding: 16px;
+}
+
+listview {
+  lines: 7;
+  padding: 8px;
+  columns: 1;
+  expand: false;
+}
+
+element {
+  padding: 6px;
+  border-radius: 11px;
+  background-color: transparent;
+  text-color: @foreground;
+
+  children: [element-text];
+}
+
+element-text {
+  background-color: inherit;
+  text-color: inherit;
+  padding: 8px 8px;
+}
+
+element selected {
+  text-color: @background;
+  background-color: @accent;
+}
+
+icon-current-entry {
+  size: 640px;
+  squared: false;
+  expand: true;
+  horizontal-align: 0.5;
+  vertical-align: 0.5;
+}

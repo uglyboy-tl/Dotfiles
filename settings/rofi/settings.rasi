@@ -1,0 +1,89 @@
+/*
+ * ROFI theme - 设置菜单专用主题 settings.rasi（复制自 desktop/rofi/custom.rasi）
+ * 与全局默认主题解耦，避免被别处的改动影响一致性。
+ * 高度与 settings/rofi/preview.rasi 对齐（480px）。
+ */
+
+@import "colors"
+
+/* 等宽字体：中文恰好是英文 2 倍宽，便于列对齐 */
+* {
+  font: "Maple Mono Normal CN 12";
+}
+
+window {
+  location: center;
+  anchor:   center;
+  border-radius: 11px;
+  width: 1024px;
+  height: 480px;
+
+  background-color: rgba(30,30,46,0);
+  spacing: 0;
+  children:  [mainbox];
+  orientation: horizontal;
+}
+
+mainbox {
+  children: [inputbar, listview];
+}
+
+inputbar {
+  color: @dark-foreground;
+  background-color: @lighter-background;
+
+  border: 0px;
+  border-radius:  11px 11px 0px 0px;
+  border-color: @blue;
+
+  children: [prompt, entry];
+}
+
+entry, prompt, case-indicator {
+  text-font: inherit;
+  text-color:inherit;
+}
+
+entry {
+  background-color: inherit;
+  padding: 16px 6px;
+}
+
+prompt {
+  background-color: inherit;
+  padding: 16px;
+}
+
+listview {
+  lines: 7;
+  padding: 8px;
+}
+
+element {
+  padding: 6px;
+  border-radius: 11px;
+  background-color: transparent;
+  text-color: @foreground;
+}
+
+element-icon {
+  background-color: inherit;
+  text-color:       inherit;
+  padding: 10px;
+}
+
+element-text {
+  background-color: inherit;
+  text-color:       inherit;
+  padding: 8px 8px;
+}
+
+element selected {
+  text-color: @background;
+  background-color: @accent;
+}
+
+element-text, element-icon {
+    background-color: inherit;
+    text-color:       inherit;
+}

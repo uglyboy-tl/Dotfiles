@@ -15,6 +15,8 @@
       glob: true # 使用通配符匹配
       path: desktop/scripts/* # 源文件路径
       relink: true # 允许重新链接
+    # 设置菜单入口（其余 settings/ 脚本由入口按绝对路径调用，不进 PATH）
+    ~/.local/bin/settings: settings/settings
     ~/.local/share/applications/:
       create: true
       glob: true
@@ -43,7 +45,7 @@
     $XDG_CONFIG_HOME/sxhkd/sxhkdrc: desktop/bspwm/sxhkdrc # 快捷键配置
     $XDG_CONFIG_HOME/picom/picom.conf: desktop/picom.conf # 合成器配置
     $XDG_CONFIG_HOME/polybar: desktop/polybar # 状态栏配置
-    $XDG_CONFIG_HOME/rofi: desktop/rofi # 应用启动器
+    $XDG_CONFIG_HOME/rofi: desktop/rofi # 应用启动器（settings 主题由 selectors 按路径加载）
     $XDG_CONFIG_HOME/dunst/dunstrc: desktop/dunst.conf # 桌面通知
     ## UDiskie 配置
     $XDG_CONFIG_HOME/udiskie/config.yml: desktop/udiskie/config.yml
