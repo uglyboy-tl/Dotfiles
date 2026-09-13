@@ -6,13 +6,12 @@
 
 ```
 conf.d/          声明「哪个文件链接到哪里」——唯一的装配清单
-   │
-   ├── config/    命令行源文件（shell/vim/tmux/git/mail/...）
-   ├── desktop/   桌面源文件（bspwm/polybar/rofi/...）
-   │   └── scripts/  桌面脚本（settings/screenshot/common/...）
-   ├── data/      随仓库分发的外部数据（壁纸、RIME 词库）
-   └── rpi/       树莓派专用
+config/          命令行源文件（shell/vim/tmux/git/mail/...）
+desktop/         桌面源文件（bspwm/polybar/rofi/...）与桌面脚本（desktop/scripts/）
+data/            随仓库分发的外部数据（壁纸、RIME 词库）
+rpi/             树莓派专用
 scripts/         用户入口脚本（链接到 ~/.local/bin）
+settings/        设置菜单与可复用库（详见「脚本分层」）
 themes/          主题颜色 + 模板，渲染生成各应用颜色文件
 ```
 
@@ -52,16 +51,16 @@ $XDG_CONFIG_HOME/git/config: config/git/config
 
 ```
 scripts/                 用户入口（被链接到 ~/.local/bin）
-├── binup / peon / ...   独立工具
-
-desktop/scripts/         桌面脚本（被链接到 ~/.local/bin）
-├── settings             设置菜单入口
-├── screenshot           截图工具
-└── common/              函数库，不直接暴露给用户
+desktop/scripts/         桌面脚本（截图、barify、rofi-* 等，也被链接到 ~/.local/bin）
+settings/                设置菜单与可复用库
+├── settings             入口（解析 --gui → SELECTOR_UI，主循环）
+├── setting-*.sh         各设置项（选择→校验→应用）
+└── lib/                 函数库
     ├── selectors.sh     界面抽象：select_ui / selector_gui_supported / epipe_init
-    ├── notify.sh       消息抽象：notify / notify_error
-    ├── render.sh        模板渲染：render <colors.toml> <tpl> <out>
-    └── setting-*.sh     各设置项的「选择→校验→应用」实现
+    ├── menu.sh          菜单循环：menu_loop / MENU_EXIT_ALL
+    ├── notify.sh        消息抽象：notify / notify_error
+    ├── render.sh        模板渲染：render
+    └── show.sh          内容展示：show_content
 ```
 
 分层规则：
@@ -74,20 +73,9 @@ desktop/scripts/         桌面脚本（被链接到 ~/.local/bin）
 
 ## 主题渲染流程
 
-```
-themes/colors/<theme>/colors.toml   （颜色定义，人工维护）
-        │  render.sh 按 {{ 变量 }} 做 sed 替换
-        ▼
-themes/templates/<app>.tpl           （模板）
-        ▼
-~/.config/<app>/colors.*             （渲染产物，自动生成）
-```
+`themes/colors/<theme>/colors.toml` + `themes/templates/<app>.tpl` 经 `render.sh` 生成 `~/.config/<app>/colors.*`，产物不手改。
 
-- 模板变量支持 `{{ name }}` 与去 `#` 的 `{{ name_strip }}`，另有派生变量（如 `selection_background`）。
-- 渲染后按应用选择重载方式（信号/命令/重启），映射表在 `setting-theme.sh`。
-- 未安装的应用会被跳过；所有模板都不可用时报错退出。
-
-完整规则见 [主题系统](theming.md)。
+变量、重载方式、新增主题/应用等完整规则见 [主题系统](theming.md)。
 
 ## 状态与本地覆盖
 

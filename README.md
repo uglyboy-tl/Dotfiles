@@ -6,7 +6,7 @@
 
 - **桌面**：BSPWM + sxhkd + Polybar + Rofi + Dunst + Picom，终端 Alacritty / Ghostty / URxvt
 - **终端与 Shell**：ZSH + Zinit + Powerlevel10k、TMUX / herdr、yazi、Atuin、FZF + Zoxide
-- **工作流**：统一设置菜单（主题 / 壁纸 / 字体 / 快捷键）、自研主题渲染、邮件（offlineimap + notmuch + NeoMutt）
+- **工作流**：统一设置菜单（主题 / 壁纸 / 字体 / 快捷键 / 关于）、自研主题渲染、邮件（offlineimap + notmuch + NeoMutt）
 - **开发与 AI**：Git、UV / Bun / Python、Pi / OpenCode，配套 `binup` 管理 CLI 二进制
 
 设计取向：Unix 哲学（一个工具只做一件事）、平铺窗口管理、命令行优先。
@@ -34,6 +34,7 @@ desktop/      桌面环境配置（BSPWM、Polybar、Rofi、终端等）
 data/         外部数据（动态壁纸、RIME 词库等）
 rpi/          树莓派专用配置
 scripts/      自定义脚本（链接到 ~/.local/bin）
+settings/     设置菜单与可复用脚本
 themes/       主题颜色定义与模板
 docs/         文档
 ```

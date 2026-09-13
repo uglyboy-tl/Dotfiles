@@ -1,12 +1,13 @@
 # 脚本参考
 
-`~/.local/bin` 下各命令的用途与源文件位置。`scripts/*`、`desktop/scripts/*` 会批量链接到这里；`settings/settings` 单独链接（见[安装与运维](../installation.md)）。
+`~/.local/bin` 下各命令的用途与源文件位置。`scripts/*`、`desktop/scripts/*` 会批量链接到这里；`settings/settings` 与 `settings/setting-keybindings.sh` 单独链接（见[安装与运维](../installation.md)）。
 
 ## 用户命令
 
 | 命令 | 源文件 | 用途 |
 |------|--------|------|
-| `settings` | `settings/settings` | 设置菜单入口（主题/壁纸/字体/快捷键），`--gui` 走 rofi，详见 [设置菜单](../settings.md) |
+| `settings` | `settings/settings` | 设置菜单入口（主题/壁纸/字体/快捷键/关于），`--gui` 走 rofi，详见 [设置菜单](../settings.md) |
+| `keybindings` | `settings/setting-keybindings.sh` | 快捷键执行菜单（选中即执行，sxhkd `Super + k`） |
 | `binup` | `scripts/binup` | 二进制文件管理器（安装/更新 CLI 工具），配置见 `desktop/builtin/binup.toml` |
 | `peon` / `update-peon` | `scripts/peon` / `scripts/update-peon` | peon-ping 提示音（配合 Claude Code hooks）及升级 |
 | `update-pi` | `scripts/update-pi` | 更新 Pi agent |
@@ -18,6 +19,7 @@
 
 | 命令 | 源文件 | 用途 |
 |------|--------|------|
+| `screenshot` | `desktop/scripts/screenshot` | 区域/全屏截图（保存 + 复制 + 通知，sxhkd `Print`） |
 | `barify` | `desktop/scripts/barify` | 音量/亮度指示条（走 dunst/mako） |
 | `brightness` | `desktop/scripts/brightness` | 外接显示器亮度（DDC/CI，经 ddcutil）+ 通知指示 |
 | `dwall.sh` | `desktop/scripts/dwall.sh` | 动态壁纸，按时间切换，由 cron 每小时调用 |

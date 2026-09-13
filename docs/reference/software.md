@@ -6,7 +6,9 @@
 
 | 软件 | 配置路径 |
 |------|----------|
+| 环境变量（XDG 重定向源头） | `config/environment`（systemd 子集在 `config/environment.d/`） |
 | ZSH + Zinit + Powerlevel10k | `config/zsh/` |
+| Bash | `config/bashrc` |
 | Starship（已链接，当前未启用） | `config/starship.toml` |
 | Atuin | `config/atuin/config.toml` |
 | FZF / Zoxide | ZSH 插件（`config/zsh/zshrc.zsh`） |
@@ -42,6 +44,8 @@
 | Rofi | `desktop/rofi/` |
 | Alacritty / Ghostty / URxvt | `desktop/alacritty/`、`desktop/ghostty/`、`desktop/X11/` |
 | Dunst / Zathura / MPV | `desktop/dunst.conf`、`desktop/zathura/`、`desktop/mpv/` |
+| Picom / Redshift / 字体 | `desktop/picom.conf`、`desktop/redshift.conf`、`desktop/fontconfig/fonts.conf` |
+| 桌面入口文件（.desktop） | `desktop/applications/` |
 | Udiskie | `desktop/udiskie/config.yml` |
 | FCITX5-RIME | `desktop/fcitx5-rime/` + `data/rime-ice/` |
 

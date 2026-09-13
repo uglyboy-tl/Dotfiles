@@ -22,16 +22,7 @@
 
 ## 内部脚本 API（`settings/`）
 
-这些是函数库，不作为用户命令暴露，被 `settings` 与各设置项 source：
-
-| 文件 | 提供 |
-|------|------|
-| `selectors.sh` | `select_ui`（rofi/fzf 统一选择器）、`selector_gui_supported`、`epipe_init` |
-| `menu.sh` | `menu_loop`（通用菜单循环）、`MENU_EXIT_ALL`（退出整栈的约定退出码） |
-| `notify.sh` | `notify` / `notify_error`（GUI 桌面通知，否则回退命令行） |
-| `render.sh` | `render <colors.toml> <tpl> <out>`（主题模板渲染） |
-| `show.sh` | `show_content` / `show_terminal` / `show_gui`（带 ANSI 颜色的命令输出双端展示，见 `settings.md`） |
-| `image_cache.py` | fzf 预览图缓存（img-preview 使用；见下节） |
+函数库不作为用户命令暴露，被 `settings` 与各设置项 source；清单与职责见 [架构与设计](architecture.md#脚本分层)，各函数用法见 [设置菜单](settings.md)。下面只记录维护相关的特殊点。
 
 ## 预览缓存
 

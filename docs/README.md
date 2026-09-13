@@ -9,7 +9,7 @@
 ## 日常使用
 
 - [快捷键](reference/keybindings.md) - BSPWM / TMUX / Shell 常用操作
-- [设置菜单](settings.md) - 切换主题/壁纸/字体/快捷键
+- [设置菜单](settings.md) - 切换主题/壁纸/字体，查看快捷键/关于
 - [脚本](reference/scripts.md) - `~/.local/bin` 下所有工具的用途
 
 ## 定制

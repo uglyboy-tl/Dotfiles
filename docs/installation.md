@@ -35,6 +35,7 @@ cd ~/.local/share/dotfiles
 
 - `dotbot`、`dotbot-plugins/crontab`（安装器本身）
 - `config/zsh/zinit`、`config/vim/vim-plug`（编辑器/Shell 插件管理器）
+- `config/opencode`（OpenCode 配置，见 [config/opencode/AGENTS.md](../config/opencode/AGENTS.md)）
 - `desktop/mpv/{uosc,thumbfast}`（播放器界面）
 - `data/dynamic-wallpaper`、`data/rime-ice`
 

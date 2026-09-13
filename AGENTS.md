@@ -1,69 +1,64 @@
 # Dotfiles 项目说明
 
-这是一个使用 **dotbot** 管理的 dotfiles 项目，体现了对 Unix 哲学的坚持和对高效工作流的追求。
+使用 **dotbot** 管理的 Linux dotfiles：BSPWM 平铺桌面 + 命令行工作流，路径遵循 XDG。项目概览见 [README](README.md)。
 
 ## 核心理念
 
-### Unix 哲学
-- 一个软件只解决一个问题
-- 选用专业工具完成特定任务
-- 通过工具组合实现复杂功能
-- 重视简洁、可维护的系统设计
+- **Unix 哲学**：一个工具只做一件事，靠组合完成复杂功能，重视简洁与可维护。
+- **平铺式窗口管理**：BSPWM，键盘驱动，减少窗口管理的认知负担。
+- **命令行优先**：优先 CLI 工具与脚本自动化，GUI 只在必要时用。
 
-### 平铺式窗口管理
-- 采用 BSPWM 平铺式窗口管理器
-- 最大化屏幕利用效率
-- 减少窗口管理的认知负担
-- 通过键盘快捷键高效操作
-
-### 命令行优先
-- 优先使用命令行程序
-- 重视终端工具的效率
-- 通过脚本自动化常规任务
-- 避免图形界面的冗余操作
+这是所有取舍的依据：新增功能优先复用已有工具与函数库，不造重复轮子。
 
 ## 重要说明
 
-查看或修改系统配置时，**不需要**查看或修改 `~/.config/` 下的文件，优先查看或修改本项目中的对应文件。运行 `./install` 后，dotbot 会自动将配置链接到系统。
+只改本仓库，**不要**直接改 `~/.config/` 下的文件（那是 `./install` 生成的软链）；改完重跑 `./install` 由 dotbot 重新链接。
 
-## Dotbot 配置文件
+## Dotbot 配置
 
-配置文件位于 `conf.d/` 目录，按需求选择性运行：
+`conf.d/` 下按环境组合，`default` 始终运行，其余用参数追加：
 
 | 文件 | 用途 |
 |------|------|
-| `default.conf.yaml` | 命令行环境配置（Shell、ZSH、VIM、Git、邮件、开发工具等） |
-| `desktop.conf.yaml` | 桌面环境配置（BSPWM、SXHKD、Polybar、Rofi、Alacritty、FCITX5 等） |
-| `rpi.conf.yaml` | 树莓派专用配置 |
-| `setup.conf.yaml` | 基础环境依赖（仅初始化系统时使用，apt 安装 jq） |
+| `default.conf.yaml` | 命令行环境（Shell、ZSH、VIM、Git、邮件、开发工具等） |
+| `desktop.conf.yaml` | 桌面环境（BSPWM、SXHKD、Polybar、Rofi、Alacritty、FCITX5 等） |
+| `rpi.conf.yaml` | 树莓派专用 |
+| `setup.conf.yaml` | 基础依赖（apt 装 jq），仅初始化系统用 |
 
-## 配置格式说明
+配置格式为「**目标路径: 源文件**」，左侧是系统实际位置，右侧是本仓库文件：
 
-配置文件中，**左侧是目标路径**（系统实际位置），**右侧是源文件路径**（本项目中的文件）。
-
-例如: `$XDG_CONFIG_HOME/zsh/.zshrc: config/zsh/zshrc.zsh` 表示系统的 `~/.config/zsh/.zshrc` 链接到本项目的 `config/zsh/zshrc.zsh`。
+```yaml
+$XDG_CONFIG_HOME/zsh/.zshrc: config/zsh/zshrc.zsh
+```
 
 ## 环境变量
 
-`config/environment`（shell 语法）是唯一源头，作用是把各软件的配置/数据/缓存从默认位置重定向到 XDG 目录。被 dotbot 链接到三个加载点：
-
-- `$XDG_CONFIG_HOME/zsh/.zshenv` - Shell 环境（全量）
-- `~/.xsessionrc` - X session（全量）
-- `$XDG_CONFIG_HOME/environment.d/60-xdg.conf` - systemd --user（源文件 `config/environment.d/xdg.conf`，systemd 语法的**子集**，缺少 GNUPGHOME、DOCKER_CONFIG、NPM_* 等变量，某些 systemd 服务读不到）
-
-环境变量与实际路径不匹配时，优先检查 `config/environment`。
+`config/environment`（shell 语法）是唯一源头，把各软件的配置/数据/缓存重定向到 XDG 目录。它被链接到三个加载点：`.zshenv`（Shell 全量）、`~/.xsessionrc`（X session 全量）、`environment.d/60-xdg.conf`（systemd user，**子集**）。路径对不上时先查它。
 
 ## 主题系统
 
-自研主题渲染：`themes/colors/<theme>/colors.toml` + `themes/templates/<app>.tpl` → `~/.config/<app>/`。
-
-- CLI 工具跟随终端 16 色，不需要模板
-- GUI 应用（Polybar/Rofi/Dunst/Zathura）需要独立模板
-- 通过 `settings` 菜单切换（主题/壁纸/字体/快捷键，`--gui` 走 rofi），详见 `docs/themes.md`
+`themes/colors/<theme>/colors.toml` + `themes/templates/<app>.tpl` → `~/.config/<app>/`（渲染产物，不手改）。CLI 工具跟随终端 16 色、无需模板；GUI 应用（Polybar/Rofi/Dunst/Zathura）需独立模板。入口是 `settings` 菜单。
 
 ## 脚本约定
 
-- 用户入口在 `scripts/`（链接到 `~/.local/bin/`），桌面相关入口在 `desktop/scripts/`（也链接到 `~/.local/bin/`）
-- 设置相关组件放 `settings/`（库/helper 在 `settings/lib/`），被 `settings`/`screenshot` 等脚本复用
-- 选择器统一走 `selectors.sh`：界面类型由 `SELECTOR_UI`（gui/tui）决定，调用 `select_ui` 即可，组件不感知 rofi/fzf
-- 消息统一走 `notify.sh`：GUI 下走桌面通知，不可用时回退命令行输出（`notify`/`notify_error`）
+- 用户入口在 `scripts/`，桌面入口在 `desktop/scripts/`，均链接到 `~/.local/bin`；设置相关复用逻辑在 `settings/`（库在 `settings/lib/`）。
+- 界面统一走 `selectors.sh` 的 `select_ui`（由 `SELECTOR_UI` 决定 rofi/fzf，组件不感知）；消息统一走 `notify.sh` 的 `notify`。
+- 无构建与测试框架。
+
+## 文档导航
+
+上面是大多数工作所需的要点；需要深入时查对应文档，不要凭目录猜：
+
+| 主题 | 文档 |
+|------|------|
+| 安装/更新/卸载、conf.d 组合、submodule、本地覆盖 | [docs/installation.md](docs/installation.md) |
+| 整体结构、dotbot 装配、XDG 细节、脚本分层、主题渲染流程 | [docs/architecture.md](docs/architecture.md) |
+| 主题颜色/模板、新增主题或应用 | [docs/theming.md](docs/theming.md) |
+| 设置菜单组件、新增设置项、内部脚本 API | [docs/settings.md](docs/settings.md) |
+| 维护约定、已知问题、待办 | [docs/maintenance.md](docs/maintenance.md) |
+| 某软件的配置放在哪 | [docs/reference/software.md](docs/reference/software.md) |
+| `~/.local/bin` 各命令 | [docs/reference/scripts.md](docs/reference/scripts.md) |
+| 快捷键 | [docs/reference/keybindings.md](docs/reference/keybindings.md) |
+| OpenCode 自身配置（agents/skills/命令） | [config/opencode/AGENTS.md](config/opencode/AGENTS.md) |
+
+总索引：[docs/README.md](docs/README.md)。

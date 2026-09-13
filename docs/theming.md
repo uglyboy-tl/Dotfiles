@@ -34,7 +34,7 @@ themes/
     └── <app>.tpl
 ```
 
-渲染逻辑由 `settings/lib/render.sh`（函数库）提供；切换实现见 `settings/setting-theme.sh`。渲染产物位于 `~/.config/<app>/colors.*`，由脚本生成、不纳入版本控制（见 [架构与设计](architecture.md#生成物与版本控制)）。
+渲染逻辑由 `settings/lib/render.sh`（函数库）提供；切换实现见 `settings/setting-theme.sh`。渲染产物位于 `~/.config/<app>/colors.*`，由脚本生成、不纳入版本控制（见 [维护者笔记](maintenance.md#版本控制)）。
 
 ## 主题列表
 

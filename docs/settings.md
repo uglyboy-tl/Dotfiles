@@ -2,7 +2,7 @@
 
 ## 概述
 
-统一入口，管理桌面可切换设置与帮助：**主题 / 壁纸 / 字体 / 帮助**。其中"帮助"是子菜单，收纳纯查看类条目（快捷键、关于）。同一套代码提供两种界面：
+统一入口，管理桌面可切换设置与查看类条目：**主题 / 壁纸 / 字体 / 快捷键 / 关于**。同一套代码提供两种界面：
 
 | 界面 | 工具 | 启用方式 |
 |------|------|----------|
@@ -27,9 +27,8 @@ settings/                              # 设置菜单（独立目录，入口链
 ├── setting-theme.sh                 # 主题切换
 ├── setting-wallpaper.sh             # 壁纸切换
 ├── setting-font.sh                  # 字体切换
-├── setting-help.sh                  # 帮助子菜单（快捷键 / 关于）
-├── setting-help-keybindings.sh      # 快捷键速查（条目式，只读）
-├── setting-help-about.sh            # 关于（fastfetch 系统信息，经 show 层双端展示）
+├── setting-keybindings.sh           # 快捷键速查（条目式，选中即执行）
+├── setting-about.sh                 # 关于（fastfetch 系统信息，经 show 层双端展示）
 ├── rofi/                            # 设置 rofi 主题
 │   ├── settings.rasi                # 主菜单
 │   ├── preview.rasi                 # 带图片预览的选择界面
@@ -49,16 +48,16 @@ settings/                              # 设置菜单（独立目录，入口链
     └── LICENSE.kittytgp              # img-preview.py 的第三方许可
 ```
 
-## 帮助子菜单
+## 快捷键 / 关于
 
-`setting-help.sh` 把查看/执行类条目收拢在一起（区别于"设置"）：
+执行/查看类条目直接挂在主菜单下，没有额外层级：
 
 | 条目 | 脚本 | 说明 |
 |------|------|------|
-| 快捷键 | `setting-help-keybindings.sh` | 列出精选快捷键，**选中即执行**对应命令；`Super + k` 直接打开（链接为 `~/.local/bin/keybindings`） |
-| 关于 | `setting-help-about.sh` | 展示 fastfetch 彩色输出，经内容展示层（`show_content`）按界面双端呈现 |
+| 快捷键 | `setting-keybindings.sh` | 列出精选快捷键，**选中即执行**对应命令；`Super + k` 直接打开（链接为 `~/.local/bin/keybindings`） |
+| 关于 | `setting-about.sh` | 展示 fastfetch 彩色输出，经内容展示层（`show_content`）按界面双端呈现 |
 
-快捷键界面执行命令后返回 `MENU_EXIT_ALL`，由 `menu_loop`（`lib/menu.sh`）逐级向上传播，入口菜单（`--root`）捕获后整体退出。这是通用约定：**任何菜单子项只要返回 `MENU_EXIT_ALL` 即可退出整个菜单栈**，中间层无需写传播代码；左键/Esc 取消则正常返回上级。该脚本独立运行时默认用 rofi（无 `SELECTOR_UI` 继承时）。
+快捷键界面执行命令后返回 `MENU_EXIT_ALL`，由入口菜单（`--root`）捕获后整体退出。这是通用约定：**任何菜单子项只要返回 `MENU_EXIT_ALL` 即可退出整个菜单栈**；左键/Esc 取消则正常返回上级。该脚本独立运行时默认用 rofi（无 `SELECTOR_UI` 继承时）。
 
 ## 内容展示层（show）
 
