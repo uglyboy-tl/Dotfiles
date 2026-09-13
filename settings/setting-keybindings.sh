@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # 快捷键界面：列出精选快捷键，选中即执行对应命令（仿 Omarchy 的 keybindings 菜单）
 # 用法:
-#   setting-help-keybindings.sh            交互式（界面由 SELECTOR_UI 决定: gui=rofi, tui=fzf）
-#   setting-help-keybindings.sh --gui      强制用 rofi（桌面快捷键直启时用）
+#   setting-keybindings.sh            交互式（界面由 SELECTOR_UI 决定: gui=rofi, tui=fzf）
+#   setting-keybindings.sh --gui      强制用 rofi（桌面快捷键直启时用）
 #
 # 只维护 SHORTCUTS 关联数组（[键位]=描述），命令从 sxhkdrc 自动查得并展开花括号。
 # 展示顺序沿用 sxhkdrc 里的顺序。

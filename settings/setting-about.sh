@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 系统信息(关于)脚本
 # 用法:
-#   setting-help-about.sh   显示 fastfetch 系统信息（界面由 SELECTOR_UI 决定）
+#   setting-about.sh   显示 fastfetch 系统信息（界面由 SELECTOR_UI 决定）
 #
 # 通过通用展示层 lib/show.sh 展示带 ANSI 颜色的输出:
 #   gui: rofi 只读窗 (viewer.rasi + ansi-to-pango.py)

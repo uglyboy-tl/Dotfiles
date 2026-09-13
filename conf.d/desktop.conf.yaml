@@ -18,7 +18,7 @@
     # 设置菜单入口（其余 settings/ 脚本由入口按绝对路径调用，不进 PATH）
     ~/.local/bin/settings: settings/settings
     # 快捷键执行菜单（选中即执行，仿 Omarchy）
-    ~/.local/bin/keybindings: settings/setting-help-keybindings.sh
+    ~/.local/bin/keybindings: settings/setting-keybindings.sh
     ~/.local/share/applications/:
       create: true
       glob: true

@@ -1,6 +1,6 @@
 #!/bin/bash
 # menu.sh - 通用菜单循环与"退出整栈"传播
-# 作为函数库被 settings / setting-help 等 source（需先 source selectors.sh）。
+# 作为函数库被 settings / setting-* 等 source（需先 source selectors.sh）。
 
 # 防止重复加载
 [[ -n "${_MENU_LOADED:-}" ]] && return 0
