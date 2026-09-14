@@ -65,6 +65,8 @@ _c pointer_action3 move          # 鼠标动作3：移动窗口
 	_o redshift              # 启动 Redshift (色温调节)
 	_s dunst                 # 启动 Dunst (通知守护进程)
 	_s polybar --reload main # 启动 Polybar (状态栏) 并重新加载配置
+	# 套用已保存的布尔开关（如 polybar 阴影）：直接用通用引擎，不经过菜单 UI
+	( . "$XDG_DATA_HOME/dotfiles/settings/lib/toggles.sh"; toggles_apply_all settle ) >/dev/null 2>&1 &
 	# _s lxpolkit              # 启动 LXPolkit (策略工具包)
 	_s udiskie               # 启动 Udiskie（自动挂载外部设备）
 	_s dex -a               # 启动 XDG Autostart .desktop 文件
@@ -72,7 +74,8 @@ _c pointer_action3 move          # 鼠标动作3：移动窗口
 
 # 动态壁纸：读取当前保存的风格，未保存则默认 lakeside，应用并同步 crontab
 _current_wall=$(cat "$HOME/.local/state/wallpaper/current" 2>/dev/null || echo lakeside)
-"$XDG_DATA_HOME/dotfiles/settings/setting-wallpaper.sh" "$_current_wall" >/dev/null 2>&1 &
+# 非 UI 场景：直接用引擎套用，不经过菜单脚本
+( . "$XDG_DATA_HOME/dotfiles/settings/lib/wallpaper.sh"; wallpaper_apply "$_current_wall" ) >/dev/null 2>&1 &
 
 ## 窗口规则 ----------------------------------------------#
 # 首先移除所有现有规则
@@ -121,7 +124,7 @@ for i in "${code[@]}"; do
 done
 
 ## 浮动窗口规则 (其他应用)
-declare -a floating=(rofi feh Zathura) # 定义其他浮动应用数组
+declare -a floating=(rofi feh Zathura zenity) # 定义其他浮动应用数组
 for i in "${floating[@]}"; do
 	_r "$i" state=floating follow=on focus=on # 将这些应用设置为浮动窗口
 done
