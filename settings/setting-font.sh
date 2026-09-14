@@ -102,16 +102,15 @@ validate_font() {
   return 0
 }
 
-# 刷新 fontconfig 缓存，使新开窗口即应用新字体
-# 说明: ghostty/alacritty 已打开的窗口字体不随 reload 刷新,
-# 不需要 reload 命令，重新打开窗口即生效。
 # 应用指定字体（单次）
+# 设置写进 fonts.conf 即算切换完成（新开窗口即刻生效），随后立即提示并返回；
+# 耗时的收尾（fc-cache 重建缓存、让 ghostty 重新解析字体）全部丢后台，不阻塞菜单。
 apply_font_run() {
   local font="$1"
   validate_font "$font" || return 1
   apply_font "$font" || return 1
-  fc-cache -f >/dev/null 2>&1 || true
   notify "已切换到字体: $font"
+  ( fc-cache -f >/dev/null 2>&1; pkill -USR2 -x ghostty >/dev/null 2>&1 ) &
 }
 
 # 循环模式：选择 → 应用 → 回到选择界面
