@@ -3,19 +3,19 @@
 ; 注意: dunst 要求颜色值必须用引号括起来, 否则 # 会被当作注释
 
 [global]
-    frame_color = "{{ lighter_background }}"
+    frame_color = "{{ accent }}"
     separator_color = frame
     highlight = "{{ accent }}"
 
 [urgency_low]
     background = "{{ background }}"
     foreground = "{{ dark_foreground }}"
-    frame_color = "{{ lighter_background }}"
+    frame_color = "{{ accent }}"
 
 [urgency_normal]
     background = "{{ background }}"
     foreground = "{{ foreground }}"
-    frame_color = "{{ lighter_background }}"
+    frame_color = "{{ accent }}"
 
 [urgency_critical]
     background = "{{ background }}"
