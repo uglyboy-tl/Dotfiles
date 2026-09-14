@@ -1,3 +1,5 @@
+@import "colors"
+
 * {
   border: 0;
   margin: 0;
@@ -14,12 +16,12 @@ configuration {
 
 window {
   transparency:		"real";
-  background-color:		@background;
+  background-color:		transparent;
   text-color:			@foreground;
-  border-radius:		11px;
+  border-radius:		10px;
   width:			371px;
   x-offset:			-10px;
-  y-offset:			46px;
+  y-offset:			48px;
 }
 
 mainbox {
@@ -32,34 +34,40 @@ inputbar {
   expand: false;
   border: 4px;
   border-color: @lighter-background;
-  border-radius: 11px;
+  border-radius: 10px;
   margin: 25px 20px 0 20px;
-  color: @dark-foreground;
+  color: @foreground;
   background-color: @dark-background;
 
-  children: [textbox-prompt-colon, prompt];
+  children: [textbox-prompt-colon, textbox-spacer-left, prompt, textbox-spacer-right];
+}
+
+textbox-spacer-left, textbox-spacer-right {
+  expand: true;
 }
 
 textbox-prompt-colon {
   expand: false;
-  str: " ";
+  str: "";
+  font: "Maple Mono Normal CN 16";
   background-color: inherit;
   text-color: @red;
-  margin: 0 8px 0 8px;
+  margin: 5px 10px 0 10px;
 }
 
 prompt {
   location: center;
   expand: false;
   text-font: inherit;
-  text-color: @dark-foreground;
+  vertical-align: 0.5;
+  text-color: @foreground;
   background-color: inherit;
   padding: 0 4px;
   margin-right: 6px;
 }
 
 listview {
-  background-color:               @background;
+  background-color:               transparent;
   margin:                         25px 20px;
   cycle:                          true;
   dynamic:                        true;
@@ -71,7 +79,7 @@ element {
   border-radius:                  100%;
   border: 1px;
   border-color: @lighter-background;
-  background-color:               rgba(30,30,46,0);
+  background-color:               transparent;
   text-color: @foreground;
   orientation:                    horizontal;
   margin: 0 15px;
@@ -91,5 +99,3 @@ element selected {
   background-color: @accent;
   border-radius: 100%;
 }
-
-@import "colors"

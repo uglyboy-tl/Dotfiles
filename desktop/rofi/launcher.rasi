@@ -1,3 +1,5 @@
+@import "colors"
+
 configuration {
   show-icons:		true;
   display-drun:		"";
@@ -9,16 +11,14 @@ configuration {
   location:			1;
 }
 
-@import "colors"
-
 window {
   transparency:		"real";
-  background-color:		@background;
+  background-color:		transparent;
   text-color:			@foreground;
-  border-radius:		11px;
+  border-radius:		10px;
   width:			400px;
   x-offset:			10px;
-  y-offset:			46px;
+  y-offset:			48px;
 }
 
 mainbox {
@@ -26,11 +26,11 @@ mainbox {
 }
 
 inputbar {
-  color: @dark-foreground;
+  color: @foreground;
   background-color: @lighter-background;
 
   border: 1px;
-  border-radius:  11px 11px 0px 0px;
+  border-radius:  10px 10px 0px 0px;
   border-color: @darker-background;
 
   children: [prompt, entry];
@@ -58,7 +58,7 @@ listview {
 
 element {
   padding: 6px;
-  border-radius: 11px;
+  border-radius: 10px;
   background-color: transparent;
   text-color: @foreground;
 }

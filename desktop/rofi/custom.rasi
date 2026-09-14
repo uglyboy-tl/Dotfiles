@@ -8,10 +8,11 @@
 window {
   location: center;
   anchor:   center;
-  border-radius: 11px;
+  border-radius: 10px;
   width: 1024px;
 
-  background-color: rgba(30,30,46,0);
+  transparency: "real";
+  background-color: transparent;
   spacing: 0;
   children:  [mainbox];
   orientation: horizontal;
@@ -22,11 +23,11 @@ mainbox {
 }
 
 inputbar {
-  color: @dark-foreground;
+  color: @foreground;
   background-color: @lighter-background;
 
   border: 0px;
-  border-radius:  11px 11px 0px 0px;
+  border-radius:  10px 10px 0px 0px;
   border-color: @blue;
 
   children: [prompt, entry];
@@ -54,7 +55,7 @@ listview {
 
 element {
   padding: 6px;
-  border-radius: 11px;
+  border-radius: 10px;
   background-color: transparent;
   text-color: @foreground;
 }
