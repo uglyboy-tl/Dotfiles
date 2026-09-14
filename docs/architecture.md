@@ -12,7 +12,7 @@ data/            随仓库分发的外部数据（壁纸、RIME 词库）
 rpi/             树莓派专用
 scripts/         用户入口脚本（链接到 ~/.local/bin）
 settings/        设置菜单与可复用库（详见「脚本分层」）
-themes/          主题颜色 + 模板，渲染生成各应用颜色文件
+themes/          主题数据：颜色 + 模板 + 渲染声明(render.conf)
 ```
 
 设计遵循三点：**声明与内容分离**（`conf.d` 只声明映射，源文件各自独立）、**入口与库分离**（`scripts/` 面向用户，`settings/` 被复用）、**渲染而非手改**（颜色由模板生成，不直接编辑产物）。
@@ -60,6 +60,8 @@ settings/                设置菜单与可复用库
     ├── menu.sh          菜单循环：menu_loop / MENU_EXIT_ALL
     ├── notify.sh        消息抽象：notify / notify_error
     ├── render.sh        模板渲染：render
+    ├── toggles.sh       布尔开关引擎：发现 / 状态 / apply_all（无 UI）
+    ├── wallpaper.sh     壁纸引擎：风格 / 状态 / dwall / crontab（无 UI）
     └── show.sh          内容展示：show_content
 ```
 
@@ -73,7 +75,7 @@ settings/                设置菜单与可复用库
 
 ## 主题渲染流程
 
-`themes/colors/<theme>/colors.toml` + `themes/templates/<app>.tpl` 经 `render.sh` 生成 `~/.config/<app>/colors.*`，产物不手改。
+`themes/render.conf`（声明：应用 ← 模板 → 输出/重载）+ `themes/templates/<app>.tpl` + `themes/colors/<theme>/colors.toml`，由 `setting-theme.sh`（内部用 `render.sh`）生成 `~/.config/<app>/colors.*`，产物不手改。
 
 变量、重载方式、新增主题/应用等完整规则见 [主题系统](theming.md)。
 

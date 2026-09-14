@@ -2,7 +2,7 @@
 
 ## 概述
 
-统一入口，管理桌面可切换设置与查看类条目：**主题 / 壁纸 / 字体 / 快捷键 / 关于**。同一套代码提供两种界面：
+统一入口，管理桌面可切换设置与查看类条目：**主题 / 壁纸 / 字体 / 开关 / 快捷键 / 关于**。同一套代码提供两种界面：
 
 | 界面 | 工具 | 启用方式 |
 |------|------|----------|
@@ -27,14 +27,20 @@ settings/                              # 设置菜单（独立目录，入口链
 ├── setting-theme.sh                 # 主题切换
 ├── setting-wallpaper.sh             # 壁纸切换
 ├── setting-font.sh                  # 字体切换
+├── setting-toggles.sh               # 布尔开关子菜单（纯 UI，具体开关见 toggles/）
 ├── setting-keybindings.sh           # 快捷键速查（条目式，选中即执行）
 ├── setting-about.sh                 # 关于（fastfetch 系统信息，经 show 层双端展示）
+├── toggles/                         # 布尔开关实现（每个开关一个独立脚本）
+│   ├── polybar-shadow.sh            #   Polybar 阴影
+│   └── dunst-pause.sh               #   免打扰（暂停通知）
 ├── rofi/                            # 设置 rofi 主题
 │   ├── settings.rasi                # 主菜单
 │   ├── preview.rasi                 # 带图片预览的选择界面
 │   └── viewer.rasi                  # 只读内容查看窗（show_gui 使用）
 └── lib/                             # 库与 helper
     ├── selectors.sh                 # 选择器：select_ui / selector_gui_supported / epipe_init
+    ├── toggles.sh                    # 布尔开关引擎（发现 + 状态 + apply_all）
+    ├── wallpaper.sh                  # 壁纸引擎（风格 / 状态 / dwall / crontab；bspwmrc 也用）
     ├── menu.sh                       # 通用菜单循环 menu_loop + 退出整栈传播 MENU_EXIT_ALL
     ├── notify.sh                     # 消息：notify / notify_error
     ├── render.sh                     # 模板渲染（主题脚本使用）
@@ -58,6 +64,35 @@ settings/                              # 设置菜单（独立目录，入口链
 | 关于 | `setting-about.sh` | 展示 fastfetch 彩色输出，经内容展示层（`show_content`）按界面双端呈现 |
 
 快捷键界面执行命令后返回 `MENU_EXIT_ALL`，由入口菜单（`--root`）捕获后整体退出。这是通用约定：**任何菜单子项只要返回 `MENU_EXIT_ALL` 即可退出整个菜单栈**；左键/Esc 取消则正常返回上级。该脚本独立运行时默认用 rofi（无 `SELECTOR_UI` 继承时）。
+
+## 开关（布尔设置）
+
+布尔型设置分三层，各层互不了解对方细节：
+
+- **菜单 UI** `setting-toggles.sh`：只调引擎的 `toggles_keys / toggle_label / toggle_state / toggle_flip`，列出「标签：开/关」、**选中即翻转并 `notify` 提示**；走 `select_ui`，复用设置主题（`settings/rofi/settings.rasi`），**无需单独新建 rasi**，也不含任何具体功能。
+- **引擎** `lib/toggles.sh`（通用，可 source）：发现开关、读写状态、`toggles_apply_all`。状态存于 `$XDG_STATE_HOME/settings/toggles/<key>`（`1`/`0`，不进版本库）；无状态文件时用该开关脚本给的默认值。
+- **具体开关** `toggles/<key>.sh`：每个开关一个独立可执行脚本。
+
+**新增开关 = 往 `settings/toggles/` 丢一个可执行脚本**，不碰菜单、不碰引擎。脚本约定三个子命令：
+
+| 子命令 | 作用 |
+|--------|------|
+| `label` | 打印显示名 |
+| `default` | 打印"未选择时"的默认状态（`0`/`1`；缺省视为 `1`） |
+| `apply <0\|1> [settle]` | 按给定状态套用（`settle` 非空时用于骑过窗口重建，可忽略） |
+
+提示统一由菜单发出（`notify`，套用后）；开关脚本只负责套用，不涉及提示。
+
+**启动套用**：`bspwmrc` 在 `_s polybar` 之后直接 source 引擎并调 `toggles_apply_all settle`，**不经过菜单 UI**——所以启动/重载只重套、不弹任何提示。
+
+**已有开关**
+
+| 开关 | 实现 | 默认 |
+|------|------|------|
+| Polybar 阴影 | 用 picom 的窗口属性 `_COMPTON_SHADOW` **实时**开关：关闭时给 polybar 窗口设 `_COMPTON_SHADOW=0`，开启时移除该属性恢复默认。**不改任何配置文件、不重启 picom**（picom 会监听该属性变化重算阴影）。 | 关（无阴影） |
+| 免打扰 | `dunstctl set-paused` 暂停/恢复通知。关闭时**先 `close-all` 丢弃暂停期间积压的通知再恢复**（否则恢复瞬间会一次性弹出旧通知）。开启时的提示会被暂停的 dunst 排队、看不到，并在下次关闭时随积压一起清掉，属正常。 | 关（正常通知） |
+
+> `_COMPTON_SHADOW` 是会话内属性，polybar 窗口重建后会丢失，且重建期间新旧窗口会短暂并存。故该开关的 `apply` 在 `settle` 模式下于数秒内反复设到当前所有 polybar 窗口上，骑过整个重建（只设一次会落到正在退出的旧窗口上而落空）；交互式翻转只设一次。
 
 ## 内容展示层（show）
 
@@ -125,8 +160,10 @@ main "$@"
 
 然后注册进 `settings/settings` 的 `get_settings_items` 与 `case`。
 
-> 变体：`setting-font.sh` / `setting-wallpaper.sh` 拆成 `apply_<name>`（纯生效）与
-> `apply_<name>_run`（校验+生效+通知），因为 `setting-wallpaper.sh` 会被 `bspwmrc` 直接调用。
+> **何时抽引擎库**：仅当套用逻辑需要在**非 UI** 场景复用才抽到 `lib/`，否则就近放在设置脚本里。
+> 例：`setting-wallpaper` 的套用被 `bspwmrc` 直接调用，故引擎在 `lib/wallpaper.sh`（菜单脚本变薄）；
+> `setting-theme` / `setting-font` 没有非 UI 调用方，套用逻辑就在各自脚本内（不单独抽库）。
+> `setting-font.sh` 另有 `apply_font` / `apply_font_run` 的小拆分（纯生效 / 带校验+通知）。
 
 ## 状态文件
 
@@ -136,6 +173,7 @@ main "$@"
 |------|----------|
 | 主题 | `~/.local/state/theme/current` |
 | 壁纸 | `~/.local/state/wallpaper/current` |
+| 开关（布尔设置） | `~/.local/state/settings/toggles/<key>`（每个开关一个文件，`1`/`0`） |
 
 ## 语义约定
 

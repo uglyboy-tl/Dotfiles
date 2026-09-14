@@ -8,6 +8,25 @@
 
 > 该模式会**误伤主题源文件** `themes/colors/<theme>/colors.toml`。新增主题后需确认源文件已纳入版本控制（必要时 `git add -f`，或把规则改成只忽略具体生成路径，如 `desktop/alacritty/colors.toml`）。否则克隆仓库拿不到任何主题。
 
+### 本地改动不追踪（skip-worktree）
+
+`desktop/fontconfig/fonts.conf` 会被设置菜单的"字体"项改写。仓库需要保留一份默认版本供初次安装，但不希望记录本机的字体偏好，因此对本机该文件启用 Git 的 `skip-worktree`：
+
+```sh
+git update-index --skip-worktree desktop/fontconfig/fonts.conf
+```
+
+- 这是**本地索引标志，不随仓库提交**；换机器或重新 clone 后需重新执行一次。
+- 文件仍被跟踪，仓库保留已提交的默认版本；本地改动留在磁盘但不进 `git status`。
+- 需要主动提交一次本地改动、或与上游同步该文件时：
+
+```sh
+git update-index --no-skip-worktree desktop/fontconfig/fonts.conf
+# 处理（commit / checkout / stash）后，再设回 --skip-worktree
+```
+
+- `config/pi/settings.json` 同样会被设置项改动，但**暂不**做此处理，保持正常追踪。
+
 ## 维护约定
 
 | 你要做的事 | 需要改的地方 |
