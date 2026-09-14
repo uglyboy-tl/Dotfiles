@@ -21,13 +21,38 @@ menu_loop() {
   shift 3
   [ "${1:-}" = "--root" ] && root=1
 
-  local items last=""
-  items="$("$items_cmd")"
+  # 记住上次选中项的“位置”而非内容：内容可能随操作变化（如开关的 开/关 标签），
+  # 按位置回填才能让下次打开仍高亮同一项。
+  local last_idx=-1
 
   while true; do
-    local choice rc=0
-    choice=$(select_ui -p "$prompt" -d "$items" -s "$last") || return 0
+    # 每轮重新生成选项：菜单项可能随状态变化
+    local items choice sel="" rc=0 i=0 line
+    items="$("$items_cmd")"
+
+    # 用上次记录的位置在新列表中取回当前内容作为高亮项
+    if [ "$last_idx" -ge 0 ]; then
+      while IFS= read -r line; do
+        if [ "$i" -eq "$last_idx" ]; then
+          sel="$line"
+          break
+        fi
+        i=$((i + 1))
+      done <<< "$items"
+    fi
+
+    choice=$(select_ui -p "$prompt" -d "$items" -s "$sel") || return 0
     [ -n "$choice" ] || return 0
+
+    # 记录选中项位置
+    i=0
+    while IFS= read -r line; do
+      if [ "$line" = "$choice" ]; then
+        last_idx=$i
+        break
+      fi
+      i=$((i + 1))
+    done <<< "$items"
 
     "$handler" "$choice" || rc=$?
     if [ "$rc" -eq "$MENU_EXIT_ALL" ]; then
@@ -35,7 +60,5 @@ menu_loop() {
     elif [ "$rc" -ne 0 ]; then
       return "$rc"
     fi
-
-    last="$choice"
   done
 }

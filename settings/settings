@@ -38,6 +38,7 @@ get_settings_items() {
 主题
 壁纸
 字体
+开关
 快捷键
 关于
 EOF
@@ -49,6 +50,7 @@ handle_settings() {
     主题) "$DOTFILES_DIR/settings/setting-theme.sh" ;;
     壁纸) "$DOTFILES_DIR/settings/setting-wallpaper.sh" ;;
     字体) "$DOTFILES_DIR/settings/setting-font.sh" ;;
+    开关) "$DOTFILES_DIR/settings/setting-toggles.sh" ;;
     快捷键) "$DOTFILES_DIR/settings/setting-keybindings.sh" ;;
     关于) "$DOTFILES_DIR/settings/setting-about.sh" ;;
   esac
