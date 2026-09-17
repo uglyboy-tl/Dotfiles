@@ -14,13 +14,12 @@
     "npm:@ff-labs/pi-fff"
   ],
   "defaultProvider": "opencode-go",
-  "defaultModel": "mimo-v2.5",
+  "defaultModel": "deepseek-v4.1-flash",
   "enabledModels": [
     "opencode/mimo-v2.5-free",
     "opencode-go/mimo-v2.5",
     "opencode-go/deepseek-v4.1-flash",
-    "opencode-go/deepseek-v4-flash",
-    "opencode-go/deepseek-v4-flash-vision-exp"
+    "deepseek/deepseek-flash"
   ],
   "defaultThinkingLevel": "high",
   "tuiMode": "fullscreen",
