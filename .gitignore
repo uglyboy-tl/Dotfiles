@@ -1,4 +1,8 @@
 .vscode/
 .opencode/
-*__pycache__*
-**/colors.*
+__pycache__/
+
+# 主题渲染产物（settings/setting-theme.sh 生成，不手改、不提交）。
+# 目录级软链让产物落回仓库，但只落在 desktop/<app>/ 下。
+# 不要图省事写成 `**/colors.*`：那会连主题源文件一起忽略（已踩过）。
+desktop/*/colors.*
