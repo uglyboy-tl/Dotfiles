@@ -113,7 +113,10 @@ green = "#a3be8c"
 | Rofi | `rofi.rasi.tpl` | `rofi/colors.rasi` | 下次启动生效 |
 | Zathura | `zathura.conf.tpl` | `zathura/colors.conf` | 重启 |
 | BSPWM | `bspwm.sh.tpl` | `bspwm/colors.sh` | `bspc wm -r` |
+| fcitx5 | `fcitx5.conf.tpl` | `fcitx5/themes/dotfiles/theme.conf`（`data:` 前缀，落 `XDG_DATA_HOME`） | `fcitx5 -r -d`（主题按名缓存，需重启重读） |
 | GTK3 / GTK4 | `gtk3.css.tpl` / `gtk4.css.tpl` | `gtk-3.0/gtk.css` / `gtk-4.0/gtk.css` | 应用重启（标记 `always`，始终渲染） |
+
+> fcitx5 主题名固定为 `dotfiles`，换肤只重写 `theme.conf`，故 `classicui.conf`（已由 dotbot 纳管）里的 `Theme=dotfiles` 只需写一次，不随换肤改变。
 
 ## 添加新主题
 
@@ -123,12 +126,12 @@ mkdir -p themes/colors/my-theme
 ~/.local/share/dotfiles/settings/setting-theme.sh my-theme
 ```
 
-> 注意 `.gitignore` 的 `**/colors.*` 会误伤主题源文件，提交前确认它被纳入版本控制，见 [维护者笔记](maintenance.md#版本控制)。
+> `.gitignore` 用 `desktop/*/colors.*` 忽略产物（不用 `**/colors.*`——那会连主题源文件 `themes/colors/<theme>/colors.toml` 一起误伤，曾导致六个主题丢失）。产物落在 `desktop/<app>/` 下即自动覆盖。见 [ADR-0001](adr/0001-gitignore-colors-artifacts.md)。
 
 ## 添加新应用
 
 1. 创建 `themes/templates/<app>.tpl`
-2. 在 `themes/render.conf` 加一行 `应用|模板|输出路径|重载命令|标记`（输出路径相对 `XDG_CONFIG_HOME`；标记加 `always` 表示不判是否安装、始终渲染）
+2. 在 `themes/render.conf` 加一行 `应用|模板|输出路径|重载命令|标记`（输出路径默认相对 `XDG_CONFIG_HOME`，前缀 `data:` 表示相对 `XDG_DATA_HOME`；标记加 `always` 表示不判是否安装、始终渲染）
 3. 需要重载才填第 4 列，不需要则留空
 
 ## 其它软件（评估结论）

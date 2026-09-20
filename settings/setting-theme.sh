@@ -72,11 +72,15 @@ _for_each_target() {
 }
 
 # 渲染一行（跳过未装应用；`always` 标记除外）
+# 输出路径默认相对 XDG_CONFIG_HOME，`data:` 前缀相对 XDG_DATA_HOME
 _render_one() {
   local app="$1" tmpl="$2" out="$3" reload="$4" flags="$5" theme="$6" src dst
   [[ ",$flags," == *",always,"* ]] || command -v "$app" >/dev/null 2>&1 || return 0
   src="$TEMPLATES_DIR/$tmpl"
-  dst="$XDG_CONFIG_HOME/$out"
+  case "$out" in
+    data:*) dst="$XDG_DATA_HOME/${out#data:}" ;;
+    *)      dst="$XDG_CONFIG_HOME/$out" ;;
+  esac
   if [ -f "$src" ]; then
     render "$COLORS_DIR/$theme/colors.toml" "$src" "$dst"
     RENDERED=$((RENDERED + 1))
