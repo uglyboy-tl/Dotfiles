@@ -3,7 +3,7 @@
 # tail=true 常驻进程,点击发 USR1 信号立即切换,像 internal/date 一样快
 
 AUTH_FILE="$HOME/.local/share/opencode/auth.json"
-CACHE_DIR="/tmp/polybar-opencode-cache"
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/polybar-opencode-cache"
 CACHE_TTL=300
 
 mkdir -p "$CACHE_DIR"
