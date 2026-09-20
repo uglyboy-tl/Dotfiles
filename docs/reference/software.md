@@ -8,7 +8,7 @@
 |------|----------|
 | 环境变量（XDG 重定向源头） | `config/environment`（systemd 子集在 `config/environment.d/`） |
 | ZSH + Zinit + Powerlevel10k | `config/zsh/` |
-| Bash | `config/bashrc` |
+| Bash（当前未启用，链接已注释） | `config/bashrc` |
 | Starship（已链接，当前未启用） | `config/starship.toml` |
 | Atuin | `config/atuin/config.toml` |
 | FZF / Zoxide | ZSH 插件（`config/zsh/zshrc.zsh`） |
@@ -33,7 +33,7 @@
 
 | 软件 | 配置路径 |
 |------|----------|
-| NeoMutt / offlineimap / notmuch / himalaya / pass | `config/mail/` |
+| NeoMutt / offlineimap / notmuch / himalaya / pass | `config/mail/`（offlineimap 的 systemd 定时器也在其中） |
 
 ## 桌面环境
 
@@ -43,18 +43,19 @@
 | Polybar | `desktop/polybar/` |
 | Rofi | `desktop/rofi/` |
 | Alacritty / Ghostty / URxvt | `desktop/alacritty/`、`desktop/ghostty/`、`desktop/X11/` |
-| Dunst / Zathura / MPV | `desktop/dunst.conf`、`desktop/zathura/`、`desktop/mpv/` |
-| Picom / Redshift / 字体 | `desktop/picom.conf`、`desktop/redshift.conf`、`desktop/fontconfig/fonts.conf` |
+| Dunst / Zathura / MPV | `desktop/dunst/dunstrc`、`desktop/zathura/`、`desktop/mpv/` |
+| Picom / Redshift / 字体 | `desktop/picom/picom.conf`、`desktop/redshift/redshift.conf`、`desktop/fontconfig/fonts.conf` |
 | 桌面入口文件（.desktop） | `desktop/applications/` |
 | Udiskie | `desktop/udiskie/config.yml` |
-| FCITX5-RIME | `desktop/fcitx5-rime/` + `data/rime-ice/` |
+| 屏保 / 熄屏 | `desktop/idle-screensaver.sh`（由 `desktop/bspwm/bspwmrc` 调用；图片目录本地设于 `~/.config/local/idle-screensaver`，后备为 `data/dynamic-wallpaper/images`；依赖 `feh`、`xprintidle`） |
+| FCITX5 / RIME | `desktop/fcitx5/`（`config`、`classicui.conf`、`rime/` 补丁）+ `data/rime-ice/` |
 
 ## 开发 & AI 工具
 
 | 软件 | 配置路径 |
 |------|----------|
 | Git | `config/git/config` |
-| UV / Bun / Python | `config/sources/` |
+| UV / Bun / Python（包管理器镜像源） | `config/sources/` |
 | Pi / OpenCode | `config/pi/` / `config/opencode/` |
 
 ## 其他随仓库分发
@@ -63,4 +64,5 @@
 |------|------|
 | 动态壁纸 | `data/dynamic-wallpaper/` |
 | RIME 词库（雾凇拼音） | `data/rime-ice/` |
-| binup 配置 | `desktop/builtin/binup.toml`（桌面）、`rpi/builtin/binup.toml`（树莓派） |
+| binup 配置 | `desktop/binup.toml`（桌面）、`rpi/binup.toml`（树莓派） |
+| 第三方脚本 | 与自研脚本同在 `scripts/`，靠文件头署名区分（见 [脚本参考](scripts.md)） |

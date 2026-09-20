@@ -1,3 +1,8 @@
+- defaults:
+    link:
+      create: true # 目标目录不存在时自动创建
+      relink: true # 已存在的符号链接重新链接
+
 - link:
     ~/.local/bin/:
       create: true # 创建目标目录
@@ -5,8 +10,8 @@
       path: rpi/scripts/* # 源文件路径
       relink: true # 允许重新链接
 
-    # Built-in
-    $XDG_CONFIG_HOME/binup/config.toml: rpi/builtin/binup.toml # UV 配置
+    # Built-in：binup 二进制管理器配置（树莓派版，路径与桌面版不同）
+    $XDG_CONFIG_HOME/binup/config.toml: rpi/binup.toml # binup 包管理器配置
     $XDG_CONFIG_HOME/zsh/zshrc.rpi: rpi/zshrc.rpi
 
 # Crontab 定时任务配置

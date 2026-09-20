@@ -1,3 +1,8 @@
+- defaults:
+    link:
+      create: true # 目标目录不存在时自动创建
+      relink: true # 已存在的符号链接重新链接
+
 - clean:
     ~/.local/share/applications/:
       force: true
@@ -28,8 +33,8 @@
     # 打开方式
     $XDG_CONFIG_HOME/mimeapps.list: desktop/mimeapps.list
 
-    # Built-in
-    $XDG_CONFIG_HOME/binup/config.toml: desktop/builtin/binup.toml # UV 配置
+    # Built-in：binup 二进制管理器配置（桌面机与树莓派各一份，目标路径相同，按环境二选一）
+    $XDG_CONFIG_HOME/binup/config.toml: desktop/binup.toml # binup 包管理器配置
 
     ## Zathura PDF 阅读器
     $XDG_CONFIG_HOME/zathura: desktop/zathura
@@ -52,10 +57,11 @@
     ## BSPWM 窗口管理器生态
     $XDG_CONFIG_HOME/bspwm/bspwmrc: desktop/bspwm/bspwmrc # BSPWM 主配置
     $XDG_CONFIG_HOME/sxhkd/sxhkdrc: desktop/bspwm/sxhkdrc # 快捷键配置
-    $XDG_CONFIG_HOME/picom/picom.conf: desktop/picom.conf # 合成器配置
+    $XDG_CONFIG_HOME/picom/picom.conf: desktop/picom/picom.conf # 合成器配置
+    $XDG_CONFIG_HOME/redshift/redshift.conf: desktop/redshift/redshift.conf # 屏幕色温调节（由 bspwmrc 启动）
     $XDG_CONFIG_HOME/polybar: desktop/polybar # 状态栏配置
     $XDG_CONFIG_HOME/rofi: desktop/rofi # 应用启动器（settings 主题由 selectors 按路径加载）
-    $XDG_CONFIG_HOME/dunst/dunstrc: desktop/dunst.conf # 桌面通知
+    $XDG_CONFIG_HOME/dunst/dunstrc: desktop/dunst/dunstrc # 桌面通知
     ## UDiskie 配置
     $XDG_CONFIG_HOME/udiskie/config.yml: desktop/udiskie/config.yml
 
@@ -69,9 +75,16 @@
 
     ## FCITX5-RIME 输入法
     $XDG_DATA_HOME/fcitx5/rime: data/rime-ice # 默认输入方案
-    $XDG_DATA_HOME/fcitx5/rime/default.custom.yaml: desktop/fcitx5-rime/default.custom.yaml # 默认输入方案
-    $XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml: desktop/fcitx5-rime/luna_pinyin.custom.yaml # 拼音输入方案
-    $XDG_DATA_HOME/fcitx5/rime/rime_ice.custom.yaml: desktop/fcitx5-rime/rime_ice.custom.yaml # 拼音输入方案
+    $XDG_DATA_HOME/fcitx5/rime/default.custom.yaml: desktop/fcitx5/rime/default.custom.yaml # 默认输入方案
+    $XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml: desktop/fcitx5/rime/luna_pinyin.custom.yaml # 拼音输入方案
+    $XDG_DATA_HOME/fcitx5/rime/rime_ice.custom.yaml: desktop/fcitx5/rime/rime_ice.custom.yaml # 拼音输入方案
+    ## fcitx5 本体配置（config 含热键/行为，classicui.conf 含主题/字体；缓存等运行时状态不纳管）
+    $XDG_CONFIG_HOME/fcitx5/config:
+      force: true # 覆盖既有的普通文件，改为软链
+      path: desktop/fcitx5/config
+    $XDG_CONFIG_HOME/fcitx5/conf/classicui.conf:
+      force: true
+      path: desktop/fcitx5/classicui.conf
 
     ## MPV 媒体播放器
     $XDG_CONFIG_HOME/mpv/mpv.conf: desktop/mpv/mpv.conf # MPV 主配置
