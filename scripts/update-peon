@@ -12,6 +12,10 @@ echo "=== update-peon ==="
 echo "-> peon.sh"
 curl -fsSL "$REPO/peon.sh" -o /tmp/peon-new.sh
 sed -i '/^CLAUDE_PEON_DIR=/d; /^# --- Platform detection ---/a\CLAUDE_PEON_DIR="${CLAUDE_PEON_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/openpeon}"' /tmp/peon-new.sh
+# Patch 2: run the embedded Python with PYTHONSAFEPATH=1. The script is written to
+# $TMPDIR, and Python prepends the script's dir to sys.path[0]; stray modules there
+# (e.g. a leftover /tmp/http.py) shadow the stdlib and crash the embedded block.
+sed -i 's|_PEON_PYOUT=$(python3 "$_PEON_PY_TMP"|_PEON_PYOUT=$(PYTHONSAFEPATH=1 python3 "$_PEON_PY_TMP"|' /tmp/peon-new.sh
 cp /tmp/peon-new.sh "$DOTFILES_PEON"
 chmod +x "$DOTFILES_PEON"
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #
+#   来源：tmux/tmux:tools/24-bit-color.sh（第三方，未修改）
+#
 #   This file echoes four gradients with 24-bit color codes
 #   to the terminal to demonstrate their functionality.
 #   The foreground escape sequence is ^[38;2;<r>;<g>;<b>m

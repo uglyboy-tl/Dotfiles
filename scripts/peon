@@ -6609,7 +6609,7 @@ if _auto_debug:
 PEON_LOCAL_PY_EOF
 # Stderr intentionally NOT suppressed: silent failures here masked issue #488
 # for multiple releases. Any future exec error will surface in `peon debug`.
-_PEON_PYOUT=$(python3 "$_PEON_PY_TMP" <<< "$INPUT")
+_PEON_PYOUT=$(PYTHONSAFEPATH=1 python3 "$_PEON_PY_TMP" <<< "$INPUT")
 eval "$_PEON_PYOUT"
 
 # --- Override PROJECT with cmux workspace title ---
