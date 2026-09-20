@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.85.1",
+  "lastChangelogVersion": "0.86.0",
   "theme": "dark",
   "npmCommand": [
     "bun"
@@ -14,7 +14,7 @@
     "npm:@ff-labs/pi-fff"
   ],
   "defaultProvider": "opencode-go",
-  "defaultModel": "deepseek-v4.1-flash",
+  "defaultModel": "mimo-v2.5",
   "enabledModels": [
     "opencode/mimo-v2.5-free",
     "opencode-go/mimo-v2.5",
