@@ -33,11 +33,11 @@ inputbar {
   padding: 4px;
   expand: false;
   border: 4px;
-  border-color: @lighter-background;
+  border-color: @background;
   border-radius: 10px;
   margin: 25px 20px 0 20px;
   color: @foreground;
-  background-color: @dark-background;
+  background-color: @lighter-background;
 
   children: [textbox-prompt-colon, textbox-spacer-left, prompt, textbox-spacer-right];
 }
@@ -68,7 +68,7 @@ prompt {
 }
 
 listview {
-  background-color:               transparent;
+  background-color:               @background;
   margin:                         25px 20px;
   cycle:                          true;
   dynamic:                        true;
