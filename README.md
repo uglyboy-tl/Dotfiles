@@ -33,7 +33,7 @@ config/       命令行环境配置（shell、编辑器、邮件、开发工具�
 desktop/      桌面环境配置（BSPWM、Polybar、Rofi、终端等）
 data/         外部数据（动态壁纸、RIME 词库等）
 rpi/          树莓派专用配置
-scripts/      自定义脚本（链接到 ~/.local/bin）
+scripts/      用户脚本（整个目录链接到 ~/.local/bin）
 settings/     设置菜单与可复用脚本
 themes/       主题颜色定义与模板
 docs/         文档
@@ -42,9 +42,10 @@ docs/         文档
 ## 文档
 
 - [安装与运维](docs/installation.md)
+- [扩展指南](docs/extending.md) - 想加软件/脚本/设置项/主题看这里
+- [术语表](docs/CONTEXT.md) - 名词的规范含义与易混词对照
 - [架构与设计](docs/architecture.md)
-- [主题系统](docs/theming.md)
-- [设置菜单](docs/settings.md)
+- [主题系统](docs/theming.md) · [设置菜单](docs/settings.md)
 - 参考：[软件与配置路径](docs/reference/software.md) · [脚本](docs/reference/scripts.md) · [快捷键](docs/reference/keybindings.md)
 
 完整文档索引见 [docs/](docs/README.md)。

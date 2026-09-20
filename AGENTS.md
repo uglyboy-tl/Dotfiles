@@ -41,7 +41,9 @@ $XDG_CONFIG_HOME/zsh/.zshrc: config/zsh/zshrc.zsh
 
 ## 脚本约定
 
-- 用户入口在 `scripts/`，桌面入口在 `desktop/scripts/`，均链接到 `~/.local/bin`；设置相关复用逻辑在 `settings/`（库在 `settings/lib/`）。
+- 用户入口在 `scripts/`，桌面入口在 `desktop/scripts/`，树莓派入口在 `rpi/scripts/`，均整个目录链接到 `~/.local/bin`。
+- 第三方脚本也放 `scripts/`，但文件头必须注明来源。
+- 设置相关复用逻辑在 `settings/`（库在 `settings/lib/`）。
 - 界面统一走 `selectors.sh` 的 `select_ui`（由 `SELECTOR_UI` 决定 rofi/fzf，组件不感知）；消息统一走 `notify.sh` 的 `notify`。
 - 无构建与测试框架。
 
@@ -51,11 +53,14 @@ $XDG_CONFIG_HOME/zsh/.zshrc: config/zsh/zshrc.zsh
 
 | 主题 | 文档 |
 |------|------|
+| **想加东西**（软件配置/脚本/设置项/开关/主题/模板） | [docs/extending.md](docs/extending.md) |
+| **名词的规范含义**、易混词（config/conf.d、主题/colors、脚本位置） | [docs/CONTEXT.md](docs/CONTEXT.md) |
 | 安装/更新/卸载、conf.d 组合、submodule、本地覆盖 | [docs/installation.md](docs/installation.md) |
 | 整体结构、dotbot 装配、XDG 细节、脚本分层、主题渲染流程 | [docs/architecture.md](docs/architecture.md) |
 | 主题颜色/模板、新增主题或应用 | [docs/theming.md](docs/theming.md) |
 | 设置菜单组件、新增设置项、内部脚本 API | [docs/settings.md](docs/settings.md) |
-| 维护约定、已知问题、待办 | [docs/maintenance.md](docs/maintenance.md) |
+| 维护笔记（Git 索引技巧、预览缓存、已知问题、待办） | [docs/maintenance.md](docs/maintenance.md) |
+| 为什么这样设计、当初排除了什么 | [docs/adr/](docs/adr/) |
 | 某软件的配置放在哪 | [docs/reference/software.md](docs/reference/software.md) |
 | `~/.local/bin` 各命令 | [docs/reference/scripts.md](docs/reference/scripts.md) |
 | 快捷键 | [docs/reference/keybindings.md](docs/reference/keybindings.md) |

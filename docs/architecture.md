@@ -10,12 +10,14 @@ config/          命令行源文件（shell/vim/tmux/git/mail/...）
 desktop/         桌面源文件（bspwm/polybar/rofi/...）与桌面脚本（desktop/scripts/）
 data/            随仓库分发的外部数据（壁纸、RIME 词库）
 rpi/             树莓派专用
-scripts/         用户入口脚本（链接到 ~/.local/bin）
+scripts/         用户入口脚本（整个目录链接到 ~/.local/bin；第三方脚本亦放此，靠文件头署名区分）
 settings/        设置菜单与可复用库（详见「脚本分层」）
 themes/          主题数据：颜色 + 模板 + 渲染声明(render.conf)
 ```
 
 设计遵循三点：**声明与内容分离**（`conf.d` 只声明映射，源文件各自独立）、**入口与库分离**（`scripts/` 面向用户，`settings/` 被复用）、**渲染而非手改**（颜色由模板生成，不直接编辑产物）。
+
+名词的准确定义与易混词对照见 [术语表](CONTEXT.md)。
 
 ## dotbot 装配层
 
@@ -50,7 +52,7 @@ $XDG_CONFIG_HOME/git/config: config/git/config
 ## 脚本分层
 
 ```
-scripts/                 用户入口（被链接到 ~/.local/bin）
+scripts/                 用户入口（整个目录被链接到 ~/.local/bin）
 desktop/scripts/         桌面脚本（截图、barify、rofi-* 等，也被链接到 ~/.local/bin）
 settings/                设置菜单与可复用库
 ├── settings             入口（解析 --gui → SELECTOR_UI，主循环）
@@ -70,6 +72,7 @@ settings/                设置菜单与可复用库
 - **界面与逻辑解耦**：组件只调用 `select_ui`，不关心底层是 rofi 还是 fzf；界面由入口导出的 `SELECTOR_UI`（gui/tui）决定。
 - **消息与平台解耦**：统一走 `notify`，GUI 下桌面通知，否则回退命令行。
 - **选择器/消息/渲染都是可复用库**，新增设置项或工具时直接 source，不重复实现。
+- **不进 PATH 的桌面助手**：只被 WM 调用的脚本放 `desktop/` 根（如 `desktop/idle-screensaver.sh`），由 `bspwmrc` 以 `$XDG_DATA_HOME/dotfiles/...` 绝对路径调用，不必链接到 `~/.local/bin`。
 
 细节见 [设置菜单](settings.md)。
 
