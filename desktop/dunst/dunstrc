@@ -14,7 +14,7 @@
 	gap_size = 8 # 通知之间的间隔
 
 	# 外观设置
-	transparency = 10
+	transparency = 15
 	padding = 18
 	horizontal_padding = 16
 	frame_width = 2
