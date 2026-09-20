@@ -52,6 +52,7 @@ cd ~/.local/share/dotfiles
 | ZSH | `~/.config/local/zshrc.after` | 最后加载 |
 | Vim | `~/.config/local/vimrc` | 由 `config/vim/vimrc` source |
 | TMUX | `~/.config/local/tmux` | 由 `config/tmux/tmux.conf` source |
+| 屏保 | `~/.config/local/idle-screensaver` | 由 `desktop/idle-screensaver.sh` source，设 `IDLE_SCREENSAVER_DIR` 等 |
 | Git | `~/.config/git/local` | 由 `config/git/config` include |
 
 这些文件不存在时会被静默跳过，不会报错。

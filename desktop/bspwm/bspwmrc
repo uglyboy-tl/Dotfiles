@@ -38,6 +38,9 @@ _o sxhkd
 xrdb ~/.config/X11/Xresources
 # 设置鼠标光标
 xsetroot -cursor_name left_ptr
+# 空闲屏保/熄屏：关掉 X 自带黑屏（屏保由 idle-screensaver 放幻灯片），30 分钟才熄屏
+xset s off
+xset dpms 0 0 1800
 
 # 配置显示器和桌面
 _m -d I II III IV V VI # 设置六个桌面
@@ -63,6 +66,8 @@ _c pointer_action3 move          # 鼠标动作3：移动窗口
 (
 	# _s picom -b              # 启动 Picom (合成器)
 	_o redshift              # 启动 Redshift (色温调节)
+	# 空闲屏保：5 分钟无操作放图片轮播，有输入即结束（图片目录见 desktop/idle-screensaver.sh）
+	pgrep -f idle-screensaver.sh >/dev/null || "$XDG_DATA_HOME/dotfiles/desktop/idle-screensaver.sh" &
 	_s dunst                 # 启动 Dunst (通知守护进程)
 	_s polybar --reload main # 启动 Polybar (状态栏) 并重新加载配置
 	# 套用已保存的布尔开关（如 polybar 阴影）：直接用通用引擎，不经过菜单 UI
