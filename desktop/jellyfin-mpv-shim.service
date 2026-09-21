@@ -1,0 +1,15 @@
+[Unit]
+Description=Jellyfin MPV Shim
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+# 移除有问题的ExecCondition，改为简单的延迟启动
+ExecStartPre=/bin/sleep 5
+ExecStart=/home/uglyboy/.local/bin/jellyfin-mpv-shim
+ExecStop=/bin/kill -s SIGINT $MAINPID
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
