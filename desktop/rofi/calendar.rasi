@@ -1,0 +1,95 @@
+/*
+ * ROFI theme - 月历弹出（由 desktop/polybar/scripts/rofi-calendar.py 调用）
+ * 颜色通过 colors.rasi 导入
+ */
+
+@import "colors"
+
+configuration {
+  show-icons: false;
+  hover-select: false; /* 鼠标移动不改变选中 */
+  me-select-entry: "";
+  me-accept-entry: "MousePrimary";
+  location: 3;
+  font: "Hack Nerd Font Mono 11";
+}
+
+entry {
+  enabled: false; /* 禁止键盘输入过滤 */
+}
+
+window {
+  transparency: "real";
+  background-color: transparent;
+  border-radius: 10px;
+  width: 300px;
+  x-offset: -10px;
+  y-offset: 48px;
+}
+
+mainbox {
+  background-color: @background;
+  border-radius: 10px;
+  children: [inputbar, message, listview];
+  padding: 8px;
+}
+
+inputbar {
+  color: @foreground;
+  background-color: @lighter-background;
+  border-radius: 8px;
+  padding: 6px 10px;
+  children: [prompt];
+}
+
+prompt {
+  background-color: inherit;
+  text-color: @foreground;
+  padding: 0;
+}
+
+message {
+  background-color: @background;
+  text-color: @dark-foreground;
+  padding: 10px 2px 6px;
+  horizontal-align: 0.5;
+}
+
+listview {
+  columns: 7;
+  lines: 6;
+  spacing: 2px;
+  padding: 2px;
+  background-color: @background;
+  dynamic: false;
+}
+
+element {
+  padding: 7px 0;
+  border-radius: 6px;
+  background-color: transparent;
+  text-color: @foreground;
+}
+
+element-text {
+  horizontal-align: 0.5;
+  background-color: inherit;
+  text-color: inherit;
+}
+
+/* 导航按钮（脚本用 -a 标记为 active）：浅底 + 主题强调色 */
+element active {
+  background-color: @lighter-background;
+  text-color: @accent;
+}
+
+element selected {
+  background-color: @accent;
+  text-color: @background;
+}
+
+/* 按钮被选中时仍用选中配色，避免蓝字压在紫底上 */
+element selected.active {
+  background-color: @accent;
+  text-color: @background;
+}
