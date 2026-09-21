@@ -35,7 +35,7 @@ super + k
 
 # 蓝牙管理
 super + b
-	~/.local/bin/rofi-bluetooth
+	~/.local/bin/bluetooth
 
 # 重载配置（杀掉重启，避免 USR1 重载后按键失效）
 super + Escape
