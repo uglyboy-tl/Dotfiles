@@ -11,7 +11,7 @@ linemode = "size"
 
 [opener]
 deb = [
-    { run = 'sudo apt install --no-install-recommends -y "$@"', block = true, desc = "Install .deb package" },
+    { run = 'sudo apt install --no-install-recommends -y %s', block = true, desc = "Install .deb package" },
 ]
 
 image-feh = [
@@ -20,6 +20,7 @@ image-feh = [
 
 [open]
 prepend_rules = [
+    { mime = "application/debian.binary-package", use = "deb" },
     { mime = "image/*", use = ["image-feh", "open", "reveal"] },
 ]
 
