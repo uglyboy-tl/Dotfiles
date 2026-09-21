@@ -48,10 +48,10 @@ This script depends on:\n
 declare -A actions
 actions[󰐥]="sudo systemctl poweroff"
 actions[󰑐]="sudo systemctl reboot"
-actions[󰐦]="$HOME/.local/bin/rofi-powermenu -a"
+actions[󰐦]="$HOME/.local/share/dotfiles/desktop/polybar/scripts/rofi-powermenu.sh -a"
 actions[]="$HOME/.local/bin/reboot2win"
 actions[󰋊]="$HOME/.local/bin/reboot2bios"
-actions[]="$HOME/.local/bin/rofi-powermenu"
+actions[]="$HOME/.local/share/dotfiles/desktop/polybar/scripts/rofi-powermenu.sh"
 
 # Check whether a command exists#####
 function command_exists() {
