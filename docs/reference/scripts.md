@@ -23,10 +23,18 @@
 | `barify` | `desktop/scripts/barify` | 音量/亮度指示条（走 dunst/mako） |
 | `brightness` | `desktop/scripts/brightness` | 外接显示器亮度（DDC/CI，经 ddcutil）+ 通知指示 |
 | `dwall.sh` | `desktop/scripts/dwall.sh` | 动态壁纸，按时间切换，由 cron 每小时调用 |
-| `rofi-bluetooth` | `desktop/scripts/rofi-bluetooth` | 蓝牙设备 rofi 菜单（sxhkd `Super + b`） |
-| `rofi-powermenu` | `desktop/scripts/rofi-powermenu` | 电源 rofi 菜单 |
+| `bluetooth` | `desktop/scripts/bluetooth` | 蓝牙设备 rofi 菜单（sxhkd `Super + b`） |
 | `reboot2bios` | `desktop/scripts/reboot2bios` | 重启进入 BIOS/UEFI |
 | `reboot2win` | `desktop/scripts/reboot2win` | 重启进入 Windows（grub 条目） |
+
+## polybar 菜单脚本
+
+只有 polybar 调用的 rofi 菜单脚本放在 `desktop/polybar/scripts/`，**不**链入 `~/.local/bin`，由 polybar 以绝对路径调用。蓝牙菜单因绑定全局快捷键，作为命令放在 `desktop/scripts/bluetooth`。
+
+| 脚本 | 用途 |
+|------|------|
+| `rofi-powermenu.sh` | 电源 rofi 菜单（polybar powermenu 模块点击） |
+| `rofi-calendar.py` | rofi 月历弹出（polybar date 模块点击），主题 `desktop/rofi/calendar.rasi` |
 
 ## 树莓派命令（`rpi` 配置）
 
