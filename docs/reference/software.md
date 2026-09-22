@@ -48,6 +48,7 @@
 | 桌面入口文件（.desktop） | `desktop/applications/` |
 | Udiskie | `desktop/udiskie/config.yml` |
 | 屏保 / 熄屏 | `desktop/idle-screensaver.sh`（由 `desktop/bspwm/bspwmrc` 调用；图片目录本地设于 `~/.config/local/idle-screensaver`，后备为 `data/dynamic-wallpaper/images`；依赖 `feh`、`xprintidle`） |
+| 屏保抑制 | `desktop/idle-screensaver-dbus.py`（提供 `org.freedesktop.ScreenSaver`，让浏览器/播放器能申请抑制；心跳文件 `${XDG_RUNTIME_DIR}/idle-screensaver/dbus-inhibit`，见 [维护笔记](../maintenance.md)） |
 | FCITX5 / RIME | `desktop/fcitx5/`（`config`、`classicui.conf`、`rime/` 补丁）+ `data/rime-ice/` |
 
 ## 开发 & AI 工具

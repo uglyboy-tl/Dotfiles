@@ -72,7 +72,7 @@ settings/                设置菜单与可复用库
 - **界面与逻辑解耦**：组件只调用 `select_ui`，不关心底层是 rofi 还是 fzf；界面由入口导出的 `SELECTOR_UI`（gui/tui）决定。
 - **消息与平台解耦**：统一走 `notify`，GUI 下桌面通知，否则回退命令行。
 - **选择器/消息/渲染都是可复用库**，新增设置项或工具时直接 source，不重复实现。
-- **不进 PATH 的桌面助手**：只被 WM 调用的脚本放 `desktop/` 根（如 `desktop/idle-screensaver.sh`），由 `bspwmrc` 以 `$XDG_DATA_HOME/dotfiles/...` 绝对路径调用，不必链接到 `~/.local/bin`。
+- **不进 PATH 的桌面助手**：只被 WM 调用的脚本放 `desktop/` 根（如 `desktop/idle-screensaver.sh`、`desktop/idle-screensaver-dbus.py`），由 `bspwmrc` 以 `$XDG_DATA_HOME/dotfiles/...` 绝对路径调用，不必链接到 `~/.local/bin`。
 
 细节见 [设置菜单](settings.md)。
 

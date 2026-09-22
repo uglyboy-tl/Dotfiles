@@ -66,12 +66,16 @@ _c pointer_action3 move          # 鼠标动作3：移动窗口
 (
 	# _s picom -b              # 启动 Picom (合成器)
 	_o redshift              # 启动 Redshift (色温调节)
+	# 屏保抑制服务：浏览器/播放器经它申请「播放中别弹屏保」，本机没装 GNOME/KDE，得自己提供
+	pgrep -f idle-screensaver-dbus.py >/dev/null || "$XDG_DATA_HOME/dotfiles/desktop/idle-screensaver-dbus.py" &
 	# 空闲屏保：5 分钟无操作放图片轮播，有输入即结束（图片目录见 desktop/idle-screensaver.sh）
 	pgrep -f idle-screensaver.sh >/dev/null || "$XDG_DATA_HOME/dotfiles/desktop/idle-screensaver.sh" &
 	_s dunst                 # 启动 Dunst (通知守护进程)
 	_s polybar --reload main # 启动 Polybar (状态栏) 并重新加载配置
 	# 套用已保存的布尔开关（如 polybar 阴影）：直接用通用引擎，不经过菜单 UI
 	( . "$XDG_DATA_HOME/dotfiles/settings/lib/toggles.sh"; toggles_apply_all settle ) >/dev/null 2>&1 &
+	# herdr 后台 server（无界面）：agent 会话常驻，客户端随时 attach；已在跑则不重复启动
+	pgrep -f 'bin/herdr server' >/dev/null || "$HOME/.local/bin/herdr" server >/dev/null 2>&1 &
 	# _s lxpolkit              # 启动 LXPolkit (策略工具包)
 	_s udiskie               # 启动 Udiskie（自动挂载外部设备）
 	_s dex -a               # 启动 XDG Autostart .desktop 文件
@@ -129,7 +133,7 @@ for i in "${code[@]}"; do
 done
 
 ## 浮动窗口规则 (其他应用)
-declare -a floating=(rofi feh Zathura zenity) # 定义其他浮动应用数组
+declare -a floating=(rofi feh Zathura zenity Motrix-next) # 定义其他浮动应用数组
 for i in "${floating[@]}"; do
 	_r "$i" state=floating follow=on focus=on # 将这些应用设置为浮动窗口
 done
