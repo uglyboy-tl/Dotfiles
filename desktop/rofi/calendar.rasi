@@ -11,7 +11,7 @@ configuration {
   me-select-entry: "";
   me-accept-entry: "MousePrimary";
   location: 3;
-  font: "Hack Nerd Font Mono 11";
+  font: "Hack Nerd Font Mono 12";
 }
 
 entry {
@@ -21,24 +21,24 @@ entry {
 window {
   transparency: "real";
   background-color: transparent;
-  border-radius: 10px;
-  width: 300px;
-  x-offset: -10px;
-  y-offset: 48px;
+  border-radius: 14px;
+  width: 440px;
+  x-offset: -14px;
+  y-offset: 56px;
 }
 
 mainbox {
   background-color: @background;
-  border-radius: 10px;
+  border-radius: 14px;
   children: [inputbar, message, listview];
-  padding: 8px;
+  padding: 14px;
 }
 
 inputbar {
   color: @foreground;
   background-color: @lighter-background;
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 10px;
+  padding: 12px 16px;
   children: [prompt];
 }
 
@@ -51,22 +51,22 @@ prompt {
 message {
   background-color: @background;
   text-color: @dark-foreground;
-  padding: 10px 2px 6px;
+  padding: 14px 2px 10px;
   horizontal-align: 0.5;
 }
 
 listview {
   columns: 7;
   lines: 6;
-  spacing: 2px;
-  padding: 2px;
+  spacing: 8px;
+  padding: 4px;
   background-color: @background;
   dynamic: false;
 }
 
 element {
-  padding: 7px 0;
-  border-radius: 6px;
+  padding: 11px 0;
+  border-radius: 9px;
   background-color: transparent;
   text-color: @foreground;
 }
@@ -88,7 +88,7 @@ element selected {
   text-color: @background;
 }
 
-/* 按钮被选中时仍用选中配色，避免蓝字压在紫底上 */
+/* 按钮被选中时仍用选中配色，避免强调色字压在强调色底上 */
 element selected.active {
   background-color: @accent;
   text-color: @background;
