@@ -20,6 +20,7 @@
 
 [push]
 	autoSetupRemote = true
+	useForceIfIncludes = true   # --force-with-lease 时额外校验，避免覆盖未看到的远端提交
 
 # ──────────────────────────────────────────────
 # 差异比较与冲突
