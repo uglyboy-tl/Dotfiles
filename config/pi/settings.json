@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.86.1",
+  "lastChangelogVersion": "0.87.0",
   "theme": "dark",
   "npmCommand": [
     "bun"
@@ -16,12 +16,11 @@
   "defaultProvider": "opencode-go",
   "defaultModel": "mimo-v2.5",
   "enabledModels": [
-    "opencode/mimo-v2.5-free",
-    "opencode-go/mimo-v2.5",
     "opencode-go/deepseek-v4.1-flash",
-    "deepseek/deepseek-flash"
+    "deepseek/deepseek-flash",
+    "opencode-go/mimo-v2.6-flash"
   ],
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "low",
   "tuiMode": "fullscreen",
   "fullscreenScrollbar": "always",
   "collapseChangelog": true,
