@@ -52,4 +52,4 @@
 
 ## 问题解决策略
 - **优先检索**: 遇到复杂问题或不确定的技术问题时，优先进行网络检索，查找相关资料和最佳实践，避免盲目尝试
-- **资料验证**: 参考网络资料时注意验证时效性和权威性，优先官方文档。pi 的检索工具：`web_search`（找入口，一轮可发 2-4 个不同角度的 queries）、`fetch_content`（读网页原文；GitHub 仓库/PR/issue 走 `gh`）、`source_check`（逐条核验断言，返回 supported/contradicted + 原文片段引用）；需要多轮交叉验证时用 `/skill:research`。pi 无 MCP，别引用 opencode 侧的 `context7_query-docs` 等 MCP 工具。PDF 解析本机不可用（unpdf 的 pdf.js 子路径在 pi 运行时解析失败），遇到 PDF 链接直接说明不支持，不要试。
+- **资料验证**: 参考网络资料时注意验证时效性和权威性，优先官方文档。pi 的检索工具：`web_search`（找入口，一轮可发 2-4 个不同角度的 queries）、`fetch_content`（读网页原文；GitHub 仓库/PR/issue 走 `gh`）、`source_check`（逐条核验断言，返回 supported/contradicted + 原文片段引用）；需要多轮交叉验证时用 `/skill:research`。PDF 解析本机不可用（unpdf 的 pdf.js 子路径在 pi 运行时解析失败），遇到 PDF 链接直接说明不支持，不要试。
