@@ -1,5 +1,10 @@
 onboarding = false
 
+[server]
+# 无客户端附着时的虚拟终端尺寸，供后台编排读取 pane 输出
+headless_cols = 160
+headless_rows = 50
+
 [theme]
 name = "terminal"
 auto_switch = false
@@ -12,6 +17,15 @@ confirm_close = false
 window_title = "{hostname}: {workspace}"
 
 status_indicators = "symbols"
+# blocked/done 的 agent 排到侧边栏最前
+agent_panel_sort = "priority"
+# 只有一个 tab 时不占一行
+tab_bar_position = "top"
+hide_tab_bar_when_single_tab = true
+tab_bar_right = [
+  { type = "hostname" },
+  { type = "datetime", format = "%m-%d %H:%M" },
+]
 [keys]
 prefix = "ctrl+a"
 detach = "prefix+d"
