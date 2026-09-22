@@ -11,7 +11,8 @@
     "npm:@gotgenes/pi-subagents",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:@narumitw/pi-usage",
-    "npm:@ff-labs/pi-fff"
+    "npm:@ff-labs/pi-fff",
+    "npm:cc-safety-net"
   ],
   "defaultProvider": "opencode-go",
   "defaultModel": "mimo-v2.5",
