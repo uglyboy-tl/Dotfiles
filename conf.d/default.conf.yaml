@@ -93,6 +93,7 @@
 
     ## Pi
     $XDG_CONFIG_HOME/pi/extensions: config/pi/extensions # 自定义扩展
+    $XDG_CONFIG_HOME/pi/agents: config/pi/agents # 专用 subagent
     $XDG_CONFIG_HOME/pi/prompts: config/pi/prompts # 提示词模板
     $XDG_CONFIG_HOME/pi/skills: config/pi/skills # 自定义技能
     $XDG_CONFIG_HOME/pi/AGENTS.md: config/pi/AGENTS.md # 全局指令
