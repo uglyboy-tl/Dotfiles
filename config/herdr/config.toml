@@ -26,6 +26,21 @@ tab_bar_right = [
   { type = "hostname" },
   { type = "datetime", format = "%m-%d %H:%M" },
 ]
+
+# 侧栏 Agents 区：每个 agent 一行。
+# 默认显示终端标题（含项目名与状态），能区分不同项目的 agent；
+# pi 另有扩展上报的 $task 任务名，比标题更干净，故单独覆盖。
+# 任务名由 config/pi/extensions/herdr-sidebar-task.ts 写入。
+[ui.sidebar.agents]
+rows = [["state_icon", "terminal_title_stripped"]]
+
+[ui.sidebar.agents.rows_by_agent]
+pi = [["state_icon", "$task"]]
+
+# 侧栏 Spaces 区：每个 space 一行，branch 只在 git 仓库里有值，其余自动消失。
+[ui.sidebar.spaces]
+rows = [["state_icon", "workspace", "branch"]]
+
 [keys]
 prefix = "ctrl+a"
 detach = "prefix+d"
