@@ -2,3 +2,9 @@ patch:
   # 关闭候选词后的拼音注释（corrector.lua 的纠错拼音提示也会一并关闭）
   translator/comment_format: {}
   translator/spelling_hints: 0
+  # 用户词典里的候选加 * 标记（lua/is_in_user_dict.lua）
+  is_in_user_dict: true
+  # 中英混输词条自动加空格（lua/cn_en_spacer.lua）
+  engine/filters/+:
+    - lua_filter@*is_in_user_dict
+    - lua_filter@*cn_en_spacer
