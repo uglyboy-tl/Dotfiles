@@ -16,7 +16,7 @@
 
     # herdr 远程桥接 server（session main）：让其它机器能用 herdr --machine 控制本机
     # 桌面机的默认 server 由 bspwmrc 起，所以这个 unit 只链在树莓派侧
-    $XDG_CONFIG_HOME/systemd/user/herdr-main.service: config/herdr/herdr-main.service
+    $XDG_CONFIG_HOME/systemd/user/herdr-main.service: rpi/herdr-main.service
 
 # Crontab 定时任务配置
 - crontab:

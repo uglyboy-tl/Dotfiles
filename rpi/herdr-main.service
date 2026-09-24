@@ -2,6 +2,9 @@
 Description=Herdr 远程桥接 server（session main）
 Documentation=https://herdr.dev/docs/configuration/
 After=network-online.target
+# 已有 server 在跑时 `herdr server` 会立刻以 1 退出。限流避免 systemd 每 3 秒重试一次。
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
