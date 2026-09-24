@@ -32,6 +32,7 @@ IMAGES="${_env_dir:-${IDLE_SCREENSAVER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}
 TIMEOUT="${_env_timeout:-${IDLE_SCREENSAVER_TIMEOUT:-300}}"
 DELAY="${_env_delay:-${IDLE_SCREENSAVER_DELAY:-10}}"
 STATE="${XDG_RUNTIME_DIR:-/tmp}/idle-screensaver"
+FEH_PID="$STATE/feh.pid"           # 屏保自己启动的 feh，避免误杀用户手动打开的
 INHIBIT_FILE="$STATE/dbus-inhibit"  # idle-screensaver-dbus.py 写的心跳文件
 HEARTBEAT_MAX=5                     # 心跳新鲜度上限（秒），超过视为该服务已死
 
@@ -40,12 +41,29 @@ command -v xprintidle >/dev/null 2>&1 || exit 0
 [ -d "$IMAGES" ] || exit 0
 find "$IMAGES" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -print -quit 2>/dev/null | grep -q . || exit 0
 
-running() { pgrep -x feh >/dev/null 2>&1; }
-start_feh() {
-	running || feh --fullscreen --auto-zoom --randomize --recursive \
-		--hide-pointer --slideshow-delay "$DELAY" "$IMAGES" &
+# 只认自己启动的 feh：pid 文件 + /proc 校验，避免 PID 复用误判，也避免 pkill 误杀用户手动打开的 feh
+feh_pid() {
+	[ -s "$FEH_PID" ] || return 1
+	local pid
+	pid="$(cat "$FEH_PID" 2>/dev/null)" || return 1
+	[ -n "$pid" ] && [ "$(cat "/proc/$pid/comm" 2>/dev/null)" = feh ] && printf '%s' "$pid"
 }
-stop_feh() { running && pkill -x feh; }
+running() { feh_pid >/dev/null; }
+start_feh() {
+	if running; then
+		return 0
+	fi
+	mkdir -p "$STATE"
+	feh --fullscreen --auto-zoom --randomize --recursive \
+		--hide-pointer --slideshow-delay "$DELAY" "$IMAGES" &
+	echo $! > "$FEH_PID"
+}
+stop_feh() {
+	local pid
+	pid="$(feh_pid)" || { rm -f "$FEH_PID"; return 0; }
+	kill "$pid" 2>/dev/null
+	rm -f "$FEH_PID"
+}
 
 # ── 抑制判定：每项命中就打印一行原因，供 inhibited 与 status 共用 ──
 inhibit_reasons() {
