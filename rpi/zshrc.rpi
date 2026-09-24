@@ -1,6 +1,6 @@
 ZSH_TMUX_DEFAULT_SESSION_NAME="${ZSH_TMUX_DEFAULT_SESSION_NAME:-ssh}"
-# 仅 SSH 连接时自动启动 tmux；排除 VSCode Remote SSH 和本地终端
-if [[ -n "${SSH_CONNECTION:-}" && -z "${VSCODE_INJECTION:-}" ]]; then
+# 仅 SSH 连接时自动启动 tmux；排除 VSCode Remote SSH、本地终端，以及 herdr pane
+if [[ -n "${SSH_CONNECTION:-}" && -z "${VSCODE_INJECTION:-}" && -z "${HERDR_ENV:-}" ]]; then
   ZSH_TMUX_AUTOSTART=true
 fi
 zi for OMZP::tmux
