@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.87.0",
+  "lastChangelogVersion": "0.87.1",
   "theme": "dark",
   "npmCommand": [
     "bun"
@@ -10,12 +10,11 @@
     "npm:pi-open-tui",
     "npm:@gotgenes/pi-subagents",
     "npm:@juicesharp/rpiv-ask-user-question",
-    "npm:@narumitw/pi-usage",
     "npm:@ff-labs/pi-fff",
     "npm:cc-safety-net"
   ],
   "defaultProvider": "opencode-go",
-  "defaultModel": "mimo-v2.5",
+  "defaultModel": "deepseek-v4.1-flash",
   "enabledModels": [
     "opencode-go/deepseek-v4.1-flash",
     "deepseek/deepseek-flash",
