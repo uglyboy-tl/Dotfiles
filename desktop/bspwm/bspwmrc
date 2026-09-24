@@ -127,7 +127,7 @@ for i in "${chat[@]}"; do
 done
 
 ## 代码编辑器规则
-declare -a code=(code Reasonix-desktop) # 定义代码编辑器数组
+declare -a code=(com.microsoft.VSCode) # 定义代码编辑器数组
 for i in "${code[@]}"; do
 	_r "$i" desktop='^6' follow=on # 将代码编辑器分配到桌面 6
 done
