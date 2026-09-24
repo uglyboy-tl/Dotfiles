@@ -14,6 +14,10 @@
     $XDG_CONFIG_HOME/binup/config.toml: rpi/binup.toml # binup 包管理器配置
     $XDG_CONFIG_HOME/zsh/zshrc.rpi: rpi/zshrc.rpi
 
+    # herdr 远程桥接 server（session main）：让其它机器能用 herdr --machine 控制本机
+    # 桌面机的默认 server 由 bspwmrc 起，所以这个 unit 只链在树莓派侧
+    $XDG_CONFIG_HOME/systemd/user/herdr-main.service: config/herdr/herdr-main.service
+
 # Crontab 定时任务配置
 - crontab:
     - time: 0 0 * * * # 每天执行一次
