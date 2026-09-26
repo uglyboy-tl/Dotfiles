@@ -1,0 +1,61 @@
+{
+  "CopilotPageContext": false,
+  "EdgeEntraCopilotPageContext": false,
+  "Microsoft365CopilotChatIconEnabled": false,
+  "CopilotNewTabPageEnabled": false,
+  "CopilotAddressBarSuggestionsEnabled": false,
+  "AllowBrowsingWithCopilot": false,
+  "ShareBrowsingHistoryWithCopilotSearchAllowed": false,
+  "NewTabPageBingChatEnabled": false,
+
+  "HubsSidebarEnabled": false,
+  "EdgeOpenInSidebarEnabled": false,
+  "EdgeSidebarCustomizeEnabled": false,
+  "PersonalizeTopSitesInCustomizeSidebarEnabled": false,
+
+  "EdgeShoppingAssistantEnabled": false,
+  "ShowMicrosoftRewards": false,
+  "PaymentMethodQueryEnabled": false,
+  "WalletDonationEnabled": false,
+  "EdgeWalletEtreeEnabled": false,
+
+  "PromotionalTabsEnabled": false,
+  "ShowRecommendationsEnabled": false,
+  "ShowPDFDefaultRecommendationsEnabled": false,
+  "ShowAcrobatSubscriptionButton": false,
+  "AddressBarTrendingSuggestEnabled": false,
+  "AddressBarWorkSearchResultsEnabled": false,
+  "AddressBarClipboardSuggestEnabled": false,
+  "AdditionalSearchBoxEnabled": false,
+  "PinBrowserEssentialsToolbarButton": false,
+
+  "PersonalizationReportingEnabled": false,
+  "ExperimentationAndConfigurationServiceControl": 0,
+  "BrowserNetworkTimeQueriesEnabled": false,
+
+  "EdgeEDropEnabled": false,
+  "EdgeHistoryAISearchEnabled": false,
+  "EdgeWorkspacesEnabled": false,
+  "WebCaptureEnabled": false,
+  "TextPredictionEnabled": false,
+  "VisualSearchEnabled": false,
+  "AccessibilityImageLabelsEnabled": false,
+  "EdgeAutofillMlEnabled": false,
+  "ReadAloudEnabled": false,
+  "SpeechRecognitionEnabled": false,
+  "ConfigureOnlineTextToSpeech": false,
+  "EnableMediaRouter": false,
+
+  "TabServicesEnabled": false,
+  "HideFirstRunExperience": true,
+
+  "NewTabPageContentEnabled": false,
+  "NewTabPageAppLauncherEnabled": false,
+
+  "PasswordManagerEnabled": false,
+  "TranslateEnabled": false,
+  "SmartScreenEnabled": false,
+  "ConfigureDoNotTrack": true,
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false
+}
