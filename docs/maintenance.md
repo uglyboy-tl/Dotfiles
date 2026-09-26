@@ -42,10 +42,10 @@ git update-index --no-skip-worktree desktop/fontconfig/fonts.conf
 ## 已知问题
 
 - **sxhkd 启动 EPIPE**：快捷键启动时 stdout 是 socket，`echo` 会触发 SIGPIPE 中断脚本（`set -e` 下直接退出）。`epipe_init()` 忽略 SIGPIPE，且非 tty 时把输出重定向到 `~/.local/state/settings/logs/<脚本名>.log`。
-- **bspwm 重载吞通知**：`bspc wm -r` 会重跑 bspwmrc，其中 `_s dunst` 会重启 dunst，导致刚发的通知被吞。主题切换因此先重载各软件、等新 dunst 就绪（`wait_dunst_ready`）再 `notify`。
-- **feh 不能播 GIF 动画**：实测只显示第一帧。所以 `desktop/idle-screensaver.sh` 目前仅轮播静态图；动态屏保需改用 `mpv`（见待办）。
+- **bspwm 重载不再重启 dunst**：dunst 配色由 `themes/render.conf` 里的 `dunstctl reload` 应用，bspwmrc 只用 `_o dunst`（已在跑就不动），所以 `bspc wm -r` 不会吞掉刚发的通知（旧实现 `_s dunst` + `wait_dunst_ready` 已删；前提：dunst 支持 `dunstrc.d` drop-in，`dunstctl reload` 会连同它一起重读）。
+- **feh 不能播 GIF 动画**：实测只显示第一帧。所以 `desktop/idle-screensaver/idle-screensaver.sh` 目前仅轮播静态图；动态屏保需改用 `mpv`（见待办）。
 - **屏保不依赖 X screensaver 扩展**：该扩展常被应用挂起，导致 `xset s` 超时与 `xss-lock` 都不可靠。故屏保改用 `xprintidle` 轮询空闲时间实现（`xset s off` 只负责关掉 X 自带黑屏）。
-- **看视频会弹屏保（已修）**：`xprintidle` 只看键鼠输入，而浏览器抑制屏保走两条路——D-Bus `org.freedesktop.ScreenSaver`（bspwm 裸装没有该服务，请求落空）或 X11 `XScreenSaverSuspend`（只暂停 X 自带屏保，`xprintidle` 照涨）。故新增 `desktop/idle-screensaver-dbus.py` 补上这个 D-Bus 服务（心跳文件每秒刷新，服务死掉 5 秒后抑制自动失效），并在 `idle-screensaver.sh` 里按「D-Bus 抑制 / 全屏窗口 / 有音频输出流」三者任一成立就暂不出屏保、同时 `xset -dpms` 关熄屏。
+- **看视频会弹屏保（已修）**：`xprintidle` 只看键鼠输入，而浏览器抑制屏保走两条路——D-Bus `org.freedesktop.ScreenSaver`（bspwm 裸装没有该服务，请求落空）或 X11 `XScreenSaverSuspend`（只暂停 X 自带屏保，`xprintidle` 照涨）。故新增 `desktop/idle-screensaver/idle-screensaver-dbus.py` 补上这个 D-Bus 服务（心跳文件每秒刷新，服务死掉 5 秒后抑制自动失效），并在 `idle-screensaver.sh` 里按「D-Bus 抑制 / 全屏窗口 / 有音频输出流」三者任一成立就暂不出屏保、同时 `xset -dpms` 关熄屏。（该服务现由 systemd user unit `desktop/systemd/idle-screensaver-dbus.service` 常驻。）
 
 ## 待办
 

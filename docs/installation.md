@@ -52,11 +52,25 @@ cd ~/.local/share/dotfiles
 | ZSH | `~/.config/local/zshrc.after` | 最后加载 |
 | Vim | `~/.config/local/vimrc` | 由 `config/vim/vimrc` source |
 | TMUX | `~/.config/local/tmux` | 由 `config/tmux/tmux.conf` source |
-| 屏保 | `~/.config/local/idle-screensaver` | 由 `desktop/idle-screensaver.sh` source，设 `IDLE_SCREENSAVER_DIR` 等 |
+| 屏保 | `~/.config/local/idle-screensaver` | 由 `desktop/idle-screensaver/idle-screensaver.sh` source，设 `IDLE_SCREENSAVER_DIR` 等 |
 | Git | `~/.config/git/local` | 由 `config/git/config` include |
 | Polybar | `~/.config/local/polybar/bluetooth-battery.conf` | 蓝牙电量组件：每个 `[节]` 一个设备，字段 `mac`（优先）/`name`（兜底）/`icon` |
 
 这些文件不存在时会被静默跳过，不会报错。
+
+## 启用 systemd user 服务
+
+`desktop/systemd/` 下的 unit 由 dotbot 链接到 `$XDG_CONFIG_HOME/systemd/user/`，但 dotbot 不改 systemd 状态，需要手动启用（一次即可，之后随会话自启）：
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now idle-screensaver-dbus.service   # 屏保抑制（org.freedesktop.ScreenSaver）
+systemctl --user enable --now herdr-server.service            # Herdr 常驻 server（default session）
+```
+
+其他 unit（如 `jellyfin-mpv-shim.service`）同理，按需启用。未启用的后果只是对应功能缺失，不影响其余配置。
+
+> Herdr 若已在跑（旧配置由 `bspwmrc` 起的手工进程），先 `herdr server stop` 再启用：否则 `herdr server` 会立刻退出，unit 进入 failed（`systemctl --user reset-failed herdr-server.service` 后可重试）。
 
 ## 平台差异
 

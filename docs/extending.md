@@ -42,7 +42,9 @@ $XDG_CONFIG_HOME/<软件>: desktop/<软件>
 - 可执行（`chmod +x`）、`shebang` 明确
 - 第三方脚本也直接放 `scripts/`，但**必须在文件头注明来源**（见 [ADR-0003](adr/0003-scripts-layout.md)）
 
-**只被 WM 调用、不进 PATH 的助手**（如 `desktop/idle-screensaver.sh`）：放 `desktop/` 根，由 `bspwmrc` 用绝对路径调用，不加链接声明。
+**只被 WM 调用、不进 PATH 的助手**（如 `desktop/idle-screensaver/idle-screensaver.sh`）：按功能放 `desktop/<功能>/` 子目录，由 `bspwmrc` 用绝对路径调用，不加链接声明。
+
+**systemd user unit**（如 `desktop/systemd/idle-screensaver-dbus.service`）：放 `desktop/systemd/`，并在 `conf.d/desktop.conf.yaml` 里加链接到 `$XDG_CONFIG_HOME/systemd/user/`；unit 要 `systemctl --user enable --now` 才随会话启动。
 
 ---
 

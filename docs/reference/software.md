@@ -47,8 +47,8 @@
 | Picom / Redshift / 字体 | `desktop/picom/picom.conf`、`desktop/redshift/redshift.conf`、`desktop/fontconfig/fonts.conf` |
 | 桌面入口文件（.desktop） | `desktop/applications/` |
 | Udiskie | `desktop/udiskie/config.yml` |
-| 屏保 / 熄屏 | `desktop/idle-screensaver.sh`（由 `desktop/bspwm/bspwmrc` 调用；图片目录本地设于 `~/.config/local/idle-screensaver`，后备为 `data/dynamic-wallpaper/images`；依赖 `feh`、`xprintidle`） |
-| 屏保抑制 | `desktop/idle-screensaver-dbus.py`（提供 `org.freedesktop.ScreenSaver`，让浏览器/播放器能申请抑制；心跳文件 `${XDG_RUNTIME_DIR}/idle-screensaver/dbus-inhibit`，见 [维护笔记](../maintenance.md)） |
+| 屏保 / 熄屏 | `desktop/idle-screensaver/idle-screensaver.sh`（由 `desktop/bspwm/bspwmrc` 调用；图片目录本地设于 `~/.config/local/idle-screensaver`，后备为 `data/dynamic-wallpaper/images`；依赖 `feh`、`xprintidle`） |
+| 屏保抑制 | `desktop/idle-screensaver/idle-screensaver-dbus.py`（提供 `org.freedesktop.ScreenSaver`，让浏览器/播放器能申请抑制；由 `desktop/systemd/idle-screensaver-dbus.service` 常驻；心跳文件 `${XDG_RUNTIME_DIR}/idle-screensaver/dbus-inhibit`，见 [维护笔记](../maintenance.md)） |
 | FCITX5 / RIME | `desktop/fcitx5/`（`config`、`classicui.conf`、`rime/` 补丁）+ `data/rime-ice/` |
 
 ## 开发 & AI 工具
@@ -58,6 +58,7 @@
 | Git | `config/git/config` |
 | UV / Bun / Python（包管理器镜像源） | `config/sources/` |
 | Pi / OpenCode | `config/pi/` / `config/opencode/` |
+| Herdr | `config/herdr/`（`config.toml` + `herdr-server.service`；常驻 server 由 systemd 管，default session；远程连接也走 default session） |
 
 ## 其他随仓库分发
 
