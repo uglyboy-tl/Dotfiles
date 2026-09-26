@@ -113,7 +113,7 @@ green = "#a3be8c"
 | Rofi | `rofi.rasi.tpl` | `rofi/colors.rasi` | 下次启动生效 |
 | Zathura | `zathura.conf.tpl` | `zathura/colors.conf` | 重启 |
 | BSPWM | `bspwm.sh.tpl` | `bspwm/colors.sh` | `bspc wm -r` |
-| fcitx5 | `fcitx5.conf.tpl` | `fcitx5/themes/dotfiles/theme.conf`（`data:` 前缀，落 `XDG_DATA_HOME`） | `fcitx5 -r -d`（主题按名缓存，需重启重读） |
+| fcitx5 | `fcitx5.conf.tpl` | `fcitx5/themes/dotfiles/theme.conf`（`data:` 前缀，落 `XDG_DATA_HOME`） | `fcitx5 -r -d`（必须重启：DBus `ReloadAddonConfig classicui` 虽能重读 `theme.conf`，但候选窗不重绘，实测无效） |
 | GTK3 / GTK4 | `gtk3.css.tpl` / `gtk4.css.tpl` | `gtk-3.0/gtk.css` / `gtk-4.0/gtk.css` | 应用重启（标记 `always`，始终渲染） |
 
 > fcitx5 主题名固定为 `dotfiles`，换肤只重写 `theme.conf`，故 `classicui.conf`（已由 dotbot 纳管）里的 `Theme=dotfiles` 只需写一次，不随换肤改变。
