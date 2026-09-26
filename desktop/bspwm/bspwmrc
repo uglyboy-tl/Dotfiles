@@ -10,7 +10,9 @@ _m() { bspc monitor "$@"; }
 # 定义 bspc rule -a 的简化函数 (添加窗口规则)
 _r() { bspc rule -a "$@"; }
 # 定义一个函数，如果某个服务未启动，则启动服务
-_o() { pgrep -x "$1" > /dev/null || "$1" & }
+_o() { pgrep -x "$1" > /dev/null || "$@" & }
+# 同上，但按整条命令行匹配（pgrep -f）：脚本、或需与同名进程区分时用
+_f() { local p=$1; shift; pgrep -f "$p" > /dev/null || "$@" & }
 # 定义一个函数来停止并重新启动服务
 _s() {
 	pkill -x "$1" # 杀死指定进程
@@ -66,19 +68,19 @@ _c pointer_action3 move          # 鼠标动作3：移动窗口
 (
 	# _s picom -b              # 启动 Picom (合成器)
 	_o redshift              # 启动 Redshift (色温调节)
-	# 屏保抑制服务：浏览器/播放器经它申请「播放中别弹屏保」，本机没装 GNOME/KDE，得自己提供
-	pgrep -f idle-screensaver-dbus.py >/dev/null || "$XDG_DATA_HOME/dotfiles/desktop/idle-screensaver-dbus.py" &
-	# 空闲屏保：5 分钟无操作放图片轮播，有输入即结束（图片目录见 desktop/idle-screensaver.sh）
-	pgrep -f idle-screensaver.sh >/dev/null || "$XDG_DATA_HOME/dotfiles/desktop/idle-screensaver.sh" &
-	_s dunst                 # 启动 Dunst (通知守护进程)
+	# 屏保抑制服务（浏览器/播放器经它申请「播放中别弹屏保」）改由 systemd user unit 管：
+	# desktop/systemd/idle-screensaver-dbus.service（需 systemctl --user enable --now）
+	# 空闲屏保：5 分钟无操作放图片轮播，有输入即结束（图片目录见 desktop/idle-screensaver/idle-screensaver.sh）
+	_f 'idle-screensaver.sh' "$XDG_DATA_HOME/dotfiles/desktop/idle-screensaver/idle-screensaver.sh"
+	_o dunst                 # 启动 Dunst；配色由 dunstctl reload 应用，不重启（重启会吞掉刚发的通知）
 	_s polybar --reload main # 启动 Polybar (状态栏) 并重新加载配置
 	# 套用已保存的布尔开关（如 polybar 阴影）：直接用通用引擎，不经过菜单 UI
 	( . "$XDG_DATA_HOME/dotfiles/settings/lib/toggles.sh"; toggles_apply_all settle ) >/dev/null 2>&1 &
-	# herdr 后台 server（无界面）：agent 会话常驻，客户端随时 attach；已在跑则不重复启动
-	pgrep -f 'bin/herdr server' >/dev/null || "$HOME/.local/bin/herdr" server >/dev/null 2>&1 &
+	# herdr 后台 server 改由 systemd user unit 管：config/herdr/herdr-server.service（default session，
+	# 需 systemctl --user enable --now）
 	# _s lxpolkit              # 启动 LXPolkit (策略工具包)
-	_s udiskie               # 启动 Udiskie（自动挂载外部设备）
-	_s dex -a               # 启动 XDG Autostart .desktop 文件
+	_o udiskie               # 启动 Udiskie（自动挂载外部设备）
+	_o dex -a                # 启动 XDG Autostart .desktop 文件
 ) &
 
 # 动态壁纸：读取当前保存的风格，未保存则默认 lakeside，应用并同步 crontab

@@ -1,0 +1,20 @@
+[Unit]
+Description=Herdr 常驻 server（默认 session，agent 会话宿主）
+# 已有 server 在跑时 `herdr server` 会立刻以 1 退出。限流避免 systemd 每 3 秒重试一次。
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# 不设 HERDR_SESSION 同样会落到默认 session，这里显式写是为了自解释；herdr 的远程连接（machine add）
+# 默认也连目标机的 default session，所以一台机器只需这一个 unit
+Environment=HERDR_SESSION=default
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/.local/bin/herdr server
+# 改完 ~/.config/herdr/config.toml 后 `systemctl --user reload herdr-server.service` 即生效
+ExecReload=%h/.local/bin/herdr server reload-config
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

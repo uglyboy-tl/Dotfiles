@@ -1,0 +1,16 @@
+[Unit]
+Description=idle-screensaver 抑制服务（提供 org.freedesktop.ScreenSaver）
+# 总线名被占用时脚本自行 exit 0 退出，不抢（见 desktop/idle-screensaver/idle-screensaver-dbus.py 顶部注释）
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/dotfiles/desktop/idle-screensaver/idle-screensaver-dbus.py
+Restart=on-failure
+RestartSec=3
+# 脚本只在 SimulateUserActivity 里用到 X（xset s reset），失败静默；X 自带屏保本来就被
+# bspwmrc 的 `xset s off` 关着，所以这里不需要传 DISPLAY。
+
+[Install]
+WantedBy=default.target

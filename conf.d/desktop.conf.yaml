@@ -13,6 +13,15 @@
         git submodule update --init --recursive desktop data || true,
         更新桌面相关 submodule 模块,
       ]
+    # Edge 企业策略：关闭 Copilot、侧边栏、遥测等内置功能。策略必须先退出 Edge 再重启才生效。
+    # 校验：edge://policy  或  该页「导出到 JSON」，检查每条有无 `error` 字段。
+    # 注意：微软政策文档列的是**全平台**策略，Windows 专属的（MetricsReportingEnabled、
+    # DiagnosticData、StartupBoostEnabled 等）在 Linux 上会报「未知策略」而被静默忽略。
+    # 所以本文件只保留已实测在 Linux 生效的策略（51 条）。
+    - [
+        sudo install -Dm644 desktop/edge/policies.json /etc/opt/edge/policies/managed/policies.json,
+        安装 Edge 企业策略,
+      ]
 
 - link:
     ~/.local/bin/:
@@ -96,4 +105,5 @@
     $XDG_CONFIG_HOME/mpv/scripts/uosc/lib: desktop/mpv/uosc/src/uosc/lib # 库文件
     $XDG_CONFIG_HOME/mpv/scripts/uosc/main.lua: desktop/mpv/uosc/src/uosc/main.lua # uosc 主脚本
     $XDG_CONFIG_HOME/mpv/script-opts/uosc.conf: desktop/mpv/uosc.conf # uosc 配置文件
-    $XDG_CONFIG_HOME/systemd/user/jellyfin-mpv-shim.service: desktop/jellyfin-mpv-shim.service
+    $XDG_CONFIG_HOME/systemd/user/jellyfin-mpv-shim.service: desktop/systemd/jellyfin-mpv-shim.service
+    $XDG_CONFIG_HOME/systemd/user/idle-screensaver-dbus.service: desktop/systemd/idle-screensaver-dbus.service # 屏保抑制 D-Bus 服务（需 systemctl --user enable --now）

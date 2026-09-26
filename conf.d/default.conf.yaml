@@ -81,6 +81,7 @@
 
     ## herdr
     $XDG_CONFIG_HOME/herdr/config.toml: config/herdr/config.toml
+    $XDG_CONFIG_HOME/systemd/user/herdr-server.service: config/herdr/herdr-server.service # 常驻 server（default session，需 systemctl --user enable --now）
 
     ## OpenCode
     $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/config/opencode.json

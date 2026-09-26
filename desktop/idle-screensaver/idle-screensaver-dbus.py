@@ -3,7 +3,7 @@
 #
 # 背景：Chromium/Firefox/mpv 播放音视频时会向会话总线申请「别让屏幕睡」（桌面环境
 # 通常由 GNOME/KDE 提供该服务）。bspwm 裸装没有这个服务，请求落空后退回 X11
-# XScreenSaverSuspend；而自研屏保（desktop/idle-screensaver.sh）按 xprintidle 判定
+# XScreenSaverSuspend；而自研屏保（desktop/idle-screensaver/idle-screensaver.sh）按 xprintidle 判定
 # 空闲，既看不到 D-Bus 请求也不受 XScreenSaverSuspend 影响，于是看视频照样弹屏保。
 #
 # 本服务不锁屏、不做 UI，只把「谁在申请抑制」写成心跳文件
