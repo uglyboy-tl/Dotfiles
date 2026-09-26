@@ -103,34 +103,13 @@ _reload_one() {
 
 reload_apps() { _for_each_target _reload_one; }
 
-# 等 dunst 重启就绪：bspc wm -r 会重跑 bspwmrc 里的 (_s dunst)&，旧 dunst 稍后才被杀；
-# 检测 PID 变化 + DBus 就绪后再返回，避免随后的通知被吞。
-wait_dunst_ready() {
-  local old_pid="$1" i j new_pid
-  [ -z "$old_pid" ] && return 0
-  for i in $(seq 1 15); do
-    new_pid=$(pgrep -x dunst | head -n1 || true)
-    if [ -n "$new_pid" ] && [ "$new_pid" != "$old_pid" ]; then
-      for j in $(seq 1 20); do
-        dunstctl count >/dev/null 2>&1 && return 0
-        sleep 0.1
-      done
-      return 0
-    fi
-    sleep 0.1
-  done
-  return 0
-}
-
 # 应用主题（单次）
 apply_theme() {
-  local theme="$1" old_dunst_pid
+  local theme="$1"
   validate_theme "$theme" || return 1
   render_templates "$theme" || return 1
   save_current_theme "$theme"
-  old_dunst_pid=$(pgrep -x dunst | head -n1 || true)
   reload_apps
-  wait_dunst_ready "$old_dunst_pid"
   notify "已切换到主题: $theme"
 }
 
