@@ -1,9 +1,21 @@
 ZSH_TMUX_DEFAULT_SESSION_NAME="${ZSH_TMUX_DEFAULT_SESSION_NAME:-ssh}"
-# 仅 SSH 连接时自动启动 tmux；排除 VSCode Remote SSH、本地终端，以及 herdr pane
-if [[ -n "${SSH_CONNECTION:-}" && -z "${VSCODE_INJECTION:-}" && -z "${HERDR_ENV:-}" ]]; then
-  ZSH_TMUX_AUTOSTART=true
+
+# 仅 SSH 连接时自动进入 tmux；排除 VSCode Remote SSH、本地终端，以及 herdr pane
+if [[ -n "${SSH_CONNECTION:-}" && -z "${TMUX:-}" && -z "${VSCODE_INJECTION:-}" && -z "${HERDR_ENV:-}" ]]; then
+  session="$ZSH_TMUX_DEFAULT_SESSION_NAME"
+  # 会话存在但已无活着的 pane（僵尸）时先杀掉：否则 attach 会返回 0 后立即退出，
+  # 再被 ZSH_TMUX_AUTOQUIT 结束整个 SSH 会话，表现为「连上就断」且不会自愈。
+  if command tmux has-session -t "$session" 2>/dev/null; then
+    if ! command tmux list-panes -t "$session" -F '#{pane_dead}' 2>/dev/null | grep -qx 0; then
+      command tmux kill-session -t "$session" 2>/dev/null
+    fi
+  fi
+  command tmux new-session -A -s "$session"
+  unset session
+  # 退出 tmux 后结束 SSH 会话
+  exit
 fi
-zi for OMZP::tmux
+
 zi wait lucid for \
   OMZP::cp \
   OMZP::uv
