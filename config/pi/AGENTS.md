@@ -4,6 +4,7 @@
 - 优先并行调用工具：同一轮里一次发出多个相互独立的工具调用，pi 默认就会并发执行同一条 assistant 消息里的多个 tool call。
 - 访问 GitHub 相关的一切（包括查询 github 代码库和下载 raw.githubusercontent.com 下的文件）都使用 `gh` 命令
 - 本机没有真正的 Node.js：`npm` / `npx` / `pnpm` / `yarn` 都不存在，`node` 只是转发到 bun 的 shim（`scripts/node`）。Node 生态命令一律用 bun：`bunx` 替代 `npx`，含其他文件里写死的 npx 用法。
+- 不要自动执行 `git commit` / `git push`；提交由用户手动执行 `/commit`。
 
 ## 回答风格（ADHD 友好）
 改编自 [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)（MIT），精简版：
