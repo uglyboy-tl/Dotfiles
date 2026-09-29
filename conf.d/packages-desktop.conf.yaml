@@ -27,14 +27,12 @@
     - wireplumber
     # 蓝牙
     - bluez
-    - rfkill
     - bc
     # 输入法
     - fcitx5-rime
     # 终端 / 文档 / 媒体
     - ghostty
     - yazi
-    - zathura
     - mpv
     - ncmpcpp
     # 脚本运行时
