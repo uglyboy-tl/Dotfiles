@@ -24,6 +24,7 @@
 - [软件与配置路径](reference/software.md) - 每个软件的配置放在哪
 - [术语表](CONTEXT.md) - 易混词速查（config/conf.d、主题/colors、源/镜像源…）
 - [脚本](reference/scripts.md) - 工具清单与源文件位置
+- [与 Omarchy 的对比](reference/omarchy.md) - 软件选型对照、取舍、v4 借鉴清单
 - [环境变量](architecture.md#环境变量与-xdg) - 唯一源头与三个加载点
 
 ---
