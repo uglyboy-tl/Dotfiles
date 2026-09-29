@@ -10,12 +10,17 @@ cd ~/.local/share/dotfiles
 ./install
 ```
 
-`install` 是 dotbot 的薄封装：先同步 `dotbot` submodule，然后**按顺序**执行配置文件。默认第一个总是 `default`，其余由参数追加：
+`install` 是 dotbot 的薄封装：先同步 `dotbot` 与插件 submodule，然后**按顺序**执行配置文件。默认第一个总是 `default`；常规安装只取**第一个**环境参数（`desktop`/`rpi`），多余的会被忽略。
+
+`setup` 必须是**第一个参数**（可后接 `desktop`/`rpi`），此时**只装包、不建链接**：把 `default` 与后面的单元都当成 `packages-<unit>.conf.yaml` 依次安装，全部以 root 运行。apt 插件只在 `setup` 模式加载，其余情况加载 crontab 插件。
 
 ```bash
-./install            # default
-./install desktop    # default + desktop
-./install desktop rpi  # default + desktop + rpi
+./install                # default
+./install desktop        # default + desktop
+./install rpi            # default + rpi
+./install setup          # 只装 CLI 基础包
+./install setup desktop  # 只装 CLI 基础包 + 桌面包
+./install setup rpi      # 只装 CLI 基础包 + 树莓派包
 ```
 
 支持的配置单元：
@@ -25,7 +30,9 @@ cd ~/.local/share/dotfiles
 | （默认） | `conf.d/default.conf.yaml` | 命令行环境：shell、vim、tmux、git、邮件、开发工具、AI 工具 |
 | `desktop` | `conf.d/desktop.conf.yaml` | 桌面环境：BSPWM、Polybar、Rofi、终端、输入法、MPV 等 |
 | `rpi` | `conf.d/rpi.conf.yaml` | 树莓派专用：备份脚本与 crontab |
-| `setup` | `conf.d/setup.conf.yaml` | 初始依赖（apt 安装 `jq`），仅首次初始化系统用 |
+| `setup` | `conf.d/packages-default.conf.yaml` | 命令行环境 apt 依赖；`setup` 模式下以 root 运行，只装包 |
+
+`setup` 后接 `desktop`/`rpi` 时，会另跑 `conf.d/packages-desktop.conf.yaml` / `conf.d/packages-rpi.conf.yaml`（只装包，不建链接）。
 
 **重复运行即更新**：dotbot 会先 `clean` 掉 `~/`、`~/.local/bin`、`$XDG_CONFIG_HOME` 下旧的符号链接，再按最新配置重建，因此新增/移动配置只要改 `conf.d` 后重跑即可。
 
@@ -33,7 +40,7 @@ cd ~/.local/share/dotfiles
 
 下列组件以 git submodule 引入，`./install` 时会自动拉取，无需手动处理：
 
-- `dotbot`、`dotbot-plugins/crontab`（安装器本身）
+- `dotbot`、`dotbot-plugins/crontab`、`dotbot-plugins/apt`（安装器本身与指令插件，由 `install` 统一拉取）
 - `config/zsh/zinit`、`config/vim/vim-plug`（编辑器/Shell 插件管理器）
 - `config/opencode`（OpenCode 配置，见 [config/opencode/AGENTS.md](../config/opencode/AGENTS.md)）
 - `desktop/mpv/{uosc,thumbfast}`（播放器界面）

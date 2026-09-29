@@ -1,0 +1,28 @@
+# 系统级依赖（apt）
+
+- apt:
+    # 基础
+    - zsh
+    - git
+    - curl
+    - jq
+    - unzip
+    # 编辑器 / 终端
+    - vim
+    - tmux
+    # CLI 增强（zshrc / aliases 引用）
+    - fzf
+    - ripgrep
+    - zoxide
+    - atuin
+    - fastfetch
+    - bat
+    - duf
+    # 邮件
+    - neomutt
+    - notmuch
+    - offlineimap3
+    - pass
+    - lynx
+    # 脚本（update-pi / update-peon 用 gh）
+    - gh

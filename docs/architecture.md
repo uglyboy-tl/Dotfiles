@@ -31,7 +31,7 @@ $XDG_CONFIG_HOME/git/config: config/git/config
 
 - **glob 链接**：`~/.local/bin/` 用 `path: scripts/*` 把整个目录下的脚本批量链接过去，新增脚本无需改配置。
 - **clean**：每次运行先清理旧链接，保证幂等，删除的配置不会残留。
-- **按环境组合**：`default` 始终运行，`desktop`/`rpi` 按参数叠加，避免笔记本、树莓派互相污染。
+- **按环境组合**：`default` 始终运行，`desktop`/`rpi` 每次选一个，避免笔记本、树莓派互相污染。
 
 详见 [安装与运维](installation.md)。
 

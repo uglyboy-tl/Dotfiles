@@ -23,7 +23,7 @@ _Avoid_: 配置（"配置"指内容，见下）
 _Avoid_: 源（那是"源文件"的位置）
 
 **环境**：
-`conf.d` 的组合单元（`default` / `desktop` / `rpi`），不是操作系统。`default` 是命令行基座、始终运行，其余按参数叠加。
+`conf.d` 的组合单元（`default` / `desktop` / `rpi`），不是操作系统。`default` 是命令行基座、始终运行，其余每次选一个。
 _Avoid_: 平台、系统（`platform` 在 crontab 声明里另有其义）
 
 ## 渲染

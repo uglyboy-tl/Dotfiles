@@ -12,8 +12,19 @@ BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 cd "${BASEDIR}"
 git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
-git submodule update --init --recursive "${DOTBOT_DIR}"
+# 插件在 dotbot 启动时加载，必须先拉好
+git submodule update --init --recursive "${DOTBOT_DIR}" dotbot-plugins
 
-for conf in ${DEFAULT_CONFIG_PREFIX} ${@}; do
-    "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${CONFIG_DIR}/${conf}${CONFIG_SUFFIX}" --plugin-dir dotbot-plugins/crontab
-done
+DOTBOT=("${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}")
+
+# 用法：./install [desktop|rpi] | ./install setup [desktop|rpi]
+if [[ "${1:-}" == setup ]]; then
+    # setup 模式只装包：default 与各环境都取 packages-<unit>.conf.yaml，需 root
+    for conf in "${DEFAULT_CONFIG_PREFIX}" "${@:2}"; do
+        sudo "${DOTBOT[@]}" -v -p dotbot-plugins/apt -c "${CONFIG_DIR}/packages-${conf}${CONFIG_SUFFIX}"
+    done
+else
+    for conf in "${DEFAULT_CONFIG_PREFIX}" "${@:1:1}"; do
+        "${DOTBOT[@]}" -p dotbot-plugins/crontab -c "${CONFIG_DIR}/${conf}${CONFIG_SUFFIX}"
+    done
+fi

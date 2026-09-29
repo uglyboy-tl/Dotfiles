@@ -21,9 +21,9 @@ cd ~/.local/share/dotfiles
 ./install rpi      # 树莓派
 ```
 
-依赖 `git`、`bash`、`curl`；依赖的第三方组件（dotbot、zinit、vim-plug、uosc、rime-ice 等）以 submodule 引入，安装时自动拉取。桌面配置需先装好对应软件（BSPWM、终端、Polybar、Rofi、Dunst 等）。`./install setup` 会用 apt 安装 `jq`。
+依赖 `git`、`bash`、`curl`；依赖的第三方组件（dotbot、zinit、vim-plug、uosc、rime-ice 等）以 submodule 引入，安装时自动拉取。桌面配置需先装好对应软件（BSPWM、终端、Polybar、Rofi、Dunst 等）。`setup` 模式（必须是第一个参数）**只装包、不建链接**：`./install setup` 装 CLI 基础包，`./install setup desktop`/`./install setup rpi` 再叠加对应环境的 `packages-<unit>.conf.yaml`。
 
-支持组合，例如 `./install desktop rpi`；重复运行即可更新配置。
+常规安装一次只接一个环境参数（`./install desktop` 或 `./install rpi`）；重复运行即可更新配置。
 
 ## 目录结构
 
