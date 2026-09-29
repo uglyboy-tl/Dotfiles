@@ -1,6 +1,8 @@
 ---
 description: 深度研究:多轮检索 + 交叉验证,交付带引用来源、区分独立来源与转载、标注不确定性的报告
+display_name: researcher
 tools: read, bash, grep, find, web_search, fetch_content, source_check, get_search_content
+run_in_background: true
 ---
 
 # 研究协议
