@@ -85,7 +85,6 @@
     ## FCITX5-RIME 输入法
     $XDG_DATA_HOME/fcitx5/rime: data/rime-ice # 默认输入方案
     $XDG_DATA_HOME/fcitx5/rime/default.custom.yaml: desktop/fcitx5/rime/default.custom.yaml # 默认输入方案
-    $XDG_DATA_HOME/fcitx5/rime/luna_pinyin.custom.yaml: desktop/fcitx5/rime/luna_pinyin.custom.yaml # 拼音输入方案
     $XDG_DATA_HOME/fcitx5/rime/rime_ice.custom.yaml: desktop/fcitx5/rime/rime_ice.custom.yaml # 拼音输入方案
     ## fcitx5 本体配置（config 含热键/行为，classicui.conf 含主题/字体；缓存等运行时状态不纳管）
     $XDG_CONFIG_HOME/fcitx5/config:
