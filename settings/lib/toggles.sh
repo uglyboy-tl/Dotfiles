@@ -71,7 +71,9 @@ toggle_flip() {
 # 按已保存状态套用全部开关：[settle]（启动/重载用，不产生任何提示）
 toggles_apply_all() {
   local settle="${1:-}" key
-  for key in $(toggles_keys); do
+  local -a keys=()
+  mapfile -t keys < <(toggles_keys)
+  for key in "${keys[@]}"; do
     toggle_apply "$key" "$(toggle_state "$key")" ${settle:+"$settle"}
   done
 }

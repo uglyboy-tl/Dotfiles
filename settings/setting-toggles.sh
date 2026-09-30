@@ -30,7 +30,9 @@ epipe_init
 # 菜单条目：标签 + 当前状态
 get_items() {
   local key mark
-  for key in $(toggles_keys); do
+  local -a keys=()
+  mapfile -t keys < <(toggles_keys)
+  for key in "${keys[@]}"; do
     [ "$(toggle_state "$key")" = "1" ] && mark="开" || mark="关"
     printf '%s：%s\n' "$(toggle_label "$key")" "$mark"
   done
@@ -39,7 +41,9 @@ get_items() {
 # 选中即翻转
 handle() {
   local choice="$1" key label new
-  for key in $(toggles_keys); do
+  local -a keys=()
+  mapfile -t keys < <(toggles_keys)
+  for key in "${keys[@]}"; do
     label="$(toggle_label "$key")"
     case "$choice" in
       "$label"：*)
