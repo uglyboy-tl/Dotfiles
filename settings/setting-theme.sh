@@ -88,7 +88,7 @@ _render_one() {
 }
 
 render_templates() {
-  RENDERED=0
+  local RENDERED=0
   _for_each_target _render_one "$1"
   [ "$RENDERED" -gt 0 ]
 }

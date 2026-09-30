@@ -12,15 +12,24 @@ declare -A RENDER_DERIVED_VARS=(
   ["selection_foreground"]="bright_foreground"
 )
 
+# 转义替换串中的 sed 特殊字符（\ & |），结果写入变量 $1（避免子 shell）
+_render_escape_var() {
+  local v="$2"
+  v="${v//\\/\\\\}"
+  v="${v//&/\\&}"
+  v="${v//|/\\|}"
+  printf -v "$1" '%s' "$v"
+}
+
 # 从 colors.toml 构建 sed 替换规则
 render_build_sed_script() {
   local colors_file="$1"
   local sed_script=""
-  declare -A colors_values
-  local key value
+  local -A colors_values
+  local key value value_strip esc
 
   while IFS='=' read -r key value; do
-    [[ "$key" =~ ^[[:space:]]*# ]] && continue
+    [[ "$key" =~ ^[[:space:]]*[#\;] ]] && continue
     [[ -z "$key" ]] && continue
 
     key="${key//[[:space:]]/}"
@@ -30,20 +39,24 @@ render_build_sed_script() {
     [[ "$value" != \#* ]] && continue
 
     colors_values["$key"]="$value"
-    sed_script+="s|{{ ${key} }}|${value}|g; "
+    _render_escape_var esc "$value"
+    sed_script+="s|{{ ${key} }}|${esc}|g; "
 
     value_strip="${value#\#}"
-    sed_script+="s|{{ ${key}_strip }}|${value_strip}|g; "
+    _render_escape_var esc "$value_strip"
+    sed_script+="s|{{ ${key}_strip }}|${esc}|g; "
   done < "$colors_file"
 
+  local derived source_var
   for derived in "${!RENDER_DERIVED_VARS[@]}"; do
-    local source_var="${RENDER_DERIVED_VARS[$derived]}"
+    source_var="${RENDER_DERIVED_VARS[$derived]}"
     if [[ -n "${colors_values[$source_var]:-}" ]]; then
-      sed_script+="s|{{ ${derived} }}|${colors_values[$source_var]}|g; "
+      _render_escape_var esc "${colors_values[$source_var]}"
+      sed_script+="s|{{ ${derived} }}|${esc}|g; "
     fi
   done
 
-  echo "$sed_script"
+  printf '%s' "$sed_script"
 }
 
 # 渲染模板
