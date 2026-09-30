@@ -21,6 +21,9 @@
     "opencode-go/mimo-v2.6-flash"
   ],
   "defaultThinkingLevel": "low",
+  "extensions": [
+    "-builtin:llama.cpp"
+  ],
   "defaultTools": [
     "+codemode"
   ],
@@ -28,5 +31,8 @@
   "fullscreenScrollbar": "hidden",
   "collapseChangelog": true,
   "fullscreenExitOutput": "resume-hint",
-  "editorPaddingX": 1
+  "editorPaddingX": 1,
+  "terminal": {
+    "clearOnShrink": true
+  }
 }
