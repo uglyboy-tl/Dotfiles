@@ -1,6 +1,6 @@
 {
-  "lastChangelogVersion": "0.87.1",
-  "theme": "dark",
+  "lastChangelogVersion": "0.99.1",
+  "theme": "system",
   "npmCommand": [
     "bun"
   ],
@@ -21,8 +21,11 @@
     "opencode-go/mimo-v2.6-flash"
   ],
   "defaultThinkingLevel": "low",
+  "defaultTools": [
+    "+codemode"
+  ],
   "tuiMode": "fullscreen",
-  "fullscreenScrollbar": "always",
+  "fullscreenScrollbar": "hidden",
   "collapseChangelog": true,
   "fullscreenExitOutput": "resume-hint",
   "editorPaddingX": 1
