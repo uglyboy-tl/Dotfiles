@@ -44,8 +44,11 @@ wallpaper_validate() { [ -d "$WALLPAPER_DIR/$1" ]; }
 # 更新 crontab（每小时轮换当前风格）
 _wallpaper_crontab_update() {
   local style="$1" cron_line new_cron
+  local display="${DISPLAY:-:0}"
+  local xauthority="${XAUTHORITY:-$HOME/.Xauthority}"
+  local dbus="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/$(id -u)/bus}"
   cron_line=$(crontab -l 2>/dev/null | grep "dwall.sh" || true)
-  new_cron="@hourly env DISPLAY=:0 XAUTHORITY=\"/var/run/lightdm/uglyboy/xauthority\" PATH=\"$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin\" XDG_DATA_HOME=\"$HOME/.local/share\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/1000/bus\" XDG_SESSION_TYPE=x11 DESKTOP_SESSION=bspwm TERM=dumb dwall.sh -s $style # dotbot"
+  new_cron="@hourly env DISPLAY=\"$display\" XAUTHORITY=\"$xauthority\" PATH=\"$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin\" XDG_DATA_HOME=\"$HOME/.local/share\" DBUS_SESSION_BUS_ADDRESS=\"$dbus\" XDG_SESSION_TYPE=x11 DESKTOP_SESSION=bspwm TERM=dumb dwall.sh -s $style # dotbot"
   if [ -n "$cron_line" ]; then
     (crontab -l 2>/dev/null | grep -v "dwall.sh" || true; echo "$new_cron") | crontab -
   else
