@@ -5,7 +5,7 @@ description: 深度研究:多轮检索 + 交叉验证,产出带引用来源的�
 
 # 深度研究
 
-问题与档位在末尾的 `User:` 行(首词是 `quick` / `standard` / `deep` 时去掉该词作档位,没有就是 `standard`)。若是你自己判断该用本 skill,问题即当前用户请求。
+末行 `User:` 是本次问题;首词为 `quick` / `standard` / `deep` 时取出作档位,没有就不传档位。若是你自己判断该用本 skill,问题即当前用户请求。
 
 ## 执行方式
 
@@ -19,15 +19,15 @@ description: 深度研究:多轮检索 + 交叉验证,产出带引用来源的�
 | 主对话已很长,再多塞材料可能触发压缩 | 委派 - 压缩会丢掉早期任务要求 |
 | 用户明确说「用 subagent / 委派」 | 委派,这是用户意志 |
 
-**委派**给 `researcher`(它自带联网与检索工具,规则就在它的定义里,你不需要交代规范)。委派前不要先自己 `web_search` / `fetch_content`:
+**委派**给 `researcher`(它自带联网与检索工具,规则就在它自己的定义里,不用你交代规范)。委派前不要自己先 `web_search` / `fetch_content` 一遍。它不带本对话的上下文,prompt 必须自包含:问题、档位,加上必要事实(涉及本仓库就给文件路径;用户的约束、范围、已知结论也写进去,否则它会重新发现或答偏):
 
     subagent({
       subagent_type: "researcher",
       description: "深度研究: <问题摘要>",
       inherit_context: false,
-      prompt: "用户问题:<问题>。档位:<quick|standard|deep>。",
+      prompt: "用户问题:<问题>。档位:<quick|standard|deep>。必要事实:<相关路径 / 范围 / 用户约束 / 已知结论>。",
     })
 
-拿到结果后原样呈现给用户(报告本身就是交付物)。若 spawn 失败或提示 agent 类型未知,改用下面的方式。
+researcher 声明后台运行:调用后本轮即结束,只回一句「已委派 researcher 后台研究」,不要声称已拿到结果;等完成通知到达,再把它交付的报告原样转达给用户(报告本身就是交付物)。若 spawn 失败或提示 agent 类型未知,改用下面的方式。
 
-**没有 `subagent`** → 你自己执行:先 read ~/.config/pi/agents/researcher.md,严格按其中的研究协议完成检索与验证,并输出同样的 evidence / answer / next_steps 三段。
+**没有 `subagent`** → 你自己执行:先 read `$PI_CODING_AGENT_DIR/agents/researcher.md`,严格按其中的研究协议完成检索、验证与交付。
