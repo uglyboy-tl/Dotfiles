@@ -43,7 +43,7 @@ get_current_font() {
 # 其他任何字体要么成为第一位主字体，要么被移除，以防止破坏字体回退。
 # 用 awk 改写 fonts.conf 的 monospace 块，避免依赖 python。
 apply_font() {
-  local font="$1"
+  local font="$1" rc=0
   local conf="$FONTS_CONF"
 
   if [ ! -f "$conf" ]; then
@@ -51,7 +51,6 @@ apply_font() {
     return 1
   fi
 
-  cp "$conf" "${conf}.bak"
   awk -v font="$font" '
     function emit_strings() {
       # 用户选择字体置顶; 若已在回退链中则不重复
@@ -75,10 +74,12 @@ apply_font() {
       next
     }
     { print }
-  ' "$conf" > "${conf}.tmp" && cat "${conf}.tmp" > "$conf"
-  rc=$?
-  rm -f "${conf}.tmp" "${conf}.bak"
-  return $rc
+  ' "$conf" > "${conf}.tmp" || rc=$?
+  if [ "$rc" -eq 0 ]; then
+    cat "${conf}.tmp" > "$conf" || rc=$?
+  fi
+  rm -f "${conf}.tmp"
+  return "$rc"
 }
 
 # 选择字体（设置全局 FONT；用户取消时退出脚本）
