@@ -41,6 +41,7 @@ git update-index --no-skip-worktree desktop/fontconfig/fonts.conf
 
 ## 已知问题
 
+- **jellyfin-mpv-shim 的 `conf.json` 有意不纳管**：`conf.py:load()` 只要文件字段数少于 schema 就立刻写回全量（实测 10 项 262 B 一次加载后变 196 项 5858 B），所以无法精简；`save()` 用 `os.replace`，会把软链替换成普通文件，导致仓库副本过期、再跑 `./install` 时被 `force` 覆盖而丢设置。故只纳管 `desktop/systemd/jellyfin-mpv-shim.service`。本机有意的偏离项（其余取默认）：`mpv_ext=true`、`mpv_ext_no_ovr=true`、`osc_style="custom"`、`enable_gui=false`、`fullscreen=true`、`hwdec="no"`、`direct_paths=true`、`thumbnail_enable=false`、`check_updates=false`、`segment_intro="always"`。
 - **sxhkd 启动 EPIPE**：快捷键启动时 stdout 是 socket，`echo` 会触发 SIGPIPE 中断脚本（`set -e` 下直接退出）。`epipe_init()` 忽略 SIGPIPE，且非 tty 时把输出重定向到 `~/.local/state/settings/logs/<脚本名>.log`。
 - **bspwm 重载不再重启 dunst**：dunst 配色由 `themes/render.conf` 里的 `dunstctl reload` 应用，bspwmrc 只用 `_o dunst`（已在跑就不动），所以 `bspc wm -r` 不会吞掉刚发的通知（旧实现 `_s dunst` + `wait_dunst_ready` 已删；前提：dunst 支持 `dunstrc.d` drop-in，`dunstctl reload` 会连同它一起重读）。
 - **feh 不能播 GIF 动画**：实测只显示第一帧。所以 `desktop/idle-screensaver/idle-screensaver.sh` 目前仅轮播静态图；动态屏保需改用 `mpv`（见待办）。
@@ -49,10 +50,8 @@ git update-index --no-skip-worktree desktop/fontconfig/fonts.conf
 
 ## 待办
 
-- opencode / pi agent - 检查是否支持主题配置
 - vscode - 参考 Omarchy 的 `vscode-theme.json.tpl`
 - 屏保支持动态：用 `mpv --no-audio --loop-playlist` 播放 GIF/视频（feh 只显示 GIF 第一帧）
-- `xss-lock` 已不需要（屏保改走 `xprintidle`），确认后可从系统卸载
 
 ## 相关
 

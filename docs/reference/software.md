@@ -44,6 +44,7 @@
 | Rofi | `desktop/rofi/` |
 | Alacritty / Ghostty / URxvt | `desktop/alacritty/`、`desktop/ghostty/`、`desktop/X11/` |
 | Dunst / Zathura / MPV | `desktop/dunst/dunstrc`、`desktop/zathura/`、`desktop/mpv/` |
+| Jellyfin MPV Shim | 仅纳管 `desktop/systemd/jellyfin-mpv-shim.service`；`conf.json` 有意不纳管（原因与关键设置见 [维护笔记](../maintenance.md#已知问题)），`cred.json`/`users.json` 属凭据留本地 |
 | Picom / Redshift / 字体 | `desktop/picom/picom.conf`、`desktop/redshift/redshift.conf`、`desktop/fontconfig/fonts.conf` |
 | 桌面入口文件（.desktop） | `desktop/applications/` |
 | Udiskie | `desktop/udiskie/config.yml` |
@@ -57,7 +58,7 @@
 |------|----------|
 | Git | `config/git/config` |
 | UV / Bun / Python（包管理器镜像源） | `config/sources/` |
-| Pi / OpenCode | `config/pi/` / `config/opencode/` |
+| Pi | `config/pi/` |
 | Herdr | `config/herdr/`（`config.toml` + `herdr-server.service`；常驻 server 由 systemd 管，default session；远程连接也走 default session） |
 
 ## 其他随仓库分发

@@ -42,7 +42,6 @@ cd ~/.local/share/dotfiles
 
 - `dotbot`、`dotbot-plugins/crontab`、`dotbot-plugins/apt`（安装器本身与指令插件，由 `install` 统一拉取）
 - `config/zsh/zinit`、`config/vim/vim-plug`（编辑器/Shell 插件管理器）
-- `config/opencode`（OpenCode 配置，见 [config/opencode/AGENTS.md](../config/opencode/AGENTS.md)）
 - `desktop/mpv/{uosc,thumbfast}`（播放器界面）
 - `data/dynamic-wallpaper`、`data/rime-ice`
 
@@ -73,9 +72,10 @@ cd ~/.local/share/dotfiles
 systemctl --user daemon-reload
 systemctl --user enable --now idle-screensaver-dbus.service   # 屏保抑制（org.freedesktop.ScreenSaver）
 systemctl --user enable --now herdr-server.service            # Herdr 常驻 server（default session）
+systemctl --user enable --now jellyfin-mpv-shim.service       # Jellyfin 投屏接收（mpv 播放）
 ```
 
-其他 unit（如 `jellyfin-mpv-shim.service`）同理，按需启用。未启用的后果只是对应功能缺失，不影响其余配置。
+> 其他 unit 同理，按需启用。未启用的后果只是对应功能缺失，不影响其余配置。务必用 `enable`——只把 unit 文件链进 `systemd/user/`（dotbot 做的）并不会自启。
 
 > Herdr 若已在跑（旧配置由 `bspwmrc` 起的手工进程），先 `herdr server stop` 再启用：否则 `herdr server` 会立刻退出，unit 进入 failed（`systemctl --user reset-failed herdr-server.service` 后可重试）。
 
