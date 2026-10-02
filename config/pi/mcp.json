@@ -4,7 +4,7 @@
       "command": "uvx",
       "args": ["--with", "mcp<2", "minimax-mcp", "-y"],
       "env": {
-        "MINIMAX_API_KEY": "${MINIMAX_API_KEY}",
+        "MINIMAX_API_KEY": "!cat ~/.config/local/minimax.key",
         "MINIMAX_API_HOST": "https://api.minimaxi.com",
         "MINIMAX_API_RESOURCE_MODE": "local",
         "MINIMAX_MCP_BASE_PATH": "~/Music/tts"

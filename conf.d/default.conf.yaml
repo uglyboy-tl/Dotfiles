@@ -90,7 +90,7 @@
     $XDG_CONFIG_HOME/pi/skills: config/pi/skills # 自定义技能
     $XDG_CONFIG_HOME/pi/AGENTS.md: config/pi/AGENTS.md # 全局指令
     $XDG_CONFIG_HOME/pi/settings.json: config/pi/settings.json # Pi 主配置(含 powerline 等插件配置,运行时会自动写入)
-    $XDG_CONFIG_HOME/pi/mcp.json: config/pi/mcp.json # MCP 服务(密钥经 ${MINIMAX_API_KEY} 注入,来自 ~/.config/local/zshrc.before)
+    $XDG_CONFIG_HOME/pi/mcp.json: config/pi/mcp.json # MCP 服务(密钥由 mcp.json 内的 !cat ~/.config/local/ 下的 .key 文件读取)
 
     # 开发环境配置
     ## Python 包管理配置
