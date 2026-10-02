@@ -1,7 +1,7 @@
 ## 用户偏好
 - 请勿使用 Unicode 连字符 `‑` (U+2011)，请使用 ASCII 连字符 `-` (U+002D)
 - 始终用**中文**交互
-- 优先并行调用工具：同一轮里一次发出多个相互独立的工具调用，pi 默认就会并发执行同一条 assistant 消息里的多个 tool call。
+- 多个相互独立的工具调用：能合成一条 bash 命令就合成；合不成时写一个 codemode 脚本批量执行（Promise.allSettled）。不要在同一条 assistant 消息里堆多个 tool call —— 那样每个结果都会逐个进入上下文。
 - 访问 GitHub 相关的一切（包括查询 github 代码库和下载 raw.githubusercontent.com 下的文件）都使用 `gh` 命令
 - 本机没有真正的 Node.js：`npm` / `npx` / `pnpm` / `yarn` 都不存在，`node` 只是转发到 bun 的 shim（`scripts/node`）。Node 生态命令一律用 bun：`bunx` 替代 `npx`，含其他文件里写死的 npx 用法。
 - 不要自动执行 `git commit` / `git push`；提交由用户手动执行 `/commit`。
@@ -20,6 +20,10 @@
 ## 检索工具
 - 检索文件内容用 `grep`，按文件名/路径找文件用 `find`；两者都是 FFF 预索引实现（git-aware、frecency 排序）。具体参数以工具描述为准。
 - 不要用 bash 里的 `rg` / `grep` / `find` / `ls` 代替它们。例外只有两种：需要陌生仓库的字母序目录总览，或概念检索返回空。
+
+## MCP 工具
+- 调 minimax 的 `text_to_audio` 生成音频时，`voice_id` 固定传 `uglyboy_voice`，不要用默认音色、也不要自行挑音色。
+- 落盘目录由 MCP 的 `MINIMAX_MCP_BASE_PATH` 环境变量决定（`~/Music/tts`），不需要传 `output_directory`。
 
 ## 子代理（subagent）
 - 用它的理由是**双向隔离**：

@@ -9,10 +9,10 @@
 | 层次 | 应用类型 | 颜色来源 | 是否需要模板 |
 |------|----------|----------|--------------|
 | 源头 | 终端模拟器（Alacritty/Ghostty/URxvt） | 定义 16 色映射 | 需要 |
-| 跟随 | CLI/TUI 工具（bat/zsh/neomutt/fastfetch/herdr 等） | 继承终端 16 色 | 不需要 |
+| 跟随 | CLI/TUI 工具（bat/zsh/neomutt/fastfetch/herdr/pi 等） | 继承终端 16 色 | 不需要 |
 | 独立 | GUI 应用（Polybar/Rofi/Dunst/Zathura） | 独立颜色系统 | 需要 |
 
-CLI 工具跟随终端的好处：一次切换全局生效，维护成本低。
+CLI 工具跟随终端的好处：一次切换全局生效，维护成本低。pi 默认的 `system` 主题从终端的背景/前景/ANSI 调色板派生，终端明暗切换时会重建，无需单独模板。
 
 ### 使用固定配色的应用（不纳入主题管理）
 

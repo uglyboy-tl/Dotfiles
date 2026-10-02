@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "minimax": {
+      "command": "uvx",
+      "args": ["--with", "mcp<2", "minimax-mcp", "-y"],
+      "env": {
+        "MINIMAX_API_KEY": "${MINIMAX_API_KEY}",
+        "MINIMAX_API_HOST": "https://api.minimaxi.com",
+        "MINIMAX_API_RESOURCE_MODE": "local",
+        "MINIMAX_MCP_BASE_PATH": "~/Music/tts"
+      },
+      "description": "MiniMax 多模态：文本转语音、音色克隆、音乐与图像生成",
+      "exposure": "hidden",
+      "toolExposure": {
+        "text_to_audio": "codemode"
+      }
+    }
+  }
+}
