@@ -58,7 +58,7 @@
 | 中文输入 | 未确认 | FCITX5 + RIME（雾凇拼音） | 我们必须有，他们面向英文用户 |
 | 包管理 | pacman + 自有签名仓库 + AUR + `omarchy pkg add/drop` | apt（用户自装）+ binup + pip/uv/bun 镜像 | 我们不做安装层，故无更新通道/回滚问题 |
 | 监控 | btop | btop（`Super+h`）+ FastFetch | 重合 |
-| AI | v4 默认 agent **可选**（Claude Code/Codex/OpenCode/Pi/Gemini…），lazy-install，`c`/`cx` 别名 | Pi + OpenCode | 都收敛到「agent launcher」模式；他们做选择器，我们固定两个 |
+| AI | v4 默认 agent **可选**（Claude Code/Codex/OpenCode/Pi/Gemini…），lazy-install，`c`/`cx` 别名 | Pi | 都收敛到「agent launcher」模式；他们做选择器，我们固定一个 |
 | 游戏 | Steam/RetroArch/Lutris/Moonlight 等菜单化安装 | 未纳管（Steam/Lutris 仅窗口规则） | — |
 
 ## v4 Quattro 的更新：哪些值得借鉴
@@ -80,7 +80,7 @@ v4（2026-08-14）把整个桌面壳重写进 Quickshell，是项目成立以来
 - **Foot 默认终端**：他们是为省内存/ISO 体积换的；我们默认 Ghostty 不缺这点资源。
 - **Lua 化 Hyprland 配置**：不用 Hyprland，无对象。
 - **发行版层能力**（自有包仓库、4 条更新通道、ISO、出厂重置、代装机器）：超出 dotfiles 职责边界。
-- **agent 选择器**：我们固定 Pi + OpenCode，YAGNI。
+- **agent 选择器**：我们固定 Pi，YAGNI。
 - **网络/蓝牙/音频控制面板**：v4 内建的 ping/测速/Wi-Fi QR 面板，对我们这个体量是过度设计，Rofi 蓝牙菜单 + 网络管理器 TUI 已够。
 
 ## 来源与时效

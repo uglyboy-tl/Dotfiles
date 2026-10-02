@@ -83,15 +83,6 @@
     $XDG_CONFIG_HOME/herdr/config.toml: config/herdr/config.toml
     $XDG_CONFIG_HOME/systemd/user/herdr-server.service: config/herdr/herdr-server.service # 常驻 server（default session，需 systemctl --user enable --now）
 
-    ## OpenCode
-    $XDG_CONFIG_HOME/opencode/opencode.json: config/opencode/config/opencode.json
-    $XDG_CONFIG_HOME/opencode/tui.json: config/opencode/config/tui.json
-    $XDG_CONFIG_HOME/opencode/AGENTS.md: config/opencode/config/AGENTS.md
-    $XDG_CONFIG_HOME/opencode/agents: config/opencode/agents
-    $XDG_CONFIG_HOME/opencode/commands: config/opencode/commands
-    $XDG_CONFIG_HOME/opencode/skills: config/opencode/skills
-    $XDG_CONFIG_HOME/opencode/plugins: config/opencode/plugins
-
     ## Pi
     $XDG_CONFIG_HOME/pi/extensions: config/pi/extensions # 自定义扩展
     $XDG_CONFIG_HOME/pi/agents: config/pi/agents # 专用 subagent
@@ -99,6 +90,7 @@
     $XDG_CONFIG_HOME/pi/skills: config/pi/skills # 自定义技能
     $XDG_CONFIG_HOME/pi/AGENTS.md: config/pi/AGENTS.md # 全局指令
     $XDG_CONFIG_HOME/pi/settings.json: config/pi/settings.json # Pi 主配置(含 powerline 等插件配置,运行时会自动写入)
+    $XDG_CONFIG_HOME/pi/mcp.json: config/pi/mcp.json # MCP 服务(密钥经 ${MINIMAX_API_KEY} 注入,来自 ~/.config/local/zshrc.before)
 
     # 开发环境配置
     ## Python 包管理配置

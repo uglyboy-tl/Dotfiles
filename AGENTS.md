@@ -65,6 +65,5 @@ $XDG_CONFIG_HOME/zsh/.zshrc: config/zsh/zshrc.zsh
 | 与 Omarchy 的选型对比、可借鉴项 | [docs/reference/omarchy.md](docs/reference/omarchy.md) |
 | `~/.local/bin` 各命令 | [docs/reference/scripts.md](docs/reference/scripts.md) |
 | 快捷键 | [docs/reference/keybindings.md](docs/reference/keybindings.md) |
-| OpenCode 自身配置（agents/skills/命令） | [config/opencode/AGENTS.md](config/opencode/AGENTS.md) |
 
 总索引：[docs/README.md](docs/README.md)。

@@ -1,5 +1,4 @@
 .vscode/
-.opencode/
 __pycache__/
 
 # 主题渲染产物（settings/setting-theme.sh 生成，不手改、不提交）。

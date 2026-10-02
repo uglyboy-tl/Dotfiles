@@ -7,7 +7,7 @@
 - **桌面**：BSPWM + sxhkd + Polybar + Rofi + Dunst + Picom，终端 Alacritty / Ghostty / URxvt
 - **终端与 Shell**：ZSH + Zinit + Powerlevel10k、TMUX / herdr、yazi、Atuin、FZF + Zoxide
 - **工作流**：统一设置菜单（主题 / 壁纸 / 字体 / 快捷键 / 关于）、自研主题渲染、邮件（offlineimap + notmuch + NeoMutt）
-- **开发与 AI**：Git、UV / Bun / Python、Pi / OpenCode，配套 `binup` 管理 CLI 二进制
+- **开发与 AI**：Git、UV / Bun / Python、Pi，配套 `binup` 管理 CLI 二进制
 
 设计取向：Unix 哲学（一个工具只做一件事）、平铺窗口管理、命令行优先。
 
