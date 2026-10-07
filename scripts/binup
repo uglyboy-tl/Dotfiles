@@ -1,92 +1,99 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_NAME="BinUp"
-system.command.exist(){ command -v "$1" >/dev/null 2>&1;}
-system.command.required(){ ! system.command.exist "$1"&&log.error "This module required \`$1\` command."&&exit 1||return 0;}
-system.command.result(){
-local result
-result=$(eval "$1" 2>&1)||{
-local exit_code=$?
-if [[ $exit_code -eq 1 ]]&&[[ $1 == *grep* ]];then
-result=""
-else
-result="（命令执行失败，退出码: $exit_code）"
-fi
+ANSI_ESC=$'\033'
+ANSI_CSI="$ANSI_ESC["
+ansi.Color.IsAvailable(){
+[[ -t 1 ]]||return 1
+local colors
+colors=$(tput colors 2>/dev/null||echo 0)
+[[ $colors -ge 16 ]]
 }
-[[ -z $result ]]&&result="（无输出）"
-echo "$result"
+ansi.enable.color(){
+BLACK="${ANSI_CSI}30m"
+RED="${ANSI_CSI}31m"
+GREEN="${ANSI_CSI}32m"
+YELLOW="${ANSI_CSI}33m"
+BLUE="${ANSI_CSI}34m"
+MAGENTA="${ANSI_CSI}35m"
+CYAN="${ANSI_CSI}36m"
+WHITE="${ANSI_CSI}37m"
+BRIGHT_BLACK="${ANSI_CSI}90m"
+BRIGHT_RED="${ANSI_CSI}91m"
+BRIGHT_GREEN="${ANSI_CSI}92m"
+BRIGHT_YELLOW="${ANSI_CSI}93m"
+BRIGHT_BLUE="${ANSI_CSI}94m"
+BRIGHT_MAGENTA="${ANSI_CSI}95m"
+BRIGHT_CYAN="${ANSI_CSI}96m"
+BRIGHT_WHITE="${ANSI_CSI}97m"
+NC="${ANSI_CSI}0m"
+NO_COLOR="${ANSI_CSI}0m"
 }
-system.os(){
-[[ -n ${_SYSTEM_OS+x} ]]&&echo "$_SYSTEM_OS"&&return 0
-case "$OSTYPE" in
-darwin*)echo "macos";;
-linux*)echo "linux";;
-msys*|cygwin*)echo "windows";;
-bsd*)echo "bsd";;
-solaris*)echo "solaris";;
-*)echo "unknown"
-esac
+ansi.disable.color(){
+BLACK=""
+RED=""
+GREEN=""
+YELLOW=""
+BLUE=""
+MAGENTA=""
+CYAN=""
+WHITE=""
+BRIGHT_BLACK=""
+BRIGHT_RED=""
+BRIGHT_GREEN=""
+BRIGHT_YELLOW=""
+BRIGHT_BLUE=""
+BRIGHT_MAGENTA=""
+BRIGHT_CYAN=""
+BRIGHT_WHITE=""
+NC=""
+NO_COLOR=""
 }
-_SYSTEM_OS="$(system.os)"
-system.arch(){
-[[ -n ${_SYSTEM_ARCH+x} ]]&&echo "$_SYSTEM_ARCH"&&return 0
-local -r arch="$(uname -m)"
-case "$arch" in
-x86_64|x64|amd64)echo "amd64";;
-aarch64|arm64)echo "arm64";;
-armv7l|armhf)echo "armhf";;
-i686|i386|i586)echo "i386";;
-*)echo "$arch"
-esac
+ansi.enable.style(){
+Bold="${ANSI_CSI}1m"
+Dim="${ANSI_CSI}2m"
+Italics="${ANSI_CSI}3m"
+Underline="${ANSI_CSI}4m"
+Blink="${ANSI_CSI}5m"
+Reverse="${ANSI_CSI}7m"
+Hidden="${ANSI_CSI}8m"
+Strike="${ANSI_CSI}9m"
+NoBold="${ANSI_CSI}21m"
+NoDim="${ANSI_CSI}22m"
+NoItalics="${ANSI_CSI}23m"
+NoUnderline="${ANSI_CSI}24m"
+NoBlink="${ANSI_CSI}25m"
+NoReverse="${ANSI_CSI}27m"
+NoHidden="${ANSI_CSI}28m"
+NoStrike="${ANSI_CSI}29m"
 }
-_SYSTEM_ARCH="$(system.arch)"
-array.len(){
-local -n ref="$1"
-echo "${#ref[@]}"
+ansi.disable.style(){
+Bold=""
+Dim=""
+Italics=""
+Underline=""
+Blink=""
+Reverse=""
+Hidden=""
+Strike=""
+NoBold=""
+NoDim=""
+NoItalics=""
+NoUnderline=""
+NoBlink=""
+NoReverse=""
+NoHidden=""
+NoStrike=""
 }
-array.contains(){
-local -n ref="$1"
-if ((${#ref[@]}<=3));then
-[[ " ${ref[*]} " == *" $2 "* ]]
-else
-local -A lookup=()
-for elem in "${ref[@]}";do
-lookup["$elem"]=1
-done
-[[ -v "lookup[$2]" ]]
-fi
+ansi.enable(){
+[[ -n ${_ANSI_FORCE_DISABLE-} ]]&&ansi.disable&&return 0
+ansi.Color.IsAvailable&&ansi.enable.color&&ansi.enable.style||{ ansi.disable.color&&ansi.disable.style;}
 }
-array.append(){
-local -n array_ref="$1"
-shift
-array_ref+=("$@")
+ansi.disable(){
+ansi.disable.color
+ansi.disable.style
 }
-array.get(){
-local -n ref="$1"
-local len=${#ref[@]}
-(($2>=0&&$2<len))&&echo "${ref[$2]}"||return 1
-}
-array.type(){
-local -r arr="$1"
-local decl
-decl="$(declare -p "$arr" 2>/dev/null)"||return 1
-case "$decl" in
-"declare -A"*)echo "associative";;
-"declare -a"*)echo "indexed";;
-*)return 1
-esac
-}
-array.has_duplicates(){
-local -n ref="$1"
-local -A seen=()
-local elem key
-for elem in "${ref[@]}";do
-key="${elem:-__EMPTY__}"
-[[ -v "seen[$key]" ]]&&return 0
-seen["$key"]=1
-done
-return 1
-}
+ansi.enable
 string.base64.encode(){ base64 -w 0 "$1" 2>/dev/null||base64 "$1" 2>/dev/null;}
 string.base64.decode(){ base64 -d 2>/dev/null||base64 -D 2>/dev/null;}
 string.escape.regex(){ printf '%s' "${1:-}"|sed 's/[].[\\^$*+?{}()|]/\\&/g; s/\//\\\//g';}
@@ -179,247 +186,6 @@ return
 ! string.is_ascii "$1"&&console.mixed_width "$1"&&return
 string.has_ansi "$1"&&console.ansi_width "$1"||echo "${#1}"
 }
-_CONSOLE_LAYOUT_UNDERLINE=$(console.repeat "=" 20)
-_CONSOLE_LAYOUT_DEPTH=0
-console.layout.section(){
-console.stdout "$1:"
-console.stdout "=${_CONSOLE_LAYOUT_UNDERLINE:0:$(console.display_width "$1")}"
-}
-console.layout.footer(){
-console.stdout "========="
-console.stdout "$*"
-}
-console.layout.item.title(){
-console.indent "$1" "${*:2}"
-_CONSOLE_LAYOUT_DEPTH=$(($1+1))
-}
-console.layout.item.item(){
-console.indent "$_CONSOLE_LAYOUT_DEPTH" "$*"
-}
-console.layout.item.mid(){
-console.layout.item.item "├─" "$*"
-}
-console.layout.item.end(){
-console.layout.item.item "└─" "$*"
-echo ""
-}
-fs.file.exists(){ [[ -f $1 ]];}
-fs.dir.exists(){ [[ -d $1 ]];}
-fs.write(){
-local _f="$1"
-mkdir -p "$(dirname "$1")"
-shift
-(($#>0))&&printf "%s\n" "$@" >"$_f"||: >"$_f"
-}
-fs.find(){ local _n=$(awk -v s="${3:-1}" -v p="$2" 'NR>=s && $0~p{print NR; exit}' "$1" 2>/dev/null)&&[[ $_n ]]&&echo "$_n"||return 1;}
-fs.replace(){
-local _repl=$(string.escape.sed "$3")
-[[ -n ${4:-} ]]&&sed -i "$4,/$2/{/$2/{s|.*|$_repl|}}" "$1"||sed -i "/$2/{s|.*|$_repl|}" "$1"
-}
-fs.insert(){ sed -i "/$2/a\\$3" "$1" 2>/dev/null;}
-fs.rmline(){ [[ -n $4 ]]&&sed -i "$4,/$2/{/$2/d}" "$1" 2>/dev/null||sed -i "/$2/d" "$1" 2>/dev/null;}
-fs.cleanup(){ ls -t "$1"* 2>/dev/null|tail -n +$((${2:-3}+1))|xargs -r rm -f;}
-fs.mktemp(){ mktemp "$@" 2>/dev/null||{
-echo "fs.mktemp: 创建临时文件失败" >&2
-return 1
-};}
-fs.file.extract(){
-local path=$(realpath "$1") base=$(basename "$1")
-(builtin cd "$2" >/dev/null||return 1
-case "${base,,}" in
-*.zip|*.war|*.jar|*.ear|*.sublime-package|*.ipa|*.ipsw|*.xpi|*.apk|*.aar|*.whl|*.vsix|*.crx|*.pk3|*.pk4)unzip -q "$path";;
-*.tar.gz|*.tgz)tar -zxf "$path";;
-*.tar.bz2|*.tbz|*.tbz2|*.tar.bz)tar -jxf "$path";;
-*.tar.xz|*.txz)tar -xJf "$path";;
-*.tar)tar -xf "$path";;
-*.gz)gzip -dc "$path" >"${base%.gz}";;
-*.bz2)bzip2 -dc "$path" >"${base%.bz2}";;
-*.xz)xz -dc "$path" >"${base%.xz}";;
-*)chmod +x "$path"
-cp "$path" "${base%%.*}"
-esac)
-}
-: "${XDG_CONFIG_HOME:=$HOME/.config}"
-: "${XDG_DATA_HOME:=$HOME/.local/share}"
-: "${XDG_STATE_HOME:=$HOME/.local/state}"
-: "${XDG_CACHE_HOME:=$HOME/.cache}"
-: "${SCRIPT_NAME:=}"
-_PATH_LOCAL_DIR="local"
-path.script_name(){
-echo "${SCRIPT_NAME,,}"
-}
-path.config_dir(){
-: "${SCRIPT_CONFIG_DIR:=$XDG_CONFIG_HOME/$(path.script_name)}"
-echo "$SCRIPT_CONFIG_DIR"
-}
-path.data_dir(){
-: "${SCRIPT_DATA_DIR:=$XDG_DATA_HOME/$(path.script_name)}"
-echo "$SCRIPT_DATA_DIR"
-}
-path.state_dir(){
-: "${SCRIPT_STATE_DIR:=$XDG_STATE_HOME/$(path.script_name)}"
-echo "$SCRIPT_STATE_DIR"
-}
-path.cache_dir(){
-: "${SCRIPT_CACHE_DIR:=$XDG_CACHE_HOME/$(path.script_name)}"
-echo "$SCRIPT_CACHE_DIR"
-}
-path.log_dir(){
-: "${SCRIPT_LOG_DIR:=$(path.state_dir)/logs}"
-echo "$SCRIPT_LOG_DIR"
-}
-path.local_config_dir(){
-: "${SCRIPT_LOCAL_CONFIG_DIR:=$XDG_CONFIG_HOME/$_PATH_LOCAL_DIR}"
-echo "$SCRIPT_LOCAL_CONFIG_DIR"
-}
-ANSI_ESC=$'\033'
-ANSI_CSI="$ANSI_ESC["
-ansi.Color.IsAvailable(){
-[[ -t 1 ]]||return 1
-local colors
-colors=$(tput colors 2>/dev/null||echo 0)
-[[ $colors -ge 16 ]]
-}
-ansi.Powerline.IsAvailable(){
-[[ -n ${NO_UNICODE-} ]]&&return 1
-local lc="${LC_ALL:-${LC_CTYPE:-${LANG:-}}}"
-[[ $lc == *UTF-8* || $lc == *utf8* ]]&&return 0
-locale -k LC_CTYPE 2>/dev/null|grep -q 'UTF-8'
-}
-ansi.enable.color(){
-BLACK="${ANSI_CSI}30m"
-RED="${ANSI_CSI}31m"
-GREEN="${ANSI_CSI}32m"
-YELLOW="${ANSI_CSI}33m"
-BLUE="${ANSI_CSI}34m"
-MAGENTA="${ANSI_CSI}35m"
-CYAN="${ANSI_CSI}36m"
-WHITE="${ANSI_CSI}37m"
-BRIGHT_BLACK="${ANSI_CSI}90m"
-BRIGHT_RED="${ANSI_CSI}91m"
-BRIGHT_GREEN="${ANSI_CSI}92m"
-BRIGHT_YELLOW="${ANSI_CSI}93m"
-BRIGHT_BLUE="${ANSI_CSI}94m"
-BRIGHT_MAGENTA="${ANSI_CSI}95m"
-BRIGHT_CYAN="${ANSI_CSI}96m"
-BRIGHT_WHITE="${ANSI_CSI}97m"
-NC="${ANSI_CSI}0m"
-NO_COLOR="${ANSI_CSI}0m"
-}
-ansi.disable.color(){
-BLACK=""
-RED=""
-GREEN=""
-YELLOW=""
-BLUE=""
-MAGENTA=""
-CYAN=""
-WHITE=""
-BRIGHT_BLACK=""
-BRIGHT_RED=""
-BRIGHT_GREEN=""
-BRIGHT_YELLOW=""
-BRIGHT_BLUE=""
-BRIGHT_MAGENTA=""
-BRIGHT_CYAN=""
-BRIGHT_WHITE=""
-NC=""
-NO_COLOR=""
-}
-ansi.enable.style(){
-Bold="${ANSI_CSI}1m"
-Dim="${ANSI_CSI}2m"
-Italics="${ANSI_CSI}3m"
-Underline="${ANSI_CSI}4m"
-Blink="${ANSI_CSI}5m"
-Reverse="${ANSI_CSI}7m"
-Hidden="${ANSI_CSI}8m"
-Strike="${ANSI_CSI}9m"
-NoBold="${ANSI_CSI}21m"
-NoDim="${ANSI_CSI}22m"
-NoItalics="${ANSI_CSI}23m"
-NoUnderline="${ANSI_CSI}24m"
-NoBlink="${ANSI_CSI}25m"
-NoReverse="${ANSI_CSI}27m"
-NoHidden="${ANSI_CSI}28m"
-NoStrike="${ANSI_CSI}29m"
-}
-ansi.disable.style(){
-Bold=""
-Dim=""
-Italics=""
-Underline=""
-Blink=""
-Reverse=""
-Hidden=""
-Strike=""
-NoBold=""
-NoDim=""
-NoItalics=""
-NoUnderline=""
-NoBlink=""
-NoReverse=""
-NoHidden=""
-NoStrike=""
-}
-ansi.enable.powerline(){
-POWERLINE_SEPARATOR=$'\ue0b0'
-POWERLINE_SEPARATOR_THIN=$'\ue0b1'
-POWERLINE_SEPARATOR_LEFT=$'\ue0b2'
-POWERLINE_SEPARATOR_LEFT_THIN=$'\ue0b3'
-POWERLINE_BRANCH=$'\ue0a0'
-POWERLINE_LINE=$'\ue0a1'
-POWERLINE_READONLY=$'\ue0a2'
-POWERLINE_POINTING_ARROW=$'\u27a1'
-POWERLINE_ARROW_RIGHT=$'\u25b6'
-POWERLINE_ARROW_LEFT=$'\u25c0'
-POWERLINE_ARROW_DOWN=$'\u2b07'
-POWERLINE_ARROW_RIGHT_DOWN=$'\u2b0a'
-POWERLINE_PLUS_MINUS=$'\u00b1'
-POWERLINE_REFERS_TO=$'\u27a6'
-POWERLINE_OK=$'\u2714'
-POWERLINE_FAIL=$'\u2718'
-POWERLINE_WARN=$'\u26a0'
-POWERLINE_COG=$'\u2699'
-POWERLINE_HEART=$'\u2764'
-POWERLINE_STAR=$'\u2605'
-}
-ansi.disable.powerline(){
-POWERLINE_SEPARATOR=">"
-POWERLINE_SEPARATOR_THIN=">"
-POWERLINE_SEPARATOR_LEFT="<"
-POWERLINE_SEPARATOR_LEFT_THIN="<"
-POWERLINE_BRANCH="|}"
-POWERLINE_LINE="LN"
-POWERLINE_READONLY="RO"
-POWERLINE_POINTING_ARROW="~"
-POWERLINE_ARROW_RIGHT="->"
-POWERLINE_ARROW_LEFT="<-"
-POWERLINE_ARROW_DOWN="_"
-POWERLINE_ARROW_RIGHT_DOWN=">"
-POWERLINE_PLUS_MINUS="+-"
-POWERLINE_REFERS_TO="*"
-POWERLINE_OK="+"
-POWERLINE_FAIL="x"
-POWERLINE_WARN="!"
-POWERLINE_COG="{*}"
-POWERLINE_HEART="<3"
-POWERLINE_STAR="*"
-}
-ansi.enable(){
-[[ -n ${_ANSI_FORCE_DISABLE-} ]]&&ansi.disable&&return 0
-ansi.Color.IsAvailable&&ansi.enable.color&&ansi.enable.style||{ ansi.disable.color&&ansi.disable.style;}
-ansi.Powerline.IsAvailable&&ansi.enable.powerline||ansi.disable.powerline
-}
-ansi.disable(){
-ansi.disable.color
-ansi.disable.style
-ansi.disable.powerline
-}
-ansi.is.initialized(){
-[[ -n $ANSI_ESC ]]
-}
-ansi.enable
 : "${_LOG_USE_EXTRA:=false}"
 : "${_LOG_LEVEL:=INFO}"
 declare -gA _LOG_LEVEL_MAP=(
@@ -457,6 +223,38 @@ log.info(){ ((1>=_LOG_MIN_LEVEL))&&log info "$@"||true;}
 log.success(){ ((2>=_LOG_MIN_LEVEL))&&log success "$@"||true;}
 log.warn(){ ((2>=_LOG_MIN_LEVEL))&&log warn "$@"||true;}
 log.error(){ ((3>=_LOG_MIN_LEVEL))&&log error "$@"||true;}
+array.len(){
+local -n ref="$1"
+echo "${#ref[@]}"
+}
+array.contains(){
+local -n ref="$1"
+local elem
+for elem in "${ref[@]}";do
+[[ $elem == "$2" ]]&&return 0
+done
+return 1
+}
+array.append(){
+local -n array_ref="$1"
+shift
+array_ref+=("$@")
+}
+array.get(){
+local -n ref="$1"
+local len=${#ref[@]}
+(($2>=0&&$2<len))&&echo "${ref[$2]}"||return 1
+}
+array.has_duplicates(){
+local -n ref="$1"
+local -A seen=()
+local elem
+for elem in "${ref[@]}";do
+[[ -v "seen[k$elem]" ]]&&return 0
+seen["k$elem"]=1
+done
+return 1
+}
 map.len(){
 local -n ref="$1"
 echo "${#ref[@]}"
@@ -673,6 +471,34 @@ args.opt.arg_index(){ echo "${_ARGS_OPT_ARGS[$1]:-}";}
 args.show_help(){
 usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
 }
+: "${XDG_CONFIG_HOME:=$HOME/.config}"
+: "${XDG_DATA_HOME:=$HOME/.local/share}"
+: "${XDG_STATE_HOME:=$HOME/.local/state}"
+: "${XDG_CACHE_HOME:=$HOME/.cache}"
+: "${SCRIPT_NAME:=}"
+path.script_name(){
+echo "${SCRIPT_NAME,,}"
+}
+path.config_dir(){
+: "${SCRIPT_CONFIG_DIR:=$XDG_CONFIG_HOME/$(path.script_name)}"
+echo "$SCRIPT_CONFIG_DIR"
+}
+path.data_dir(){
+: "${SCRIPT_DATA_DIR:=$XDG_DATA_HOME/$(path.script_name)}"
+echo "$SCRIPT_DATA_DIR"
+}
+path.state_dir(){
+: "${SCRIPT_STATE_DIR:=$XDG_STATE_HOME/$(path.script_name)}"
+echo "$SCRIPT_STATE_DIR"
+}
+path.cache_dir(){
+: "${SCRIPT_CACHE_DIR:=$XDG_CACHE_HOME/$(path.script_name)}"
+echo "$SCRIPT_CACHE_DIR"
+}
+path.log_dir(){
+: "${SCRIPT_LOG_DIR:=$(path.state_dir)/logs}"
+echo "$SCRIPT_LOG_DIR"
+}
 declare -ga _CONFIG_REGISTERED=()
 declare -gA _CONFIG_ARRAY_REGISTERED=()
 declare -gA _CONFIG_ARRAY_ITEMS=()
@@ -779,6 +605,638 @@ _CONFIG_VALUES["$1.$2.$3"]=$4
 }
 config.type(){ [[ -v "_CONFIG_TYPES[$1]" ]]&&echo "${_CONFIG_TYPES[$1]}";}
 config.desc(){ [[ -v "_CONFIG_DESCS[$1]" ]]&&echo "${_CONFIG_DESCS[$1]}";}
+system.command.exist(){ command -v "$1" >/dev/null 2>&1;}
+system.command.required(){ ! system.command.exist "$1"&&log.error "This module required \`$1\` command."&&exit 1||return 0;}
+system.gui_supported(){ [[ -n ${DISPLAY:-} || -n ${WAYLAND_DISPLAY:-} ]];}
+system.command.result(){
+local result
+result=$(eval "$1" 2>&1)||{
+local exit_code=$?
+if [[ $exit_code -eq 1 ]]&&[[ $1 == *grep* ]];then
+result=""
+else
+result="（命令执行失败，退出码: $exit_code）"
+fi
+}
+[[ -z $result ]]&&result="（无输出）"
+echo "$result"
+}
+system.os(){
+case "$OSTYPE" in
+darwin*)echo "macos";;
+linux*)echo "linux";;
+msys*|cygwin*)echo "windows";;
+bsd*)echo "bsd";;
+solaris*)echo "solaris";;
+*)echo "unknown"
+esac
+}
+system.arch(){
+local -r arch="$(uname -m)"
+case "$arch" in
+x86_64|x64|amd64)echo "amd64";;
+aarch64|arm64)echo "arm64";;
+armv7l|armhf)echo "armhf";;
+i686|i386|i586)echo "i386";;
+*)echo "$arch"
+esac
+}
+fs.file.exists(){ [[ -f $1 ]];}
+fs.dir.exists(){ [[ -d $1 ]];}
+fs.write(){
+local _f="$1"
+mkdir -p "$(dirname "$1")"
+shift
+(($#>0))&&printf "%s\n" "$@" >"$_f"||: >"$_f"
+}
+fs.find(){ local _n=$(awk -v s="${3:-1}" -v p="$2" 'NR>=s && $0~p{print NR; exit}' "$1" 2>/dev/null)&&[[ $_n ]]&&echo "$_n"||return 1;}
+fs.replace(){
+local _repl=$(string.escape.sed "$3")
+[[ -n ${4:-} ]]&&sed -i "$4,/$2/{/$2/{s|.*|$_repl|}}" "$1"||sed -i "/$2/{s|.*|$_repl|}" "$1"
+}
+fs.insert(){ sed -i "/$2/a\\$3" "$1" 2>/dev/null;}
+fs.rmline(){ [[ -n $4 ]]&&sed -i "$4,/$2/{/$2/d}" "$1" 2>/dev/null||sed -i "/$2/d" "$1" 2>/dev/null;}
+fs.cleanup(){ ls -t "$1"* 2>/dev/null|tail -n +$((${2:-3}+1))|xargs -r rm -f;}
+fs.mktemp(){ mktemp "$@" 2>/dev/null||{
+echo "fs.mktemp: 创建临时文件失败" >&2
+return 1
+};}
+fs.file.extract(){
+local path=$(realpath "$1") base=$(basename "$1")
+(builtin cd "$2" >/dev/null||return 1
+case "${base,,}" in
+*.zip|*.war|*.jar|*.ear|*.sublime-package|*.ipa|*.ipsw|*.xpi|*.apk|*.aar|*.whl|*.vsix|*.crx|*.pk3|*.pk4)unzip -q "$path";;
+*.tar.gz|*.tgz)tar -zxf "$path";;
+*.tar.bz2|*.tbz|*.tbz2|*.tar.bz)tar -jxf "$path";;
+*.tar.xz|*.txz)tar -xJf "$path";;
+*.tar)tar -xf "$path";;
+*.gz)gzip -dc "$path" >"${base%.gz}";;
+*.bz2)bzip2 -dc "$path" >"${base%.bz2}";;
+*.xz)xz -dc "$path" >"${base%.xz}";;
+*)chmod +x "$path"
+cp "$path" "${base%%.*}"
+esac)
+}
+declare -g _REQUESTS_TIMEOUT=30
+declare -g _REQUESTS_USER_AGENT="bashlet-requests/1.0"
+declare -g _REQUESTS_BASE_URL=""
+declare -gA _REQUESTS_HEADERS=()
+declare -gA _REQUESTS_AUTH=()
+declare -g _REQUESTS_CURL=""
+declare -g _REQUESTS_JQ=""
+requests.init(){
+declare -ga _REQUESTS_CURL_EXTRA=("$@")
+system.command.required "curl"&&_REQUESTS_CURL="$(command -v curl)"
+system.command.required "jq"&&_REQUESTS_JQ="$(command -v jq)"
+_REQUESTS_HEADERS=(
+["Accept"]="*/*"
+["Accept-Encoding"]="gzip, deflate"
+["Connection"]="keep-alive")
+_REQUESTS_AUTH=()
+_REQUESTS_BASE_URL=""
+log.debug "requests module initialized: curl=$_REQUESTS_CURL, jq=$_REQUESTS_JQ"
+return 0
+}
+requests.curl.configure(){
+local array_name="$1"
+local timeout="${2:-}"
+local include_auth="${3:-true}"
+[[ -n $timeout ]]&&array.append "$array_name" "--max-time" "$timeout"
+array.append "$array_name" "-A" "$_REQUESTS_USER_AGENT"
+local key
+for key in "${!_REQUESTS_HEADERS[@]}";do
+array.append "$array_name" "-H" "$key: ${_REQUESTS_HEADERS[$key]}"
+done
+if [[ $include_auth == "true" && ${#_REQUESTS_AUTH[@]} -gt 0 ]];then
+local auth_key
+for auth_key in "${!_REQUESTS_AUTH[@]}";do
+array.append "$array_name" "-H" "$auth_key: ${_REQUESTS_AUTH[$auth_key]}"
+done
+fi
+}
+requests.request.build(){
+local -n cmd_ref="$1"
+local -r method="$2"
+local -r url="$3"
+local -r body="$4"
+local -r content_type="${5:-$(requests.content_type.detect "$4")}"
+cmd_ref=("$_REQUESTS_CURL" "-s" "-L" "--compressed")
+if [[ $method != POST || -z $body ]];then
+cmd_ref+=("-X" "$method")
+fi
+cmd_ref+=("${_REQUESTS_CURL_EXTRA[@]}")
+requests.curl.configure cmd_ref "$_REQUESTS_TIMEOUT"
+if [[ -n $body ]];then
+cmd_ref+=("-d" "$body")
+[[ -n $content_type ]]&&cmd_ref+=("-H" "Content-Type: $content_type")
+fi
+local full_url="$url"
+[[ -n $_REQUESTS_BASE_URL ]]&&full_url="$_REQUESTS_BASE_URL$url"
+cmd_ref+=("$full_url")
+}
+requests._headers_json(){
+"$_REQUESTS_JQ" -Rs '[splits("\r?\n\r?\n")] | map(select(length > 0)) | last // "" | split("\n") | map(select(length > 0 and test(":"))) | map(split(": ") | {(.[0]): .[1] | rtrimstr("\r")}) | add // {}' "$1"
+}
+requests.request(){
+local -r method="$1"
+local -r url="$2"
+local -r body="$3"
+local -r content_type="$4"
+local curl_cmd
+requests.request.build curl_cmd "$method" "$url" "$body" "$content_type"||return 1
+local temp_body
+temp_body="$(fs.mktemp)"||return 1
+local temp_headers
+temp_headers="$(fs.mktemp)"||{
+rm -f "$temp_body"
+return 1
+}
+local status_code curl_exit=0
+status_code=$("${curl_cmd[@]}" -w "%{http_code}" -D "$temp_headers" -o "$temp_body" 2>/dev/null)||curl_exit=$?
+local body_base64 headers_json
+body_base64="$(string.base64.encode "$temp_body")"||{
+rm -f "$temp_body" "$temp_headers"
+return 1
+}
+headers_json="$(requests._headers_json "$temp_headers")"||{
+rm -f "$temp_body" "$temp_headers"
+return 1
+}
+local success="false"
+[[ $status_code =~ ^2[0-9][0-9]$ && $curl_exit -eq 0 ]]&&success="true"
+rm -f "$temp_body" "$temp_headers"
+echo "{\"status_code\":$status_code,\"curl_exit\":$curl_exit,\"headers\":$headers_json,\"body\":\"$body_base64\",\"success\":$success}"
+}
+requests.download(){
+local curl_cmd=("$_REQUESTS_CURL" "-L" "--globoff" "--fail")
+requests.curl.configure curl_cmd "" false
+curl_cmd+=("-o" "$2")
+[[ ${3:-true} == "true" ]]&&curl_cmd+=("--progress-bar")
+[[ ${4:-true} == "true" ]]&&curl_cmd+=("-C" "-")
+"${curl_cmd[@]}" "$1"
+}
+requests._urlencode(){
+"$_REQUESTS_JQ" -nr --arg str "$1" '$str | @uri'
+}
+requests.content_type.detect(){
+[[ $1 =~ ^\{.*\}$ ]]&&echo "application/json"&&return 0
+[[ $1 =~ ^\[.*\]$ ]]&&echo "application/json"&&return 0
+[[ $1 =~ ^[a-zA-Z0-9_-]+=[^\&]+(\&[a-zA-Z0-9_-]+=[^\&]+)*$ ]]&&echo "application/x-www-form-urlencoded"&&return 0
+echo ""
+}
+requests.body.build(){
+local -n ref="$1"
+local first=true
+if [[ ${2:-form} == "json" ]];then
+printf "{"
+for key in "${!ref[@]}";do
+$first||printf ","
+printf '"%s":"%s"' "$key" "${ref[$key]}"
+first=false
+done
+printf "}\n"
+else
+for key in "${!ref[@]}";do
+$first||printf "&"
+printf '%s=%s' "$(requests._urlencode "$key")" "$(requests._urlencode "${ref[$key]}")"
+first=false
+done
+printf "\n"
+fi
+}
+requests.query.build(){
+local query="" first=true
+for param in "$@";do
+local key="${param%%=*}" value="${param#*=}"
+if $first;then
+query="?$(requests._urlencode "$key")=$(requests._urlencode "$value")"
+first=false
+else
+query="$query&$(requests._urlencode "$key")=$(requests._urlencode "$value")"
+fi
+done
+echo "$query"
+}
+requests.get(){ requests.request "GET" "$1$(requests.query.build "${@:2}")" "" "";}
+requests.post(){ requests.request "POST" "$1" "$2" "${3:-}";}
+requests.put(){ requests.request "PUT" "$1" "$2" "${3:-}";}
+requests.delete(){ requests.request "DELETE" "$1" "" "";}
+requests.patch(){ requests.request "PATCH" "$1" "$2" "${3:-}";}
+requests.head(){ requests.request "HEAD" "$1" "" "";}
+requests.options(){ requests.request "OPTIONS" "$1" "" "";}
+requests.status_code(){ "$_REQUESTS_JQ" -r '.status_code' <<<"$1";}
+requests.exit_code(){ "$_REQUESTS_JQ" -r '.curl_exit' <<<"$1";}
+requests.headers(){ [[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r --arg name "$2" '.headers[$name] // empty' <<<"$1"||"$_REQUESTS_JQ" -r '.headers' <<<"$1";}
+requests.text(){ "$_REQUESTS_JQ" -r '.body' <<<"$1"|string.base64.decode;}
+requests.json(){
+local -r body_text="$(requests.text "$1")"
+[[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r "$2" <<<"$body_text"||echo "$body_text"
+}
+requests.success(){ "$_REQUESTS_JQ" -r '.success' <<<"$1";}
+requests.raise_for_status(){ [[ "$(requests.success "${1:-}")" == "true" ]]||{ log.error "HTTP error: status $(requests.status_code "${1:-}") curl_exit $(requests.exit_code "${1:-}")"&&return 1;};}
+requests.timeout(){ string.natural.check "$1"&&_REQUESTS_TIMEOUT="$1"||{ log.error "timeout must be a positive integer"&&return 1;};}
+requests.headers.append(){
+local key="${1:-}"
+shift
+while [[ -n $key ]];do
+local value="$1"
+shift
+_REQUESTS_HEADERS["$key"]="$value"
+log.debug "default header set: $key"
+key="${1:-}"
+shift||true
+done
+}
+requests.base_url(){ _REQUESTS_BASE_URL="$1";}
+requests.headers.clear(){ _REQUESTS_HEADERS=();}
+requests.auth(){ _REQUESTS_AUTH["Authorization"]="Basic $("$_REQUESTS_JQ" -nr --arg c "$1:$2" '$c | @base64')";}
+requests.auth_bearer(){ _REQUESTS_AUTH["Authorization"]="Bearer $1";}
+ansi.Powerline.IsAvailable(){
+[[ -n ${NO_UNICODE-} ]]&&return 1
+local lc="${LC_ALL:-${LC_CTYPE:-${LANG:-}}}"
+[[ $lc == *UTF-8* || $lc == *utf8* ]]&&return 0
+locale -k LC_CTYPE 2>/dev/null|grep -q 'UTF-8'
+}
+ansi.enable.powerline(){
+POWERLINE_SEPARATOR=$'\ue0b0'
+POWERLINE_SEPARATOR_THIN=$'\ue0b1'
+POWERLINE_SEPARATOR_LEFT=$'\ue0b2'
+POWERLINE_SEPARATOR_LEFT_THIN=$'\ue0b3'
+POWERLINE_BRANCH=$'\ue0a0'
+POWERLINE_LINE=$'\ue0a1'
+POWERLINE_READONLY=$'\ue0a2'
+POWERLINE_POINTING_ARROW=$'\u27a1'
+POWERLINE_ARROW_RIGHT=$'\u25b6'
+POWERLINE_ARROW_LEFT=$'\u25c0'
+POWERLINE_ARROW_DOWN=$'\u2b07'
+POWERLINE_ARROW_RIGHT_DOWN=$'\u2b0a'
+POWERLINE_PLUS_MINUS=$'\u00b1'
+POWERLINE_REFERS_TO=$'\u27a6'
+POWERLINE_OK=$'\u2714'
+POWERLINE_FAIL=$'\u2718'
+POWERLINE_WARN=$'\u26a0'
+POWERLINE_COG=$'\u2699'
+POWERLINE_HEART=$'\u2764'
+POWERLINE_STAR=$'\u2605'
+}
+ansi.disable.powerline(){
+POWERLINE_SEPARATOR=">"
+POWERLINE_SEPARATOR_THIN=">"
+POWERLINE_SEPARATOR_LEFT="<"
+POWERLINE_SEPARATOR_LEFT_THIN="<"
+POWERLINE_BRANCH="|}"
+POWERLINE_LINE="LN"
+POWERLINE_READONLY="RO"
+POWERLINE_POINTING_ARROW="~"
+POWERLINE_ARROW_RIGHT="->"
+POWERLINE_ARROW_LEFT="<-"
+POWERLINE_ARROW_DOWN="_"
+POWERLINE_ARROW_RIGHT_DOWN=">"
+POWERLINE_PLUS_MINUS="+-"
+POWERLINE_REFERS_TO="*"
+POWERLINE_OK="+"
+POWERLINE_FAIL="x"
+POWERLINE_WARN="!"
+POWERLINE_COG="{*}"
+POWERLINE_HEART="<3"
+POWERLINE_STAR="*"
+}
+if [[ -z ${_ANSI_FORCE_DISABLE-} ]]&&ansi.Powerline.IsAvailable;then
+ansi.enable.powerline
+else
+ansi.disable.powerline
+fi
+DEFAULT_REGISTRY_TTL=24
+get_package_property(){ config.array.get "packages" "$1" "$2"||true;}
+declare -ga _DEFAULT_REGISTERED_PACKAGES=()
+declare -g _DEFAULT_PACKAGES_LOADED=false
+package_reset_cache(){
+_DEFAULT_REGISTERED_PACKAGES=()
+_DEFAULT_PACKAGES_LOADED=false
+}
+github_token(){
+[[ -n ${GITHUB_TOKEN:-} ]]&&return 0
+GITHUB_TOKEN=$(pass "github" 2>/dev/null)||GITHUB_TOKEN=""
+return 0
+}
+_load_registered_packages(){
+[[ $_DEFAULT_PACKAGES_LOADED == true ]]&&return 0
+local -a all=()
+read -ra all <<<"$(config.array.items "packages")"
+local key
+for key in "${all[@]}";do
+config.has "packages.$key.repo"&&_DEFAULT_REGISTERED_PACKAGES+=("$key")
+done
+_DEFAULT_PACKAGES_LOADED=true
+}
+get_default_registered_packages(){
+_load_registered_packages
+((${#_DEFAULT_REGISTERED_PACKAGES[@]}))&&printf '%s\n' "${_DEFAULT_REGISTERED_PACKAGES[@]}"
+return 0
+}
+is_package_in_default_config_with_repo(){
+_load_registered_packages
+array.contains _DEFAULT_REGISTERED_PACKAGES "$1"
+}
+build_filename(){ printf '%s' "$1-$2${3:+.$3}";}
+cache.dir(){
+local dir
+dir="$(path.cache_dir)"||return 1
+[[ -n ${1:-} ]]&&dir="$dir/$1"
+mkdir -p "$dir" 2>/dev/null||return 1
+printf '%s' "$dir"
+}
+cache.key(){
+if command -v sha256sum >/dev/null 2>&1;then
+printf '%s\0' "$@"|sha256sum|cut -c1-40
+else
+printf '%s\0' "$@"|cksum|tr -s ' ' '-'
+fi
+}
+cache.path(){
+local dir key="${2:-}"
+[[ $key != */* && $key != *..* ]]||return 1
+dir="$(cache.dir "${1:-default}")"||return 1
+printf '%s/%s' "$dir" "$key"
+}
+cache.fresh(){
+local file="$1" ttl="${2:-0}" mtime
+[[ -f $file ]]||return 1
+[[ $ttl =~ ^[0-9]+$ ]]||return 1
+((ttl>0))||return 1
+mtime=$(stat -c %Y "$file" 2>/dev/null)||mtime=$(stat -f %m "$file" 2>/dev/null)||return 1
+(($(date +%s)-mtime<ttl))
+}
+cache.put(){
+local f tmp
+f="$(cache.path "$1" "$2")"||return 1
+tmp="$f.$$"
+printf '%s' "${3:-}" >"$tmp" 2>/dev/null||{
+rm -f "$tmp"
+return 1
+}
+mv -f "$tmp" "$f" 2>/dev/null||{
+rm -f "$tmp"
+return 1
+}
+}
+cache.get(){
+local f
+f="$(cache.path "$1" "$2")"||return 1
+cache.fresh "$f" "${3:-0}"||return 1
+cat "$f"
+}
+cache.clear(){
+local dir
+dir="$(cache.dir "${1:-}")"||return 1
+rm -rf "$dir"
+}
+requests.cache.path(){ cache.path http "$(cache.key "$1")";}
+requests.cache.fresh(){ cache.fresh "$1" "${2:-0}";}
+requests.cache.fetch(){
+local url="$1" cache meta tmp response code etag="" modified=""
+cache=$(requests.cache.path "$url")||return 1
+meta="$cache.meta"
+tmp="$cache.tmp"
+if [[ -f $cache && -f $meta ]];then
+etag=$(sed -n 's/^etag=//p' "$meta")
+modified=$(sed -n 's/^last-modified=//p' "$meta")
+fi
+response=$(if
+[[ -n $etag ]]
+then
+requests.headers.append "If-None-Match" "$etag"
+elif [[ -n $modified ]];then
+requests.headers.append "If-Modified-Since" "$modified"
+fi
+requests.get "$url")||return 1
+code=$(requests.status_code "$response")
+if [[ $code == "304" ]];then
+touch "$cache"
+log.debug "requests.cache: 远端未变更 (304), 刷新本地时间戳"
+return 0
+fi
+[[ $(requests.success "$response") == "true" ]]||return 1
+requests.text "$response" >"$tmp"||return 1
+mv "$tmp" "$cache"||return 1
+{
+printf 'etag=%s\n' "$(requests.headers "$response" "ETag")"
+printf 'last-modified=%s\n' "$(requests.headers "$response" "Last-Modified")"
+} >"$meta"||return 1
+return 0
+}
+requests.cache.ensure(){
+local url="$1" cache
+cache=$(requests.cache.path "$url")||return 1
+requests.cache.fresh "$cache" "${2:-0}"&&return 0
+requests.cache.fetch "$url"&&return 0
+[[ -f $cache ]]&&log.warn "requests.cache: 回源失败，降级使用过期缓存 ($url)"&&return 0
+log.error "requests.cache: 无可用缓存且回源失败 ($url)"
+return 1
+}
+declare -g _GITHUB_API="https://api.github.com"
+declare -g _GITHUB_WEB="https://github.com"
+github.api(){
+[[ -n ${GITHUB_TOKEN:-} ]]&&requests.headers.append "Authorization" "token $GITHUB_TOKEN"
+requests.get "$_GITHUB_API/$1"
+}
+github._json(){
+local response="$1" filter="${2:-.}"
+[[ -n $response ]]||return 1
+[[ $(requests.success "$response") == "true" ]]||{
+log.debug "github: HTTP $(requests.status_code "$response")"
+return 1
+}
+requests.json "$response" "$filter"
+}
+github.release.latest(){ github._json "$(github.api "repos/$1/releases/latest")";}
+github.release.first(){ github._json "$(github.api "repos/$1/releases")" ".[0]";}
+github.release.version(){
+local tag
+tag=$("$_REQUESTS_JQ" -r '.tag_name // .name // ""' <<<"$1")
+[[ $tag =~ ([0-9]+\.[0-9]+(\.[0-9]+)?) ]]&&echo "${BASH_REMATCH[1]}"||echo "$tag"
+}
+github.release.pick(){
+local repo="$1" pattern="$2" mode="${3:-stable}"
+local json version url
+if [[ $mode == "stable" ]];then
+json=$(github.release.latest "$repo")||return 1
+else
+json=$(github.release.first "$repo")||return 1
+fi
+version=$(github.release.version "$json")
+url=$(github.asset.url "$json" "$pattern")||return 1
+[[ -n $version && -n $url ]]||return 1
+printf '%s|||%s\n' "$version" "$url"
+}
+github.asset.arch_regex(){
+local arch="${1:-$(system.arch)}"
+case "$arch" in
+amd64)echo "(x86_64|x64|amd64)";;
+arm64)echo "(aarch64|arm64)";;
+armhf)echo "(armv7l|armhf|armv7hl|armv7l-unknown)";;
+i386)echo "(i686|i386|i586)";;
+*)echo "$arch"
+esac
+}
+github.asset.pattern(){
+local pattern="${1//\{os\}/$(system.os)}"
+pattern="${pattern//\{arch\}/$(github.asset.arch_regex "$(system.arch)")}"
+pattern="${pattern//\*/.*}"
+pattern="${pattern//\?/.}"
+[[ -n ${2:-} ]]&&echo "$pattern[.][^.]*$2$"||echo "$pattern$"
+}
+github.asset.url(){
+local url
+url=$("$_REQUESTS_JQ" -r --arg pat "$2" 'first(.assets[]? | select(.name | test($pat; "i")) | .browser_download_url) // ""' <<<"$1")
+[[ -n $url && $url != "null" ]]&&echo "$url"
+}
+github.contents.list(){
+local response
+response=$(github.api "repos/$1/contents/${2:-}?per_page=100")||return 1
+github._json "$response" '.[].name'
+}
+github.raw.url(){ printf '%s/%s/raw/%s/%s' "$_GITHUB_WEB" "$1" "${3:-HEAD}" "$2";}
+github.url.proxied(){
+local url="$1" prefix="${2:-}" owner repo rest
+[[ -n $prefix ]]||{
+printf '%s' "$url"
+return 0
+}
+case "$url" in
+https://github.com/*)printf '%s' "$prefix${url#https://github.com/}";;
+https://raw.githubusercontent.com/*)rest="${url#https://raw.githubusercontent.com/}"
+owner="${rest%%/*}"
+rest="${rest#*/}"
+repo="${rest%%/*}"
+rest="${rest#*/}"
+printf '%s%s/%s/raw/%s' "$prefix" "$owner" "$repo" "$rest"
+;;
+*)printf '%s' "$url"
+esac
+}
+declare -ga REGISTRY_FIELDS=(repo version_type file_pattern file_extension binary_name)
+declare -gA _REGISTRY_ENTRIES=()
+declare -g _REGISTRY_DUMP_URL=""
+registry_source(){
+local url="${BINUP_REGISTRY_URL:-$(config.get registry_url)}"
+github.url.proxied "$url" "${SETTINGS_PROXY_PREFIX:-}"
+}
+registry_ensure(){
+local url="$1" cache
+cache=$(requests.cache.path "$url")
+_REGISTRY_DUMP_URL=""
+requests.cache.ensure "$url" "$2"||return 1
+if ! grep -q '^\[packages\.' "$cache" 2>/dev/null;then
+log.error "包目录内容无效（缺少 [packages.*] 段）: $url"
+rm -f "$cache" "$cache.meta"
+return 1
+fi
+registry_load "$url"||{
+log.error "包目录解析失败: $url"
+return 1
+}
+}
+_registry_dump(){
+local cache="$1" k
+(for k in "${!_CONFIG_VALUES[@]}"
+do unset "_CONFIG_VALUES[$k]";done
+for k in "${!_CONFIG_ARRAY_ITEMS[@]}";do unset "_CONFIG_ARRAY_ITEMS[$k]";done
+config.load "$cache"||exit 1
+for k in "${!_CONFIG_VALUES[@]}";do
+[[ $k == packages.* ]]&&printf '%s=%s\n' "$k" "${_CONFIG_VALUES[$k]}"
+done)|sort
+}
+registry_load(){
+local url="$1" line
+[[ $_REGISTRY_DUMP_URL == "$url" ]]&&return 0
+_REGISTRY_ENTRIES=()
+while IFS= read -r line;do
+_REGISTRY_ENTRIES["${line%%=*}"]="${line#*=}"
+done < <(_registry_dump "$(requests.cache.path "$url")")
+((${#_REGISTRY_ENTRIES[@]}))||return 1
+_REGISTRY_DUMP_URL="$url"
+}
+registry.name.valid(){ [[ $1 =~ ^[A-Za-z0-9_-]+$ ]];}
+registry_names(){
+registry_load "$1"||return 1
+((${#_REGISTRY_ENTRIES[@]}))||return 0
+local k name
+for k in "${!_REGISTRY_ENTRIES[@]}";do
+[[ $k =~ ^packages\.(.+)\.[^.]+$ ]]||continue
+name="${BASH_REMATCH[1]}"
+registry.name.valid "$name"||continue
+printf '%s\n' "$name"
+done|sort -u
+}
+registry_get(){
+registry_load "$1"
+[[ -v "_REGISTRY_ENTRIES[packages.$2.$3]" ]]&&printf '%s\n' "${_REGISTRY_ENTRIES[packages.$2.$3]}"
+return 0
+}
+registry_safe_value(){
+local v="$1" bad=$'"\'`$\\\n\r'
+[[ $v == *["$bad"]* ]]&&return 1
+return 0
+}
+_CONSOLE_LAYOUT_UNDERLINE=$(console.repeat "=" 20)
+_CONSOLE_LAYOUT_DEPTH=0
+console.layout.section(){
+console.stdout "$1:"
+console.stdout "=${_CONSOLE_LAYOUT_UNDERLINE:0:$(console.display_width "$1")}"
+}
+console.layout.footer(){
+console.stdout "========="
+console.stdout "$*"
+}
+console.layout.item.title(){
+console.indent "$1" "${*:2}"
+_CONSOLE_LAYOUT_DEPTH=$(($1+1))
+}
+console.layout.item.item(){
+console.indent "$_CONSOLE_LAYOUT_DEPTH" "$*"
+}
+console.layout.item.mid(){
+console.layout.item.item "├─" "$*"
+}
+console.layout.item.end(){
+console.layout.item.item "└─" "$*"
+echo ""
+}
+cmd_list(){
+args.init
+args.process "$@"
+console.layout.section "已下载的包"
+local -a registered_packages=()
+mapfile -t registered_packages < <(get_default_registered_packages)
+local package current_version latest_version file_extension file_path download_time
+for package in "${registered_packages[@]}";do
+current_version=$(get_package_property "$package" "current_version")
+latest_version=$(get_package_property "$package" "latest_version")
+file_extension=$(get_package_property "$package" "file_extension")
+file_path="$SETTINGS_DOWNLOAD_DIR/$(build_filename "$package" "$current_version" "$file_extension")"
+console.layout.item.title 0 "$POWERLINE_STAR $package"
+[[ -n $latest_version ]]||{
+console.layout.item.end "状态: $POWERLINE_WARN 运行 \`$_USAGE_SCRIPT_FILENAME update\` 获取版本信息"
+continue
+}
+[[ -n $current_version && -f $file_path ]]||{
+console.layout.item.mid "状态: $POWERLINE_COG 未下载 (最新: $latest_version)"
+console.layout.item.end "运行 \`$_USAGE_SCRIPT_FILENAME upgrade $package\` 下载"
+continue
+}
+download_time=$(stat -c "%.19y" "$file_path" 2>/dev/null||true)
+console.layout.item.mid "当前版本: $current_version"
+console.layout.item.mid "文件: $(basename "$file_path")"
+console.layout.item.mid "下载时间: $download_time"
+if [[ $current_version == "$latest_version" ]];then
+console.layout.item.end "状态: $POWERLINE_OK 已是最新"
+else
+console.layout.item.end "状态: $POWERLINE_STAR 有新版本 $latest_version"
+fi
+done
+return 0
+}
 config.persist.update(){
 local _f _s _k _v _sec _sec_grep _pat _repl _n
 (($#%2==1))&&_f="${!#}"&&set -- "${@:1:$#-1}"||_f="$(config.path)"
@@ -856,253 +1314,163 @@ _o+=("$_field = \"$_v\"")
 done
 fs.write "$_f" "${_o[@]}"
 }
-declare -g _REQUESTS_TIMEOUT=30
-declare -g _REQUESTS_USER_AGENT="bashlet-requests/1.0"
-declare -g _REQUESTS_BASE_URL=""
-declare -gA _REQUESTS_HEADERS=()
-declare -gA _REQUESTS_AUTH=()
-declare -g _REQUESTS_CURL=""
-declare -g _REQUESTS_JQ=""
-requests.init(){
-declare -ga _REQUESTS_CURL_EXTRA=("$@")
-system.command.required "curl"&&_REQUESTS_CURL="$(command -v curl)"
-system.command.required "jq"&&_REQUESTS_JQ="$(command -v jq)"
-_REQUESTS_HEADERS=(
-["Accept"]="*/*"
-["Accept-Encoding"]="gzip, deflate"
-["Connection"]="keep-alive")
-log.debug "requests module initialized: curl=$_REQUESTS_CURL, jq=$_REQUESTS_JQ"
-return 0
-}
-requests.curl.configure(){
-local array_name="$1"
-local timeout="${2:-}"
-local include_auth="${3:-true}"
-[[ -n $timeout ]]&&array.append "$array_name" "--max-time" "$timeout"
-array.append "$array_name" "-A" "$_REQUESTS_USER_AGENT"
-local key
-for key in "${!_REQUESTS_HEADERS[@]}";do
-array.append "$array_name" "-H" "$key: ${_REQUESTS_HEADERS[$key]}"
-done
-if [[ $include_auth == "true" && ${#_REQUESTS_AUTH[@]} -gt 0 ]];then
-local auth_key
-for auth_key in "${!_REQUESTS_AUTH[@]}";do
-array.append "$array_name" "-H" "$auth_key: ${_REQUESTS_AUTH[$auth_key]}"
-done
-fi
-}
-requests.request.build(){
-local -n cmd_ref="$1"
-local -r method="$2"
-local -r url="$3"
-local -r body="$4"
-local -r content_type="${5:-$(requests.content_type.detect "$4")}"
-cmd_ref=("$_REQUESTS_CURL" "-s" "--compressed" "-X" "$method")
-cmd_ref+=("${_REQUESTS_CURL_EXTRA[@]}")
-requests.curl.configure cmd_ref "$_REQUESTS_TIMEOUT"
-if [[ -n $body ]];then
-cmd_ref+=("-d" "$body")
-[[ -n $content_type ]]&&cmd_ref+=("-H" "Content-Type: $content_type")
-fi
-local full_url="$url"
-[[ -n $_REQUESTS_BASE_URL ]]&&full_url="$_REQUESTS_BASE_URL$url"
-cmd_ref+=("$full_url")
-}
-requests.request(){
-local -r method="$1"
-local -r url="$2"
-local -r body="$3"
-local -r content_type="$4"
-local curl_cmd
-requests.request.build curl_cmd "$method" "$url" "$body" "$content_type"||return 1
-local temp_body="$(fs.mktemp)"||return 1
-local temp_headers="$(fs.mktemp)"||return 1
-trap 'rm -f "${temp_body:-}" "${temp_headers:-}"' EXIT
-local status_code=$("${curl_cmd[@]}" -w "%{http_code}" -D "$temp_headers" -o "$temp_body" 2>/dev/null)
-local body_base64="$(string.base64.encode "$temp_body")"
-local headers_json="$("$_REQUESTS_JQ" -Rs 'split("\n") | map(select(length > 0 and test(":"))) | map(split(": ") | {(.[0]): .[1] | rtrimstr("\r")}) | add // {}' "$temp_headers")"
-local success="false"
-[[ $status_code =~ ^2[0-9][0-9]$ ]]&&success="true"
-echo "{\"status_code\":$status_code,\"headers\":$headers_json,\"body\":\"$body_base64\",\"success\":$success}"
-}
-requests.download(){
-local curl_cmd=("$_REQUESTS_CURL" "-L" "--globoff")
-requests.curl.configure curl_cmd "" false
-curl_cmd+=("-o" "$2")
-[[ ${3:-true} == "true" ]]&&curl_cmd+=("--progress-bar")
-[[ ${4:-true} == "true" ]]&&curl_cmd+=("-C" "-")
-"${curl_cmd[@]}" "$1"
-}
-requests._urlencode(){
-"$_REQUESTS_JQ" -nr --arg str "$1" '$str | @uri'
-}
-requests.content_type.detect(){
-[[ $1 =~ ^\{.*\}$ ]]&&echo "application/json"&&return 0
-[[ $1 =~ ^\[.*\]$ ]]&&echo "application/json"&&return 0
-[[ $1 =~ ^[a-zA-Z0-9_-]+=[^\&]+(\&[a-zA-Z0-9_-]+=[^\&]+)*$ ]]&&echo "application/x-www-form-urlencoded"&&return 0
-echo ""
-}
-requests.body.build(){
-local -n ref="$1"
-local first=true
-if [[ ${2:-form} == "json" ]];then
-printf "{"
-for key in "${!ref[@]}";do
-$first||printf ","
-printf '"%s":"%s"' "$key" "${ref[$key]}"
-first=false
-done
-printf "}\n"
-else
-for key in "${!ref[@]}";do
-$first||printf "&"
-printf '%s=%s' "$(requests._urlencode "$key")" "$(requests._urlencode "${ref[$key]}")"
-first=false
-done
-printf "\n"
-fi
-}
-requests.query.build(){
-local query="" first=true
-for param in "$@";do
-local key="${param%%=*}" value="${param#*=}"
-if $first;then
-query="?$(requests._urlencode "$key")=$(requests._urlencode "$value")"
-first=false
-else
-query="$query&$(requests._urlencode "$key")=$(requests._urlencode "$value")"
-fi
-done
-echo "$query"
-}
-requests.get(){ requests.request "GET" "$1$(requests.query.build "${@:2}")" "" "";}
-requests.post(){ requests.request "POST" "$1" "$2" "${3:-}";}
-requests.put(){ requests.request "PUT" "$1" "$2" "${3:-}";}
-requests.delete(){ requests.request "DELETE" "$1" "" "";}
-requests.patch(){ requests.request "PATCH" "$1" "$2" "${3:-}";}
-requests.head(){ requests.request "HEAD" "$1" "" "";}
-requests.options(){ requests.request "OPTIONS" "$1" "" "";}
-requests.status_code(){ "$_REQUESTS_JQ" -r '.status_code' <<<"$1";}
-requests.headers(){ [[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r --arg name "$2" '.headers[$name] // empty' <<<"$1"||"$_REQUESTS_JQ" -r '.headers' <<<"$1";}
-requests.text(){ "$_REQUESTS_JQ" -r '.body' <<<"$1"|string.base64.decode;}
-requests.json(){
-local -r body_text="$(requests.text "$1")"
-[[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r "$2" <<<"$body_text"||echo "$body_text"
-}
-requests.success(){ "$_REQUESTS_JQ" -r '.success' <<<"$1";}
-requests.raise_for_status(){ [[ "$(requests.success "${1:-}")" == "true" ]]||{ log.error "HTTP error: status code $(requests.status_code "${1:-}")"&&return 1;};}
-requests.timeout(){ string.natural.check "$1"&&_REQUESTS_TIMEOUT="$1"||{ log.error "timeout must be a positive integer"&&return 1;};}
-requests.headers.append(){
-local key="${1:-}"
-shift
-while [[ -n $key ]];do
-local value="$1"
-shift
-_REQUESTS_HEADERS["$key"]="$value"
-log.debug "default header set: $key: $value"
-key="${1:-}"
-shift||true
-done
-}
-requests.base_url(){ _REQUESTS_BASE_URL="$1";}
-requests.headers.clear(){ _REQUESTS_HEADERS=();}
-requests.auth(){ _REQUESTS_AUTH["Authorization"]="Basic $("$_REQUESTS_JQ" -nr --arg c "$1:$2" '$c | @base64')";}
-requests.auth_bearer(){ _REQUESTS_AUTH["Authorization"]="Bearer $1";}
-VERSION="2.2.0"
-PROJECT_ROOT="$(cd "${BASH_SOURCE[0]%/*}/.."&&pwd)"
-: "${GITHUB_TOKEN:=$(pass "github")}"
-get_package_property(){ config.array.get "packages" "$1" "$2"||true;}
-declare -ga _DEFAULT_REGISTERED_PACKAGES=()
-declare -g _DEFAULT_PACKAGES_LOADED=false
-_load_registered_packages(){
-[[ $_DEFAULT_PACKAGES_LOADED == true ]]&&return 0
-local -a all=()
-read -ra all <<<"$(config.array.items "packages")"
-local key
-for key in "${all[@]}";do
-config.has "packages.$key.repo"&&_DEFAULT_REGISTERED_PACKAGES+=("$key")
-done
-_DEFAULT_PACKAGES_LOADED=true
-}
-get_default_registered_packages(){
-_load_registered_packages
-((${#_DEFAULT_REGISTERED_PACKAGES[@]}))&&printf '%s\n' "${_DEFAULT_REGISTERED_PACKAGES[@]}"
-return 0
-}
-is_package_in_default_config_with_repo(){
-_load_registered_packages
-array.contains _DEFAULT_REGISTERED_PACKAGES "$1"
-}
-_get_arch_regex(){
-case "$(system.arch)" in
-amd64)echo "(x86_64|x64|amd64)";;
-arm64)echo "(aarch64|arm64)";;
-armhf)echo "(armv7l|armhf|armv7hl|armv7l-unknown)";;
-i386)echo "(i686|i386|i586)";;
-*)system.arch
-esac
-}
-_build_pattern(){
-local pattern="$1" ext="${2:-}"
-pattern="${pattern//\{os\}/$(system.os)}"
-pattern="${pattern//\{arch\}/$(_get_arch_regex)}"
-pattern="${pattern//\*/.*}"
-pattern="${pattern//\?/.}"
-[[ -n $ext ]]&&echo "$pattern[.][^.]*$ext$"||echo "$pattern$"
-}
-build_filename(){ printf '%s' "$1-$2${3:+.$3}";}
-_github_fetch_release(){
-local repo="$1" version_type="${2:-release}" response
-local endpoint="releases/latest" filter="."
-if [[ $version_type != "release" ]];then
-endpoint="releases"
-filter=".[0]"
-fi
-response=$(requests.get "https://api.github.com/repos/$repo/$endpoint")
-requests.raise_for_status "$response"||return 1
-requests.json "$response" "$filter"
-}
-get_latest_version_and_url(){
+_get_latest_version_and_url(){
 local repo="$1" version_type="${2:-release}" pattern="$3" ext="${4:-}"
-local latest version url build_pattern
-latest=$(_github_fetch_release "$repo" "$version_type")||return 1
-build_pattern=$(_build_pattern "$pattern" "$ext")
+local build_pattern mode="any"
+build_pattern=$(github.asset.pattern "$pattern" "$ext")
 log.debug "Matching regex: $build_pattern"
-local -a fields=()
-mapfile -t fields < <("$_REQUESTS_JQ" -r --arg pat "$build_pattern" '
-		(.tag_name // .name // ""),
-		(first(.assets[]? | select(.name | test($pat; "i")) | .browser_download_url) // "")
-	' <<<"$latest")
-version="${fields[0]:-}"
-url="${fields[1]:-}"
-[[ $version =~ ([0-9]+\.[0-9]+(\.[0-9]+)?) ]]&&version="${BASH_REMATCH[1]}"
-[[ -z $version || $version == "null" || -z $url || $url == "null" ]]&&return 1
-echo "$version|||$url"
+[[ $version_type == "release" ]]&&mode="stable"
+github.release.pick "$repo" "$build_pattern" "$mode"
 }
-save_latest_info(){
+_save_latest_info(){
 [[ $# -lt 3 ]]&&return 1
 config.persist.update "packages" "$1" "latest_version" "$2" "$VERSIONS_FILE"
 config.persist.update "packages" "$1" "download_url" "$3" "$VERSIONS_FILE"
 }
-save_version_info(){
+cmd_update(){
+args.init
+args.process "$@"
+ensure_download_dir
+github_token
+requests.init "-4" 2>/dev/null||{
+log.error "Failed to initialize requests module"
+exit 1
+}
+console.layout.section "检查更新"
+local has_updates=false
+local -a registered_packages=()
+mapfile -t registered_packages < <(get_default_registered_packages)
+local package repo version_type file_pattern file_extension current_version
+local latest_info latest_version download_url prop
+for package in "${registered_packages[@]}";do
+local -a props=()
+for prop in repo version_type file_pattern file_extension current_version;do
+props+=("$(get_package_property "$package" "$prop")")
+done
+repo="${props[0]}"
+version_type="${props[1]}"
+file_pattern="${props[2]}"
+file_extension="${props[3]}"
+current_version="${props[4]}"
+latest_info=$(_get_latest_version_and_url "$repo" "$version_type" "$file_pattern" "$file_extension")||{
+console.layout.item.title 1 "$package: 获取版本失败"
+continue
+}
+latest_version="${latest_info%%|||*}"
+download_url="${latest_info#*|||}"
+[[ -n $latest_version && -n $download_url ]]||{
+console.layout.item.title 1 "$package: 获取版本信息失败"
+continue
+}
+_save_latest_info "$package" "$latest_version" "$download_url"
+if [[ -z $current_version ]];then
+console.layout.item.title 1 "$package: 未下载 (最新: $latest_version)"
+has_updates=true
+elif [[ $current_version != "$latest_version" ]];then
+console.layout.item.title 1 "$package: 有新版本 $current_version $POWERLINE_POINTING_ARROW $latest_version"
+has_updates=true
+else
+console.layout.item.title 1 "$package: 已是最新版本 $current_version"
+fi
+done
+[[ $has_updates == "true" ]]&&console.layout.footer "运行 \`$_USAGE_SCRIPT_FILENAME upgrade\` 下载更新"
+return 0
+}
+_save_version_info(){
 [[ -z $1 ]]&&return 1
 config.persist.update "packages" "$1" "current_version" "$2" "$VERSIONS_FILE"
 }
-download_file(){
-local url="${SETTINGS_PROXY_PREFIX:+$SETTINGS_PROXY_PREFIX${1#https://github.com/}}"
-log.debug "[URL] ${url:-$1}"
-requests.download "${url:-$1}" "$2"
+_download_file(){
+local url
+url=$(github.url.proxied "$1" "${SETTINGS_PROXY_PREFIX:-}")
+log.debug "[URL] $url"
+requests.download "$url" "$2"
 }
-backup_file(){
-local package="$1" version="$2" filename="$3" ext="${4:-${3##*.}}"
+_backup_file(){
+local package="$1" version="$2" filename="$3" ext="${4:-}"
 local source_file="$SETTINGS_DOWNLOAD_DIR/$filename"
 local backup_dir="$SETTINGS_DOWNLOAD_DIR/backups"
-local timestamp=$(date +%Y.%m.%d)
-local backup_file="$backup_dir/$package-$version-$timestamp${ext:+.$ext}"
+local timestamp
+timestamp=$(date +%Y.%m.%d)
+local _backup_path="$backup_dir/$package-$version-$timestamp${ext:+.$ext}"
 mkdir -p "$backup_dir"
-mv "$source_file" "$backup_file"
+mv "$source_file" "$_backup_path"
 fs.cleanup "$backup_dir/$package-"
-log.debug "[Backup] $backup_file"
+log.debug "[Backup] $_backup_path"
+}
+cmd_upgrade(){
+args.init
+args.add_options "arg" "待更新的二进制包" "可选：指定需要更新的二进制包名，支持多个包名"
+args.process "$@"
+ensure_download_dir
+requests.init 2>/dev/null||{
+log.error "Failed to initialize requests module"
+exit 1
+}
+local -n target_packages="$(args.args)"
+local -a packages_to_upgrade=()
+local package
+if ((${#target_packages[@]}==0));then
+mapfile -t packages_to_upgrade < <(get_default_registered_packages)
+else
+for package in "${target_packages[@]}";do
+is_package_in_default_config_with_repo "$package"||{
+log.error "Unknown package: $package"
+log.error "Available packages: $(get_default_registered_packages)"
+exit 1
+}
+packages_to_upgrade+=("$package")
+done
+fi
+local packages_skipped=0 packages_failed=0 packages_updated=0
+local file_extension current_version latest_version download_url filename output_file old_file
+console.layout.section "下载更新"
+for package in "${packages_to_upgrade[@]}";do
+file_extension=$(get_package_property "$package" "file_extension")
+current_version=$(get_package_property "$package" "current_version")
+latest_version=$(get_package_property "$package" "latest_version")
+download_url=$(get_package_property "$package" "download_url")
+[[ -n $latest_version ]]||{
+console.layout.item.title 1 "$package: 没有云端信息，请先运行 \`$_USAGE_SCRIPT_FILENAME update\`"
+continue
+}
+[[ -n $download_url ]]||{
+console.layout.item.title 1 "$package: 没有下载链接，请先运行 \`$_USAGE_SCRIPT_FILENAME update\`"
+continue
+}
+if [[ -z $current_version ]];then
+console.layout.item.title 1 "$package: 未下载，将下载 $latest_version"
+elif [[ $current_version != "$latest_version" ]];then
+console.layout.item.title 1 "$package: 有新版本 $current_version $POWERLINE_POINTING_ARROW $latest_version"
+else
+console.layout.item.title 1 "$package: 已是最新版本 $current_version"
+((packages_skipped++))||true
+continue
+fi
+if [[ -n $current_version ]];then
+old_file=$(build_filename "$package" "$current_version" "$file_extension")
+[[ -f "$SETTINGS_DOWNLOAD_DIR/$old_file" ]]&&_backup_file "$package" "$current_version" "$old_file" "$file_extension" >/dev/null
+fi
+filename=$(build_filename "$package" "$latest_version" "$file_extension")
+output_file="$SETTINGS_DOWNLOAD_DIR/$filename"
+console.layout.item.item "[下载] $filename"
+if _download_file "$download_url" "$output_file";then
+console.layout.item.item "[完成] 下载成功"
+_save_version_info "$package" "$latest_version"
+((packages_updated++))||true
+else
+console.layout.item.item "$package: 下载失败"
+rm -f "$output_file"
+((packages_failed++))||true
+fi
+done
+local total=${#packages_to_upgrade[@]}
+if ((total>0));then
+local summary="共 $total 个包，$packages_updated 个已更新，$packages_skipped 个跳过"
+((packages_failed>0))&&summary+="，$packages_failed 个失败"
+console.layout.footer "$summary"
+fi
+((packages_failed==0))
 }
 _get_install_dir(){
 local system_bin="/usr/local/bin" user_bin="$HOME/.local/bin"
@@ -1145,7 +1513,7 @@ console.layout.item.item "[失败] 安装 ${failed_packages[*]} 时出现错误"
 return 1
 }
 console.layout.item.item "[完成] 安装成功 ($installed_count 个文件)"
-console.layout.item.item "[路径] $install_dir 已添加到 PATH"
+console.layout.item.item "[路径] 已安装到 $install_dir"
 return 0
 }
 _do_install_package(){
@@ -1174,161 +1542,12 @@ rc=$?
 rm -rf "$work_dir"
 return $rc
 }
-cmd_list(){
-args.init
-args.process "$@"
-console.layout.section "已下载的包"
-local -a registered_packages=()
-mapfile -t registered_packages < <(get_default_registered_packages)
-local package current_version latest_version file_extension file_path download_time
-for package in "${registered_packages[@]}";do
-current_version=$(get_package_property "$package" "current_version")
-latest_version=$(get_package_property "$package" "latest_version")
-file_extension=$(get_package_property "$package" "file_extension")
-file_path="$SETTINGS_DOWNLOAD_DIR/$package-$current_version${file_extension:+.$file_extension}"
-console.layout.item.title 0 "$POWERLINE_STAR $package"
-[[ -n $latest_version ]]||{
-console.layout.item.end "状态: $POWERLINE_WARN 运行 \`$_USAGE_SCRIPT_FILENAME update\` 获取版本信息"
-continue
-}
-[[ -n $current_version && -f $file_path ]]||{
-console.layout.item.mid "状态: $POWERLINE_COG 未下载 (最新: $latest_version)"
-console.layout.item.end "运行 \`$_USAGE_SCRIPT_FILENAME upgrade $package\` 下载"
-continue
-}
-download_time=$(stat -c "%.19y" "$file_path" 2>/dev/null||stat -c "%y" "$file_path" 2>/dev/null|cut -d'.' -f1)
-console.layout.item.mid "当前版本: $current_version"
-console.layout.item.mid "文件: $(basename "$file_path")"
-console.layout.item.mid "下载时间: $download_time"
-if [[ $current_version == "$latest_version" ]];then
-console.layout.item.end "状态: $POWERLINE_OK 已是最新"
-else
-console.layout.item.end "状态: $POWERLINE_STAR 有新版本 $latest_version"
-fi
-done
-return 0
-}
-cmd_update(){
-args.init
-args.process "$@"
-requests.init "-4" 2>/dev/null||{
-log.error "Failed to initialize requests module"
-exit 1
-}
-[[ -n ${GITHUB_TOKEN:-} ]]&&requests.headers.append "Authorization" "token $GITHUB_TOKEN"
-console.layout.section "检查更新"
-local has_updates=false
-local -a registered_packages=()
-mapfile -t registered_packages < <(get_default_registered_packages)
-local package repo version_type file_pattern file_extension current_version
-local latest_info latest_version download_url prop
-for package in "${registered_packages[@]}";do
-local -a props=()
-for prop in repo version_type file_pattern file_extension current_version;do
-props+=("$(get_package_property "$package" "$prop")")
-done
-repo="${props[0]}"
-version_type="${props[1]}"
-file_pattern="${props[2]}"
-file_extension="${props[3]}"
-current_version="${props[4]}"
-latest_info=$(get_latest_version_and_url "$repo" "$version_type" "$file_pattern" "$file_extension")||{
-console.layout.item.title 1 "$package: 获取版本失败"
-continue
-}
-latest_version="${latest_info%%|||*}"
-download_url="${latest_info#*|||}"
-[[ -n $latest_version && -n $download_url ]]||{
-console.layout.item.title 1 "$package: 获取版本信息失败"
-continue
-}
-save_latest_info "$package" "$latest_version" "$download_url"
-if [[ -z $current_version ]];then
-console.layout.item.title 1 "$package: 未下载 (最新: $latest_version)"
-has_updates=true
-elif [[ $current_version != "$latest_version" ]];then
-console.layout.item.title 1 "$package: 有新版本 $current_version $POWERLINE_POINTING_ARROW $latest_version"
-has_updates=true
-else
-console.layout.item.title 1 "$package: 已是最新版本 $current_version"
-fi
-done
-[[ $has_updates == "true" ]]&&console.layout.footer "运行 \`$_USAGE_SCRIPT_FILENAME upgrade\` 下载更新"
-return 0
-}
-cmd_upgrade(){
-args.init
-args.add_options "arg" "待更新的二进制包" "可选：指定需要更新的二进制包名，支持多个包名"
-args.process "$@"
-requests.init 2>/dev/null||{
-log.error "Failed to initialize requests module"
-exit 1
-}
-local -n target_packages=$(args.args)
-local -a packages_to_upgrade=()
-local package
-if ((${#target_packages[@]}==0));then
-mapfile -t packages_to_upgrade < <(get_default_registered_packages)
-else
-for package in "${target_packages[@]}";do
-is_package_in_default_config_with_repo "$package"||{
-log.error "Unknown package: $package"
-log.error "Available packages: $(get_default_registered_packages)"
-exit 1
-}
-packages_to_upgrade+=("$package")
-done
-fi
-local packages_skipped=0
-local file_extension current_version latest_version download_url filename output_file old_file
-console.layout.section "下载更新"
-for package in "${packages_to_upgrade[@]}";do
-file_extension=$(get_package_property "$package" "file_extension")
-current_version=$(get_package_property "$package" "current_version")
-latest_version=$(get_package_property "$package" "latest_version")
-download_url=$(get_package_property "$package" "download_url")
-[[ -n $latest_version ]]||{
-console.layout.item.title 1 "$package: 没有云端信息，请先运行 \`$_USAGE_SCRIPT_FILENAME update\`"
-continue
-}
-[[ -n $download_url ]]||{
-console.layout.item.title 1 "$package: 没有下载链接，请先运行 \`$_USAGE_SCRIPT_FILENAME update\`"
-continue
-}
-if [[ -z $current_version ]];then
-console.layout.item.title 1 "$package: 未下载，将下载 $latest_version"
-elif [[ $current_version != "$latest_version" ]];then
-console.layout.item.title 1 "$package: 有新版本 $current_version $POWERLINE_POINTING_ARROW $latest_version"
-else
-console.layout.item.title 1 "$package: 已是最新版本 $current_version"
-((packages_skipped++))||true
-continue
-fi
-if [[ -n $current_version ]];then
-old_file=$(build_filename "$package" "$current_version" "$file_extension")
-[[ -f "$SETTINGS_DOWNLOAD_DIR/$old_file" ]]&&backup_file "$package" "$current_version" "$old_file" "$file_extension" >/dev/null
-fi
-filename=$(build_filename "$package" "$latest_version" "$file_extension")
-output_file="$SETTINGS_DOWNLOAD_DIR/$filename"
-console.layout.item.item "[下载] $filename"
-if download_file "$download_url" "$output_file";then
-console.layout.item.item "[完成] 下载成功"
-save_version_info "$package" "$latest_version"
-else
-console.layout.item.item "$package: 下载失败"
-rm -f "$output_file"
-fi
-done
-local total=${#packages_to_upgrade[@]}
-local updated=$((total-packages_skipped))
-((total>0))&&console.layout.footer "共 $total 个包，$updated 个已更新，$packages_skipped 个跳过"
-return 0
-}
 cmd_install(){
 args.init
 args.add_options "arg" "待安装的二进制包" "可选：指定需要安装的二进制包名，支持多个包名"
 args.process "$@"
-local -n target_packages=$(args.args)
+ensure_download_dir
+local -n target_packages="$(args.args)"
 console.layout.section "安装包"
 local success_count=0 fail_count=0 package
 for package in "${target_packages[@]}";do
@@ -1345,23 +1564,159 @@ console.stdout ""
 done
 console.layout.footer "共 ${#target_packages[@]} 个包，$success_count 个成功，$fail_count 个失败"
 }
+cmd_search(){
+args.init
+args.add_options "arg" "搜索关键词，留空列出全部" "可选：多个关键词按 AND 匹配包名/仓库/说明"
+args.add_options "refresh" "r" "忽略缓存有效期，强制刷新包目录"
+args.process "$@"
+github_token
+requests.init 2>/dev/null||{
+log.error "Failed to initialize requests module"
+exit 1
+}
+local -n keywords="$(args.args)"
+local url ttl
+url=$(registry_source)
+ttl="$(config.get registry_ttl)"
+[[ $ttl =~ ^[0-9]+$ ]]||ttl="$DEFAULT_REGISTRY_TTL"
+args.has "-r" "--refresh"&&ttl=0
+console.layout.section "搜索包目录"
+registry_ensure "$url" "$((ttl*3600))"||return 1
+local -a names=() hits=()
+mapfile -t names < <(registry_names "$url")
+local name lower keyword matched
+local repo description
+for name in "${names[@]}";do
+repo="${_REGISTRY_ENTRIES["packages.$name.repo"]:-}"
+description="${_REGISTRY_ENTRIES["packages.$name.description"]:-}"
+lower="${name,,} ${repo,,} ${description,,}"
+matched=true
+for keyword in "${keywords[@]}";do
+[[ $lower == *"${keyword,,}"* ]]||{
+matched=false
+break
+}
+done
+[[ $matched == true ]]&&hits+=("$name")
+done
+if ((${#hits[@]}==0));then
+console.layout.footer "没有匹配的包"
+return 0
+fi
+local status
+for name in "${hits[@]}";do
+repo="${_REGISTRY_ENTRIES["packages.$name.repo"]:-}"
+description="${_REGISTRY_ENTRIES["packages.$name.description"]:-}"
+if is_package_in_default_config_with_repo "$name";then
+status=" $POWERLINE_OK 已配置"
+else
+status=""
+fi
+console.layout.item.title 0 "$POWERLINE_STAR $name$status"
+local -a details=()
+[[ -n $repo ]]&&details+=("仓库: $repo")
+[[ -n $description ]]&&details+=("说明: $description")
+local i
+for ((i=0; i<${#details[@]}; i++));do
+if ((i==${#details[@]}-1));then
+console.layout.item.end "${details[i]}"
+else
+console.layout.item.mid "${details[i]}"
+fi
+done
+((${#details[@]}))||echo ""
+done
+console.layout.footer "共 ${#hits[@]} 个包，运行 \`$_USAGE_SCRIPT_FILENAME add <包名>\` 添加到本地配置"
+return 0
+}
+cmd_add(){
+args.init
+args.add_options "arg" "待添加的包名" "必填：指定需要添加的包名，支持多个包名"
+args.add_options "force" "f" "覆盖已存在的本地配置"
+args.process "$@"
+github_token
+requests.init 2>/dev/null||{
+log.error "Failed to initialize requests module"
+exit 1
+}
+local -n targets="$(args.args)"
+((${#targets[@]}))||{
+log.error "请指定包名: $_USAGE_SCRIPT_FILENAME add <包名>"
+return 1
+}
+local url ttl
+url=$(registry_source)
+ttl="$(config.get registry_ttl)"
+[[ $ttl =~ ^[0-9]+$ ]]||ttl="$DEFAULT_REGISTRY_TTL"
+registry_ensure "$url" "$((ttl*3600))"||return 1
+local config_file
+config_file="$(config.path)"||return 1
+config_file="$(readlink -f "$config_file")"
+log.debug "本地配置: $config_file"
+console.layout.section "添加包"
+local -a names=()
+mapfile -t names < <(registry_names "$url")
+local package field value count=0
+for package in "${targets[@]}";do
+if ! array.contains names "$package";then
+if registry.name.valid "$package";then
+log.error "包目录中不存在: $package"
+log.error "运行 \`$_USAGE_SCRIPT_FILENAME search\` 查看可用包"
+else
+log.error "包名非法（只允许字母/数字/下划线/连字符）: $package"
+fi
+continue
+fi
+if is_package_in_default_config_with_repo "$package"&&! args.has "-f" "--force";then
+log.warn "$package 已在本地配置中（-f 覆盖）"
+continue
+fi
+local written=0
+for field in "${REGISTRY_FIELDS[@]}";do
+value="$(registry_get "$url" "$package" "$field")"
+[[ -n $value ]]||continue
+if ! registry_safe_value "$value";then
+log.error "$package.$field 含非法字符，已跳过: $value"
+continue
+fi
+config.persist.update "packages" "$package" "$field" "$value" "$config_file"||continue
+((written++))||true
+done
+if ((written==0));then
+log.error "$package: 没有字段通过校验，未写入配置"
+continue
+fi
+console.layout.item.title 0 "$POWERLINE_OK $package 已写入本地配置"
+((count++))||true
+done
+((count>0))||{
+log.error "没有包被写入本地配置"
+return 1
+}
+package_reset_cache
+console.layout.footer "运行 \`$_USAGE_SCRIPT_FILENAME update\` 检查版本，再 \`upgrade\` 下载"
+return 0
+}
 cmd_edit(){
 args.init
 args.process "$@"
 local config_path
 config_path=$(config.path 2>/dev/null)||config_path="${_CONFIG_PATH:-$(path.config_dir)/config.toml}"
-[[ -f $config_path ]]||create_default_config "$config_path"
+[[ -f $config_path ]]||_create_default_config "$config_path"
 log.debug "配置文件: $config_path"
 "${EDITOR:-vi}" "$config_path"||{
 log.error "编辑器打开失败: ${EDITOR:-vi} $config_path"
 return 1
 }
 }
-create_default_config(){
+_create_default_config(){
 local path="$1" dir="${1%/*}"
 [[ $dir != "$path" ]]&&mkdir -p "$dir"
 cat >"$path" <<'EOF'
 # BinUp 配置
+# 注意: 本文件常常是 dotfiles 的软链（~/.config/binup/config.toml -> 仓库里的 xxx.toml），
+#       `binup add` 会解析软链后就地改写真实文件，所以新增的包会直接出现在仓库里，记得提交。
+#
 # 每个包声明在 [packages.<名称>] 段中:
 #   repo           = "owner/repo"           # GitHub 仓库
 #   version_type   = "release"              # release(默认) | 其他(取 releases 列表首个)
@@ -1370,20 +1725,21 @@ cat >"$path" <<'EOF'
 #   binary_name    = "<名称>"               # 归档内可执行文件名(单文件时可省略)
 download_dir = "downloads"
 log_level = "info"
+# registry_url = "https://github.com/uglyboy-tl/bashlet-packages/raw/HEAD/packages/binup/registry.toml"  # 包目录 URL，search/add 使用
+# registry_ttl = "24"                              # 包目录缓存有效期（小时）
 EOF
 }
-main(){
-args.init 命令行程序下载管理器
-args.add_options "version" "v" "显示版本信息"
-args.add_subcommand "list" "列出项目" "cmd_list"
-args.add_subcommand "update" "检查更新" "cmd_update"
-args.add_subcommand "upgrade" "下载二进制文件包" "cmd_upgrade"
-args.add_subcommand "install" "安装二进制文件" "cmd_install"
-args.add_subcommand "edit" "编辑配置文件" "cmd_edit"
+VERSION="2.3.0"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"&&pwd)"
+_DEFAULT_REGISTRY_URL="https://github.com/uglyboy-tl/bashlet-packages/raw/HEAD/packages/binup/registry.toml"
+init_settings(){
 config.register "download_dir" "downloads" "string" "下载目录"
 config.register "proxy_prefix" ""
 config.register "log_level" "info"
+config.register "registry_url" "$_DEFAULT_REGISTRY_URL" "string" "包目录 URL（可换成第三方源）"
+config.register "registry_ttl" "24" "string" "包目录缓存有效期（小时）"
 config.array.register "packages" "repo"
+config.array.register "packages" "description" ""
 config.array.register "packages" "version_type" ""
 config.array.register "packages" "file_pattern"
 config.array.register "packages" "file_extension"
@@ -1396,11 +1752,25 @@ main_config=$(config.path 2>/dev/null)||main_config=""
 [[ -n $main_config && -f $main_config ]]&&config.load "$main_config"
 SETTINGS_DOWNLOAD_DIR="$(config.get "download_dir")"
 SETTINGS_PROXY_PREFIX="$(config.get proxy_prefix)"
-mkdir -p "$SETTINGS_DOWNLOAD_DIR"
 VERSIONS_FILE="$SETTINGS_DOWNLOAD_DIR/versions.toml"
-[[ -f $VERSIONS_FILE ]]||touch "$VERSIONS_FILE"
-config.load "$VERSIONS_FILE"||true
+config.load "$VERSIONS_FILE" 2>/dev/null||true
 log.setLevel "$(config.get log_level)"
+}
+ensure_download_dir(){
+mkdir -p "$SETTINGS_DOWNLOAD_DIR"
+[[ -f $VERSIONS_FILE ]]||touch "$VERSIONS_FILE"
+}
+main(){
+args.init 命令行程序下载管理器
+args.add_options "version" "v" "显示版本信息"
+args.add_subcommand "list" "列出项目" "cmd_list"
+args.add_subcommand "update" "检查更新" "cmd_update"
+args.add_subcommand "upgrade" "下载二进制文件包" "cmd_upgrade"
+args.add_subcommand "install" "安装二进制文件" "cmd_install"
+args.add_subcommand "search" "搜索远端包目录" "cmd_search"
+args.add_subcommand "add" "从包目录添加包到本地配置" "cmd_add"
+args.add_subcommand "edit" "编辑配置文件" "cmd_edit"
+init_settings
 args.process "$@"
 args.has "-v" "--version"&&usage.version&&exit 0
 }
