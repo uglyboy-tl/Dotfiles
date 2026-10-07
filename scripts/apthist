@@ -9,12 +9,6 @@ local colors
 colors=$(tput colors 2>/dev/null||echo 0)
 [[ $colors -ge 16 ]]
 }
-ansi.Powerline.IsAvailable(){
-[[ -n ${NO_UNICODE-} ]]&&return 1
-local lc="${LC_ALL:-${LC_CTYPE:-${LANG:-}}}"
-[[ $lc == *UTF-8* || $lc == *utf8* ]]&&return 0
-locale -k LC_CTYPE 2>/dev/null|grep -q 'UTF-8'
-}
 ansi.enable.color(){
 BLACK="${ANSI_CSI}30m"
 RED="${ANSI_CSI}31m"
@@ -91,62 +85,13 @@ NoReverse=""
 NoHidden=""
 NoStrike=""
 }
-ansi.enable.powerline(){
-POWERLINE_SEPARATOR=$'\ue0b0'
-POWERLINE_SEPARATOR_THIN=$'\ue0b1'
-POWERLINE_SEPARATOR_LEFT=$'\ue0b2'
-POWERLINE_SEPARATOR_LEFT_THIN=$'\ue0b3'
-POWERLINE_BRANCH=$'\ue0a0'
-POWERLINE_LINE=$'\ue0a1'
-POWERLINE_READONLY=$'\ue0a2'
-POWERLINE_POINTING_ARROW=$'\u27a1'
-POWERLINE_ARROW_RIGHT=$'\u25b6'
-POWERLINE_ARROW_LEFT=$'\u25c0'
-POWERLINE_ARROW_DOWN=$'\u2b07'
-POWERLINE_ARROW_RIGHT_DOWN=$'\u2b0a'
-POWERLINE_PLUS_MINUS=$'\u00b1'
-POWERLINE_REFERS_TO=$'\u27a6'
-POWERLINE_OK=$'\u2714'
-POWERLINE_FAIL=$'\u2718'
-POWERLINE_WARN=$'\u26a0'
-POWERLINE_COG=$'\u2699'
-POWERLINE_HEART=$'\u2764'
-POWERLINE_STAR=$'\u2605'
-}
-ansi.disable.powerline(){
-POWERLINE_SEPARATOR=">"
-POWERLINE_SEPARATOR_THIN=">"
-POWERLINE_SEPARATOR_LEFT="<"
-POWERLINE_SEPARATOR_LEFT_THIN="<"
-POWERLINE_BRANCH="|}"
-POWERLINE_LINE="LN"
-POWERLINE_READONLY="RO"
-POWERLINE_POINTING_ARROW="~"
-POWERLINE_ARROW_RIGHT="->"
-POWERLINE_ARROW_LEFT="<-"
-POWERLINE_ARROW_DOWN="_"
-POWERLINE_ARROW_RIGHT_DOWN=">"
-POWERLINE_PLUS_MINUS="+-"
-POWERLINE_REFERS_TO="*"
-POWERLINE_OK="+"
-POWERLINE_FAIL="x"
-POWERLINE_WARN="!"
-POWERLINE_COG="{*}"
-POWERLINE_HEART="<3"
-POWERLINE_STAR="*"
-}
 ansi.enable(){
 [[ -n ${_ANSI_FORCE_DISABLE-} ]]&&ansi.disable&&return 0
 ansi.Color.IsAvailable&&ansi.enable.color&&ansi.enable.style||{ ansi.disable.color&&ansi.disable.style;}
-ansi.Powerline.IsAvailable&&ansi.enable.powerline||ansi.disable.powerline
 }
 ansi.disable(){
 ansi.disable.color
 ansi.disable.style
-ansi.disable.powerline
-}
-ansi.is.initialized(){
-[[ -n $ANSI_ESC ]]
 }
 ansi.enable
 string.base64.encode(){ base64 -w 0 "$1" 2>/dev/null||base64 "$1" 2>/dev/null;}
@@ -308,15 +253,11 @@ echo "${#ref[@]}"
 }
 array.contains(){
 local -n ref="$1"
-if ((${#ref[@]}<=3));then
-[[ " ${ref[*]} " == *" $2 "* ]]
-else
-local -A lookup=()
+local elem
 for elem in "${ref[@]}";do
-lookup["$elem"]=1
+[[ $elem == "$2" ]]&&return 0
 done
-[[ -v "lookup[$2]" ]]
-fi
+return 1
 }
 array.append(){
 local -n array_ref="$1"
@@ -328,24 +269,13 @@ local -n ref="$1"
 local len=${#ref[@]}
 (($2>=0&&$2<len))&&echo "${ref[$2]}"||return 1
 }
-array.type(){
-local -r arr="$1"
-local decl
-decl="$(declare -p "$arr" 2>/dev/null)"||return 1
-case "$decl" in
-"declare -A"*)echo "associative";;
-"declare -a"*)echo "indexed";;
-*)return 1
-esac
-}
 array.has_duplicates(){
 local -n ref="$1"
 local -A seen=()
-local elem key
+local elem
 for elem in "${ref[@]}";do
-key="${elem:-__EMPTY__}"
-[[ -v "seen[$key]" ]]&&return 0
-seen["$key"]=1
+[[ -v "seen[k$elem]" ]]&&return 0
+seen["k$elem"]=1
 done
 return 1
 }
@@ -565,8 +495,9 @@ args.opt.arg_index(){ echo "${_ARGS_OPT_ARGS[$1]:-}";}
 args.show_help(){
 usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
 }
-PROJECT_ROOT="$(cd "${BASH_SOURCE[0]%/*}/.."&&pwd)"
-declare -gi _DAYS=7 _SHOW_AUTO=0 _SHOW_REMOVED=0
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"&&pwd)"
+declare -g _DAYS=7
+declare -gi _SHOW_AUTO=0 _SHOW_REMOVED=0
 declare -g _START_DATE=""
 declare -g _LOG_OVERRIDE=""
 _parse_pkg_name(){
