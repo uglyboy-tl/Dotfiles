@@ -1,0 +1,3283 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_NAME="Dig"
+.env(){
+local _d="${BASH_SOURCE[1]:-}"
+[[ -n $_d ]]||return 0
+[[ $_d == */* ]]&&_d="${_d%/*}"||_d="."
+[[ -f "$_d/.env" ]]&&source "$_d/.env"||true
+}
+array.len(){
+local -n ref="$1"
+echo "${#ref[@]}"
+}
+array.contains(){
+local -n ref="$1"
+local elem
+for elem in "${ref[@]}";do
+[[ $elem == "$2" ]]&&return 0
+done
+return 1
+}
+array.append(){
+local -n array_ref="$1"
+shift
+array_ref+=("$@")
+}
+array.get(){
+local -n ref="$1"
+local len=${#ref[@]}
+(($2>=0&&$2<len))&&echo "${ref[$2]}"||return 1
+}
+array.has_duplicates(){
+local -n ref="$1"
+local -A seen=()
+local elem
+for elem in "${ref[@]}";do
+[[ -v "seen[k$elem]" ]]&&return 0
+seen["k$elem"]=1
+done
+return 1
+}
+map.len(){
+local -n ref="$1"
+echo "${#ref[@]}"
+}
+map.contains(){
+local -n ref="$1"
+[[ -v "ref[$2]" ]]
+}
+map.get(){
+local -n ref="$1"
+[[ -v "ref[$2]" ]]&&echo "${ref[$2]}"||return 1
+}
+ANSI_ESC=$'\033'
+ANSI_CSI="$ANSI_ESC["
+ansi.Color.IsAvailable(){
+[[ -t 1 ]]||return 1
+local colors
+colors=$(tput colors 2>/dev/null||echo 0)
+[[ $colors -ge 16 ]]
+}
+ansi.enable.color(){
+BLACK="${ANSI_CSI}30m"
+RED="${ANSI_CSI}31m"
+GREEN="${ANSI_CSI}32m"
+YELLOW="${ANSI_CSI}33m"
+BLUE="${ANSI_CSI}34m"
+MAGENTA="${ANSI_CSI}35m"
+CYAN="${ANSI_CSI}36m"
+WHITE="${ANSI_CSI}37m"
+BRIGHT_BLACK="${ANSI_CSI}90m"
+BRIGHT_RED="${ANSI_CSI}91m"
+BRIGHT_GREEN="${ANSI_CSI}92m"
+BRIGHT_YELLOW="${ANSI_CSI}93m"
+BRIGHT_BLUE="${ANSI_CSI}94m"
+BRIGHT_MAGENTA="${ANSI_CSI}95m"
+BRIGHT_CYAN="${ANSI_CSI}96m"
+BRIGHT_WHITE="${ANSI_CSI}97m"
+NC="${ANSI_CSI}0m"
+NO_COLOR="${ANSI_CSI}0m"
+}
+ansi.disable.color(){
+BLACK=""
+RED=""
+GREEN=""
+YELLOW=""
+BLUE=""
+MAGENTA=""
+CYAN=""
+WHITE=""
+BRIGHT_BLACK=""
+BRIGHT_RED=""
+BRIGHT_GREEN=""
+BRIGHT_YELLOW=""
+BRIGHT_BLUE=""
+BRIGHT_MAGENTA=""
+BRIGHT_CYAN=""
+BRIGHT_WHITE=""
+NC=""
+NO_COLOR=""
+}
+ansi.enable.style(){
+Bold="${ANSI_CSI}1m"
+Dim="${ANSI_CSI}2m"
+Italics="${ANSI_CSI}3m"
+Underline="${ANSI_CSI}4m"
+Blink="${ANSI_CSI}5m"
+Reverse="${ANSI_CSI}7m"
+Hidden="${ANSI_CSI}8m"
+Strike="${ANSI_CSI}9m"
+NoBold="${ANSI_CSI}21m"
+NoDim="${ANSI_CSI}22m"
+NoItalics="${ANSI_CSI}23m"
+NoUnderline="${ANSI_CSI}24m"
+NoBlink="${ANSI_CSI}25m"
+NoReverse="${ANSI_CSI}27m"
+NoHidden="${ANSI_CSI}28m"
+NoStrike="${ANSI_CSI}29m"
+}
+ansi.disable.style(){
+Bold=""
+Dim=""
+Italics=""
+Underline=""
+Blink=""
+Reverse=""
+Hidden=""
+Strike=""
+NoBold=""
+NoDim=""
+NoItalics=""
+NoUnderline=""
+NoBlink=""
+NoReverse=""
+NoHidden=""
+NoStrike=""
+}
+ansi.enable(){
+[[ -n ${_ANSI_FORCE_DISABLE-} ]]&&ansi.disable&&return 0
+ansi.Color.IsAvailable&&ansi.enable.color&&ansi.enable.style||{ ansi.disable.color&&ansi.disable.style;}
+}
+ansi.disable(){
+ansi.disable.color
+ansi.disable.style
+}
+ansi.enable
+string.base64.encode(){ base64 -w 0 "$1" 2>/dev/null||base64 "$1" 2>/dev/null;}
+string.base64.decode(){ base64 -d 2>/dev/null||base64 -D 2>/dev/null;}
+string.escape.regex(){ printf '%s' "${1:-}"|sed 's/[].[\\^$*+?{}()|]/\\&/g; s/\//\\\//g';}
+string.escape.sed(){ printf '%s' "${1:-}"|sed 's/\\/\\\\/g; s/&/\\&/g; s/|/\\|/g';}
+string.trim(){
+local s="${1#"${1%%[![:space:]]*}"}"
+echo "${s%"${s##*[![:space:]]}"}"
+}
+string.int.check(){ [[ $1 =~ ^-?[0-9]+$ ]];}
+string.natural.check(){ [[ $1 =~ ^[1-9][0-9]*$ ]];}
+string.float.check(){ [[ $1 =~ ^-?[0-9]+\.[0-9]+$ ]];}
+string.is_ascii(){ [[ $1 != *[![:ascii:]]* ]];}
+string.has_ansi(){ [[ $1 == *$'\x1b'* ]];}
+console.stdout(){ printf "%s\n" "$*";}
+console.stderr(){ printf "%s\n" "$*" >&2;}
+console.repeat(){
+local char="$1" repeat=${2:-0}
+((repeat<=0))&&return
+if [[ ${#char} -eq 1 ]];then
+local _pad
+printf -v _pad '%*s' "$repeat" ''
+printf '%s' "${_pad// /$char}"
+else
+local result="" i
+for ((i=0; i<repeat; i++));do
+result+="$char"
+done
+printf "%s" "$result"
+fi
+}
+console.align(){
+local padding=$(($1-$(console.display_width "$2")))
+((padding>0))&&printf "%s%${padding}s%s\n" "$2" "" "${*:3}"||printf "%s%s\n" "$2" "${*:3}"
+}
+console.indent(){ console.align $(($1*2)) "" "${*:2}";}
+console.ansi_width(){
+local width=0 i=0 len=${#1} flag=0
+while ((i<len));do
+local char="${1:$((i++)):1}"
+((flag))&&{
+[[ $char =~ [a-zA-Z] ]]&&flag=0
+continue
+}
+[[ $char == $'\x1b' ]]&&flag=1&&continue
+((width++))
+done
+echo "$width"
+}
+console.mixed_width(){
+local width=0 flag=0 i=0
+local hex_bytes=$(printf "%s" "$1"|od -An -tx1 -v|tr -d ' \n')
+local len=${#hex_bytes}
+while ((i<len));do
+local num=$((0x${hex_bytes:i:2}))
+i=$((i+2))
+((flag))&&{
+(((num>=0x41&&num<=0x5A)||(num>=0x61&&num<=0x7A)))&&flag=0
+continue
+}
+((num==0x1b))&&{
+flag=1
+continue
+}
+((num<=0x7F))&&{
+((width++))
+continue
+}
+((num>=0xC2&&num<=0xDF))&&{
+((width++))
+i=$((i+2))
+continue
+}
+((num>=0xE0&&num<=0xEF))&&{
+((width+=2))
+i=$((i+4))
+continue
+}
+((num>=0xF0&&num<=0xF7))&&{
+((width+=2))
+i=$((i+6))
+}
+done
+echo "$width"
+}
+console.display_width(){
+[[ $1 ]]||{
+echo "0"
+return
+}
+! string.is_ascii "$1"&&console.mixed_width "$1"&&return
+string.has_ansi "$1"&&console.ansi_width "$1"||echo "${#1}"
+}
+: "${_LOG_USE_EXTRA:=false}"
+: "${_LOG_LEVEL:=INFO}"
+declare -gA _LOG_LEVEL_MAP=(
+[DEBUG]=0 [INFO]=1 [WARN]=2 [SUCCESS]=2 [ERROR]=3)
+[[ -v "_LOG_LEVEL_MAP[$_LOG_LEVEL]" ]]||_LOG_LEVEL=INFO
+declare -gi _LOG_MIN_LEVEL=${_LOG_LEVEL_MAP[$_LOG_LEVEL]}
+log.setLevel(){
+local -r level="${1^^}"
+[[ -v "_LOG_LEVEL_MAP[$level]" ]]||return 1
+export _LOG_MIN_LEVEL=${_LOG_LEVEL_MAP[$level]}
+export _LOG_LEVEL="$level"
+}
+log(){
+local -r level="${1^^}"
+local timestamp
+printf -v timestamp '%(%m-%d %H:%M:%S )T' -1
+local flag
+case "$level" in
+SUCCESS)flag="$GREEN[$level]$NC";;
+INFO)flag="$BLUE[$level]$NC";;
+WARN)flag="$YELLOW[$level]$NC";;
+ERROR)flag="$RED[$level]$NC";;
+DEBUG)flag="$WHITE[$level]$NC";;
+*)flag=""
+esac
+[[ -z $flag ]]||shift
+local prefix extra=""
+[[ $_LOG_USE_EXTRA == true ]]&&[[ -v BASH_SOURCE[2] ]]&&extra="${BASH_SOURCE[2]##*/}:${BASH_LINENO[0]}"
+[[ -z $extra ]]||extra="$WHITE($extra)$NC"
+prefix="$WHITE$timestamp$NC$flag$extra"
+console.stderr "$prefix" "$@"
+}
+log.debug(){ ((0>=_LOG_MIN_LEVEL))&&log debug "$@"||true;}
+log.info(){ ((1>=_LOG_MIN_LEVEL))&&log info "$@"||true;}
+log.success(){ ((2>=_LOG_MIN_LEVEL))&&log success "$@"||true;}
+log.warn(){ ((2>=_LOG_MIN_LEVEL))&&log warn "$@"||true;}
+log.error(){ ((3>=_LOG_MIN_LEVEL))&&log error "$@"||true;}
+_USAGE_SCRIPT_FILENAME=${0##*/}
+_USAGE_SCRIPT_NAME=${SCRIPT_NAME:-$_USAGE_SCRIPT_FILENAME}
+_USAGE_SCRIPT_DESC=""
+usage.name.set(){ _USAGE_SCRIPT_NAME="$1";}
+usage.description.set(){ [[ -n $1 ]]&&_USAGE_SCRIPT_DESC="$1";}
+usage.title(){
+local _title="$_USAGE_SCRIPT_NAME"
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&_title="$_title - $_ARGS_CURRENT_SUBCOMMAND"
+[[ -n $_USAGE_SCRIPT_DESC ]]&&_title="$_title - $_USAGE_SCRIPT_DESC"
+console.stdout "$Bold$_title$NC"
+}
+usage.usage(){
+local _usage_line="${BRIGHT_BLUE}Usage:$NC $BRIGHT_CYAN$_USAGE_SCRIPT_FILENAME$NC"
+local subcommand="${_ARGS_CURRENT_SUBCOMMAND:-<subcommand>}"
+((${1:-0}))&&_usage_line="$_usage_line $BRIGHT_MAGENTA$subcommand$NC"
+((${2:-0}))&&_usage_line="$_usage_line $BRIGHT_YELLOW[OPTIONS]$NC"
+((${3:-0}))&&_usage_line="$_usage_line $BRIGHT_YELLOW[ARGUMENTS]$NC"
+console.stdout "$_usage_line"
+}
+usage.section(){
+echo ""
+console.stdout "$Bold$BRIGHT_BLUE$1$NC:"
+}
+usage.section.items(){
+local -n _items_ref="$1"
+local -a _keys=("${!_items_ref[@]}")
+local _max_width=20
+for _key in "${_keys[@]}";do
+((${#_key}>_max_width))&&_max_width=${#_key}
+done
+((_max_width+=4))
+for _key in "${_keys[@]}";do
+console.align "$_max_width" "  $BRIGHT_CYAN$_key$NC" "${_items_ref[$_key]}"
+done
+}
+usage.footer(){
+[[ ${#_ARGS_SUBCOMMANDS[@]} -eq 0 ]]&&return 0
+echo ""
+console.stdout "${BRIGHT_BLACK}Use '$BRIGHT_WHITE$_USAGE_SCRIPT_FILENAME <subcommand> --help$BRIGHT_BLACK' for subcommand help$NC"
+}
+usage.show(){
+local -n _opts_ref=$1
+local -n _args_ref=$2
+local -n _examples_ref=$3
+local -n _notices_ref=$4
+local -n _cmd_ref="_ARGS_CURRENT_SUBCOMMAND"
+local -n _cmd_desc_ref="_ARGS_SUBCOMMANDS_DESC"
+echo ""
+usage.title
+echo ""
+usage.usage $(($(map.len _cmd_desc_ref)>0)) $(($(map.len _opts_ref)>0)) $(($(map.len _args_ref)>0))
+[[ -z $_cmd_ref ]]&&[[ $(map.len _cmd_desc_ref) -gt 0 ]]&&usage.section "Commands"&&usage.section.items _cmd_desc_ref
+[[ $(map.len _opts_ref) -gt 0 ]]&&usage.section "Options"&&usage.section.items _opts_ref
+[[ $(map.len _args_ref) -gt 0 ]]&&usage.section "Arguments"&&usage.section.items _args_ref
+[[ $(map.len _examples_ref) -gt 0 ]]&&usage.section "Examples"&&usage.section.items _examples_ref
+[[ $(map.len _notices_ref) -gt 0 ]]&&usage.section "Notices"&&usage.section.items _notices_ref
+[[ -z $_cmd_ref ]]&&usage.footer||true
+}
+usage.version(){ console.stdout "$BRIGHT_CYAN$_USAGE_SCRIPT_NAME$NC version $BRIGHT_GREEN${VERSION:-null}$NC";}
+declare -gA _ARGS_SUBCOMMANDS=()
+declare -gA _ARGS_SUBCOMMANDS_DESC=()
+declare -ga _ARGS_OPTIONS=()
+declare -gA _ARGS_OPTIONS_SWITCH=()
+declare -gA _ARGS_OPTIONS_TYPE=()
+declare -g _ARGS_CURRENT_SUBCOMMAND=""
+declare -gA _ARGS_HELP_OPTIONS=()
+declare -gA _ARGS_HELP_ARGS=()
+declare -gA _ARGS_HELP_EXAMPLES=()
+declare -gA _ARGS_HELP_NOTICES=()
+args.name(){ usage.name.set "$1";}
+args.description(){ usage.description.set "$1"||return 1;}
+args.init(){
+_ARGS_OPTIONS=()
+declare -gA _ARGS_OPTIONS_SWITCH=()
+declare -gA _ARGS_OPTIONS_TYPE=()
+declare -gA _ARGS_HELP_OPTIONS=()
+declare -gA _ARGS_HELP_ARGS=()
+declare -gA _ARGS_HELP_EXAMPLES=()
+declare -gA _ARGS_HELP_NOTICES=()
+usage.description.set "${1:-}"||{ [[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&usage.description.set "${_ARGS_SUBCOMMANDS_DESC[$_ARGS_CURRENT_SUBCOMMAND]}";}
+args.add_options "help" "h" "显示帮助信息"
+}
+args.add_options(){
+local type="${4:-}" key subcommand
+: "${type:="NONE"}"
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&subcommand=" $_ARGS_CURRENT_SUBCOMMAND"||subcommand=""
+case ${1^^} in
+"ARG")[[ -n $2 ]]&&_ARGS_HELP_ARGS["$2"]="$3"&&_ARGS_OPTIONS_TYPE["$2"]="$type";;
+"EXAMPLE")_ARGS_HELP_EXAMPLES["${0##*/}$subcommand $2"]="$3";;
+"NOTICE")_ARGS_HELP_NOTICES+=(["$2"]="");;
+*)_ARGS_OPTIONS_TYPE["$1"]="$type"
+_ARGS_OPTIONS+=("$1")
+[[ -n $2 ]]&&{
+_ARGS_OPTIONS_SWITCH["$1"]="$2"
+_ARGS_OPTIONS_SWITCH["$2"]="$1"
+_ARGS_OPTIONS+=("$2")
+}
+key=""
+[[ -n $2 ]]&&key="-$2, "
+key+="--$1"
+[[ -n ${4+x} ]]&&key+=" $type"
+_ARGS_HELP_OPTIONS["$key"]="$3"
+esac
+}
+args.add_subcommand(){
+[[ -n $_ARGS_CURRENT_SUBCOMMAND ]]&&return 0
+_ARGS_SUBCOMMANDS["$1"]="$3"
+_ARGS_SUBCOMMANDS_DESC["$1"]="$2"
+}
+args.dispatch(){
+local cmd="${1:-}"
+[[ -v "_ARGS_SUBCOMMANDS[$cmd]" ]]&&{
+local handler="${_ARGS_SUBCOMMANDS[$cmd]}"
+_ARGS_CURRENT_SUBCOMMAND="$cmd"
+shift
+"$handler" "$@"
+exit $?
+}
+return 1
+}
+args.process(){
+[[ -z $_ARGS_CURRENT_SUBCOMMAND ]]&&args.dispatch "$@"&&exit 0
+args.parse "$@"
+args.verify||{
+args.show_help
+exit 1
+}
+args.has "-h" "--help"&&args.show_help&&exit 0||true
+}
+args.parse(){
+declare -ga _ARGS_OPTS=()
+declare -ga _ARGS_ARGS=()
+declare -gA _ARGS_OPT_ARGS=()
+local end=0 last=""
+for arg in "$@";do
+if [[ $arg == '--' ]];then
+end=1
+last=""
+elif ((!end))&&[[ $arg =~ ^- ]];then
+if [[ $arg =~ ^-[a-zA-Z]{2,}$ ]];then
+local c="${arg:1}"
+for ((i=0; i<${#c}; i++));do
+last="-${c:i:1}"
+_ARGS_OPTS+=("$last")
+done
+else
+_ARGS_OPTS+=("$arg")
+last="$arg"
+fi
+else
+_ARGS_ARGS+=("$arg")
+[[ $last ]]&&_ARGS_OPT_ARGS["$last"]=$((${#_ARGS_ARGS[@]}-1))&&last=""
+fi
+done
+return 0
+}
+args.verify(){
+for option in "${_ARGS_OPTS[@]}";do
+local opt="${option#--}" another
+opt="${opt#-}"
+array.contains _ARGS_OPTIONS "$opt"||{
+log.error "未知选项: \"$option\""
+return 1
+}
+array.contains _ARGS_OPTIONS_SWITCH "$opt"&&{
+another=${_ARGS_OPTIONS_SWITCH[$opt]}
+args.has "-$another" "--$another"&&log.error "重复选项"&&return 1
+[[ $option =~ ^-[a-zA-Z]$ ]]&&opt=$another
+}
+case ${_ARGS_OPTIONS_TYPE[$opt]} in
+"NONE")unset "_ARGS_OPT_ARGS[$option]" 2>/dev/null||true;;
+*)[[ -z ${_ARGS_OPT_ARGS[$option]+x} ]]&&log.error "选项 $option 需要参数"&&return 1
+esac
+done
+array.has_duplicates _ARGS_OPTS&&log.error "重复选项"&&return 1
+local -a _ARGS_TEMP_ARGS=("${_ARGS_ARGS[@]}")
+for value in "${_ARGS_OPT_ARGS[@]}";do
+unset "_ARGS_TEMP_ARGS[$value]"
+done
+declare -ga _ARGS_FINAL_ARGS=("${_ARGS_TEMP_ARGS[@]}")
+[[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]]&&[[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]]&&log.error "位置参数错误"&&return 1||true
+}
+args.has(){
+for o in "$@";do
+array.contains _ARGS_OPTS "$o"&&return 0
+done
+return 1
+}
+args.get(){
+for o in "$@";do
+i=$(args.opt.arg_index "$o")
+if [[ $i ]];then
+args.arg "$i"
+return 0
+fi
+done
+return 1
+}
+args.args(){ echo "_ARGS_FINAL_ARGS";}
+args.arg(){ array.get _ARGS_ARGS "$1";}
+args.opt.arg_index(){ echo "${_ARGS_OPT_ARGS[$1]:-}";}
+args.show_help(){
+usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
+}
+: "${XDG_CONFIG_HOME:=$HOME/.config}"
+: "${XDG_DATA_HOME:=$HOME/.local/share}"
+: "${XDG_STATE_HOME:=$HOME/.local/state}"
+: "${XDG_CACHE_HOME:=$HOME/.cache}"
+: "${SCRIPT_NAME:=}"
+path.script_name(){
+echo "${SCRIPT_NAME,,}"
+}
+path.config_dir(){
+: "${SCRIPT_CONFIG_DIR:=$XDG_CONFIG_HOME/$(path.script_name)}"
+echo "$SCRIPT_CONFIG_DIR"
+}
+path.data_dir(){
+: "${SCRIPT_DATA_DIR:=$XDG_DATA_HOME/$(path.script_name)}"
+echo "$SCRIPT_DATA_DIR"
+}
+path.state_dir(){
+: "${SCRIPT_STATE_DIR:=$XDG_STATE_HOME/$(path.script_name)}"
+echo "$SCRIPT_STATE_DIR"
+}
+path.cache_dir(){
+: "${SCRIPT_CACHE_DIR:=$XDG_CACHE_HOME/$(path.script_name)}"
+echo "$SCRIPT_CACHE_DIR"
+}
+path.log_dir(){
+: "${SCRIPT_LOG_DIR:=$(path.state_dir)/logs}"
+echo "$SCRIPT_LOG_DIR"
+}
+declare -ga _CONFIG_REGISTERED=()
+declare -gA _CONFIG_ARRAY_REGISTERED=()
+declare -gA _CONFIG_ARRAY_ITEMS=()
+declare -gA _CONFIG_VALUES=()
+declare -gA _CONFIG_TYPES=()
+declare -gA _CONFIG_DESCS=()
+declare -gi _CONFIG_STRICT_MODE=1
+config.path(){
+[[ -n ${_CONFIG_PATH+x} ]]&&echo "$_CONFIG_PATH"&&return 0
+local _f="config.toml"
+[[ -f $_f ]]&&echo "$_f"&&return 0
+_f="$(path.config_dir)/config.toml"
+[[ -f $_f ]]&&echo "$_f"&&return 0
+log.error "配置文件不存在: $_f"
+return 1
+}
+config.register(){
+array.contains _CONFIG_REGISTERED "$1"&&log.warn "Key $1 重复定义"||_CONFIG_REGISTERED+=("$1")
+_CONFIG_TYPES["$1"]="${3:-string}"
+_CONFIG_DESCS["$1"]="${4:-}"
+(($#>=2))&&_CONFIG_VALUES["$1"]="$2"||true
+}
+config.array.register(){
+_CONFIG_ARRAY_REGISTERED["$1"]+=" $2"
+config.register "$1.$2" "${@:3}"
+unset '_CONFIG_REGISTERED[-1]'
+}
+config.loose(){ _CONFIG_STRICT_MODE=0;}
+config.load(){
+local _f="${1:-$(config.path)}" _in_arr=false _table=""
+[[ -z $_f ]]&&return 1
+while IFS= read -r line||[[ -n $line ]];do
+[[ $line =~ ^[[:space:]]*$ ]]&&continue
+[[ $line =~ ^[[:space:]]*# ]]&&continue
+if [[ $line =~ ^\[([^\]]+)\]$ ]];then
+_table="${BASH_REMATCH[1]}"
+_in_arr=false
+if [[ $_table =~ ^([^.]+)\.(.+)$ ]];then
+local _arr="${BASH_REMATCH[1]}" _itm="${BASH_REMATCH[2]}"
+! ((_CONFIG_STRICT_MODE))||config.array.has "$_arr"&&config.array.add "$_arr" "$_itm"&&_in_arr=true
+fi
+continue
+fi
+[[ $line =~ ^([^=[:space:]]+)[[:space:]]*=[[:space:]]*(.*)$ ]]||continue
+local _ak="${BASH_REMATCH[1]}"
+local _k="${_table:+$_table.}$_ak" _v="${BASH_REMATCH[2]}"
+((_CONFIG_STRICT_MODE))&&[[ $_in_arr != "true" ]]&&{ array.contains "_CONFIG_REGISTERED" "$_k"||continue;}
+((_CONFIG_STRICT_MODE))&&[[ $_in_arr == "true" ]]&&{ config.array.has "$_arr" "$_itm" "$_ak"||continue;}
+_v="${_v%"${_v##*[![:space:]]}"}"
+[[ $_v =~ ^[\'\"](.*)[\'\"]$ ]]&&_v="${BASH_REMATCH[1]}"
+_CONFIG_VALUES["$_k"]="$_v"
+done <"$_f"
+}
+config.keys(){ printf "%s\n" "${_CONFIG_REGISTERED[@]}";}
+config.has(){ [[ -v "_CONFIG_VALUES[$1]" ]];}
+config.get(){ [[ -v "_CONFIG_VALUES[$1]" ]]&&echo "${_CONFIG_VALUES[$1]}"||return 1;}
+config.set(){
+! array.contains "_CONFIG_REGISTERED" "$1"&&{
+log.error "未注册的配置项: $1"
+return 1
+}
+_CONFIG_VALUES["$1"]="$2"
+}
+config.sections(){
+local prefix="${1:-}"
+local -A seen=()
+local key section_prefix="${prefix:+$prefix.}"
+for key in "${!_CONFIG_VALUES[@]}";do
+[[ $key == $section_prefix*.* ]]&&{
+local part=${key#"$section_prefix"}
+seen["${part%%.*}"]=1
+}
+done
+printf "%s\n" "${!seen[@]}"
+}
+config.array.items(){ [[ -v "_CONFIG_ARRAY_ITEMS[$1]" ]]&&echo "${_CONFIG_ARRAY_ITEMS[$1]}";}
+_config.list.contains(){
+local -n _ref="$1"
+local -a _t=()
+read -ra _t <<<"${_ref[$2]:-}"||true
+array.contains _t "${3:-}"
+}
+config.array.has(){
+map.contains _CONFIG_ARRAY_REGISTERED "$1"||return 1
+(($#>=2))&&_config.list.contains _CONFIG_ARRAY_ITEMS "$1" "$2"||(($#<2))||return 1
+(($#>=3))&&_config.list.contains _CONFIG_ARRAY_REGISTERED "$1" "$3"||(($#<3))||return 1
+}
+config.array.get(){ [[ -v "_CONFIG_VALUES["$1.$2.$3"]" ]]&&echo "${_CONFIG_VALUES["$1.$2.$3"]}"||return 1;}
+config.array.add(){
+_config.list.contains _CONFIG_ARRAY_ITEMS "$1" "$2"&&return 0
+_CONFIG_ARRAY_ITEMS["$1"]+=" $2"
+}
+config.array.set(){
+! config.array.has "$1"&&{
+log.error "未注册的数组配置名: $1"
+return 1
+}
+_config.list.contains _CONFIG_ARRAY_REGISTERED "$1" "$3"||{
+log.error "未注册的数组配置项: $1:$3"
+return 1
+}
+config.array.add "$1" "$2"
+_CONFIG_VALUES["$1.$2.$3"]=$4
+}
+config.type(){ [[ -v "_CONFIG_TYPES[$1]" ]]&&echo "${_CONFIG_TYPES[$1]}";}
+config.desc(){ [[ -v "_CONFIG_DESCS[$1]" ]]&&echo "${_CONFIG_DESCS[$1]}";}
+cache.dir(){
+local dir
+dir="$(path.cache_dir)"||return 1
+[[ -n ${1:-} ]]&&dir="$dir/$1"
+mkdir -p "$dir" 2>/dev/null||return 1
+printf '%s' "$dir"
+}
+cache.key(){
+if command -v sha256sum >/dev/null 2>&1;then
+printf '%s\0' "$@"|sha256sum|cut -c1-40
+else
+printf '%s\0' "$@"|cksum|tr -s ' ' '-'
+fi
+}
+cache.path(){
+local dir key="${2:-}"
+[[ $key != */* && $key != *..* ]]||return 1
+dir="$(cache.dir "${1:-default}")"||return 1
+printf '%s/%s' "$dir" "$key"
+}
+cache.fresh(){
+local file="$1" ttl="${2:-0}" mtime
+[[ -f $file ]]||return 1
+[[ $ttl =~ ^[0-9]+$ ]]||return 1
+((ttl>0))||return 1
+mtime=$(stat -c %Y "$file" 2>/dev/null)||mtime=$(stat -f %m "$file" 2>/dev/null)||return 1
+(($(date +%s)-mtime<ttl))
+}
+cache.put(){
+local f tmp
+f="$(cache.path "$1" "$2")"||return 1
+tmp="$f.$$"
+printf '%s' "${3:-}" >"$tmp" 2>/dev/null||{
+rm -f "$tmp"
+return 1
+}
+mv -f "$tmp" "$f" 2>/dev/null||{
+rm -f "$tmp"
+return 1
+}
+}
+cache.get(){
+local f
+f="$(cache.path "$1" "$2")"||return 1
+cache.fresh "$f" "${3:-0}"||return 1
+cat "$f"
+}
+cache.clear(){
+local dir
+dir="$(cache.dir "${1:-}")"||return 1
+rm -rf "$dir"
+}
+system.command.exist(){ command -v "$1" >/dev/null 2>&1;}
+system.command.required(){ ! system.command.exist "$1"&&log.error "This module required \`$1\` command."&&exit 1||return 0;}
+system.gui_supported(){ [[ -n ${DISPLAY:-} || -n ${WAYLAND_DISPLAY:-} ]];}
+system.command.result(){
+local result
+result=$(eval "$1" 2>&1)||{
+local exit_code=$?
+if [[ $exit_code -eq 1 ]]&&[[ $1 == *grep* ]];then
+result=""
+else
+result="（命令执行失败，退出码: $exit_code）"
+fi
+}
+[[ -z $result ]]&&result="（无输出）"
+echo "$result"
+}
+system.os(){
+case "$OSTYPE" in
+darwin*)echo "macos";;
+linux*)echo "linux";;
+msys*|cygwin*)echo "windows";;
+bsd*)echo "bsd";;
+solaris*)echo "solaris";;
+*)echo "unknown"
+esac
+}
+system.arch(){
+local -r arch="$(uname -m)"
+case "$arch" in
+x86_64|x64|amd64)echo "amd64";;
+aarch64|arm64)echo "arm64";;
+armv7l|armhf)echo "armhf";;
+i686|i386|i586)echo "i386";;
+*)echo "$arch"
+esac
+}
+fs.file.exists(){ [[ -f $1 ]];}
+fs.dir.exists(){ [[ -d $1 ]];}
+fs.write(){
+local _f="$1"
+mkdir -p "$(dirname "$1")"
+shift
+(($#>0))&&printf "%s\n" "$@" >"$_f"||: >"$_f"
+}
+fs.find(){ local _n=$(awk -v s="${3:-1}" -v p="$2" 'NR>=s && $0~p{print NR; exit}' "$1" 2>/dev/null)&&[[ $_n ]]&&echo "$_n"||return 1;}
+fs.replace(){
+local _repl=$(string.escape.sed "$3")
+[[ -n ${4:-} ]]&&sed -i "$4,/$2/{/$2/{s|.*|$_repl|}}" "$1"||sed -i "/$2/{s|.*|$_repl|}" "$1"
+}
+fs.insert(){ sed -i "/$2/a\\$3" "$1" 2>/dev/null;}
+fs.rmline(){ [[ -n $4 ]]&&sed -i "$4,/$2/{/$2/d}" "$1" 2>/dev/null||sed -i "/$2/d" "$1" 2>/dev/null;}
+fs.cleanup(){ ls -t "$1"* 2>/dev/null|tail -n +$((${2:-3}+1))|xargs -r rm -f;}
+fs.mktemp(){ mktemp "$@" 2>/dev/null||{
+echo "fs.mktemp: 创建临时文件失败" >&2
+return 1
+};}
+fs.file.extract(){
+local path=$(realpath "$1") base=$(basename "$1")
+(builtin cd "$2" >/dev/null||return 1
+case "${base,,}" in
+*.zip|*.war|*.jar|*.ear|*.sublime-package|*.ipa|*.ipsw|*.xpi|*.apk|*.aar|*.whl|*.vsix|*.crx|*.pk3|*.pk4)unzip -q "$path";;
+*.tar.gz|*.tgz)tar -zxf "$path";;
+*.tar.bz2|*.tbz|*.tbz2|*.tar.bz)tar -jxf "$path";;
+*.tar.xz|*.txz)tar -xJf "$path";;
+*.tar)tar -xf "$path";;
+*.gz)gzip -dc "$path" >"${base%.gz}";;
+*.bz2)bzip2 -dc "$path" >"${base%.bz2}";;
+*.xz)xz -dc "$path" >"${base%.xz}";;
+*)chmod +x "$path"
+cp "$path" "${base%%.*}"
+esac)
+}
+declare -g _REQUESTS_TIMEOUT=30
+declare -g _REQUESTS_USER_AGENT="bashlet-requests/1.0"
+declare -g _REQUESTS_BASE_URL=""
+declare -gA _REQUESTS_HEADERS=()
+declare -gA _REQUESTS_AUTH=()
+declare -g _REQUESTS_CURL=""
+declare -g _REQUESTS_JQ=""
+requests.init(){
+declare -ga _REQUESTS_CURL_EXTRA=("$@")
+system.command.required "curl"&&_REQUESTS_CURL="$(command -v curl)"
+system.command.required "jq"&&_REQUESTS_JQ="$(command -v jq)"
+_REQUESTS_HEADERS=(
+["Accept"]="*/*"
+["Accept-Encoding"]="gzip, deflate"
+["Connection"]="keep-alive")
+_REQUESTS_AUTH=()
+_REQUESTS_BASE_URL=""
+log.debug "requests module initialized: curl=$_REQUESTS_CURL, jq=$_REQUESTS_JQ"
+return 0
+}
+requests.curl.configure(){
+local array_name="$1"
+local timeout="${2:-}"
+local include_auth="${3:-true}"
+[[ -n $timeout ]]&&array.append "$array_name" "--max-time" "$timeout"
+array.append "$array_name" "-A" "$_REQUESTS_USER_AGENT"
+local key
+for key in "${!_REQUESTS_HEADERS[@]}";do
+array.append "$array_name" "-H" "$key: ${_REQUESTS_HEADERS[$key]}"
+done
+if [[ $include_auth == "true" && ${#_REQUESTS_AUTH[@]} -gt 0 ]];then
+local auth_key
+for auth_key in "${!_REQUESTS_AUTH[@]}";do
+array.append "$array_name" "-H" "$auth_key: ${_REQUESTS_AUTH[$auth_key]}"
+done
+fi
+}
+requests.request.build(){
+local -n cmd_ref="$1"
+local -r method="$2"
+local -r url="$3"
+local -r body="$4"
+local -r content_type="${5:-$(requests.content_type.detect "$4")}"
+cmd_ref=("$_REQUESTS_CURL" "-s" "-L" "--compressed")
+if [[ $method != POST || -z $body ]];then
+cmd_ref+=("-X" "$method")
+fi
+cmd_ref+=("${_REQUESTS_CURL_EXTRA[@]}")
+requests.curl.configure cmd_ref "$_REQUESTS_TIMEOUT"
+if [[ -n $body ]];then
+cmd_ref+=("-d" "$body")
+[[ -n $content_type ]]&&cmd_ref+=("-H" "Content-Type: $content_type")
+fi
+local full_url="$url"
+[[ -n $_REQUESTS_BASE_URL ]]&&full_url="$_REQUESTS_BASE_URL$url"
+cmd_ref+=("$full_url")
+}
+requests._headers_json(){
+"$_REQUESTS_JQ" -Rs '[splits("\r?\n\r?\n")] | map(select(length > 0)) | last // "" | split("\n") | map(select(length > 0 and test(":"))) | map(split(": ") | {(.[0]): .[1] | rtrimstr("\r")}) | add // {}' "$1"
+}
+requests.request(){
+local -r method="$1"
+local -r url="$2"
+local -r body="$3"
+local -r content_type="$4"
+local curl_cmd
+requests.request.build curl_cmd "$method" "$url" "$body" "$content_type"||return 1
+local temp_body
+temp_body="$(fs.mktemp)"||return 1
+local temp_headers
+temp_headers="$(fs.mktemp)"||{
+rm -f "$temp_body"
+return 1
+}
+local status_code curl_exit=0
+status_code=$("${curl_cmd[@]}" -w "%{http_code}" -D "$temp_headers" -o "$temp_body" 2>/dev/null)||curl_exit=$?
+local body_base64 headers_json
+body_base64="$(string.base64.encode "$temp_body")"||{
+rm -f "$temp_body" "$temp_headers"
+return 1
+}
+headers_json="$(requests._headers_json "$temp_headers")"||{
+rm -f "$temp_body" "$temp_headers"
+return 1
+}
+local success="false"
+[[ $status_code =~ ^2[0-9][0-9]$ && $curl_exit -eq 0 ]]&&success="true"
+rm -f "$temp_body" "$temp_headers"
+echo "{\"status_code\":$status_code,\"curl_exit\":$curl_exit,\"headers\":$headers_json,\"body\":\"$body_base64\",\"success\":$success}"
+}
+requests.download(){
+local curl_cmd=("$_REQUESTS_CURL" "-L" "--globoff" "--fail")
+requests.curl.configure curl_cmd "" false
+curl_cmd+=("-o" "$2")
+[[ ${3:-true} == "true" ]]&&curl_cmd+=("--progress-bar")
+[[ ${4:-true} == "true" ]]&&curl_cmd+=("-C" "-")
+"${curl_cmd[@]}" "$1"
+}
+requests._urlencode(){
+"$_REQUESTS_JQ" -nr --arg str "$1" '$str | @uri'
+}
+requests.content_type.detect(){
+[[ $1 =~ ^\{.*\}$ ]]&&echo "application/json"&&return 0
+[[ $1 =~ ^\[.*\]$ ]]&&echo "application/json"&&return 0
+[[ $1 =~ ^[a-zA-Z0-9_-]+=[^\&]+(\&[a-zA-Z0-9_-]+=[^\&]+)*$ ]]&&echo "application/x-www-form-urlencoded"&&return 0
+echo ""
+}
+requests.body.build(){
+local -n ref="$1"
+local first=true
+if [[ ${2:-form} == "json" ]];then
+printf "{"
+for key in "${!ref[@]}";do
+$first||printf ","
+printf '"%s":"%s"' "$key" "${ref[$key]}"
+first=false
+done
+printf "}\n"
+else
+for key in "${!ref[@]}";do
+$first||printf "&"
+printf '%s=%s' "$(requests._urlencode "$key")" "$(requests._urlencode "${ref[$key]}")"
+first=false
+done
+printf "\n"
+fi
+}
+requests.query.build(){
+local query="" first=true
+for param in "$@";do
+local key="${param%%=*}" value="${param#*=}"
+if $first;then
+query="?$(requests._urlencode "$key")=$(requests._urlencode "$value")"
+first=false
+else
+query="$query&$(requests._urlencode "$key")=$(requests._urlencode "$value")"
+fi
+done
+echo "$query"
+}
+requests.get(){ requests.request "GET" "$1$(requests.query.build "${@:2}")" "" "";}
+requests.post(){ requests.request "POST" "$1" "$2" "${3:-}";}
+requests.put(){ requests.request "PUT" "$1" "$2" "${3:-}";}
+requests.delete(){ requests.request "DELETE" "$1" "" "";}
+requests.patch(){ requests.request "PATCH" "$1" "$2" "${3:-}";}
+requests.head(){ requests.request "HEAD" "$1" "" "";}
+requests.options(){ requests.request "OPTIONS" "$1" "" "";}
+requests.status_code(){ "$_REQUESTS_JQ" -r '.status_code' <<<"$1";}
+requests.exit_code(){ "$_REQUESTS_JQ" -r '.curl_exit' <<<"$1";}
+requests.headers(){ [[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r --arg name "$2" '.headers[$name] // empty' <<<"$1"||"$_REQUESTS_JQ" -r '.headers' <<<"$1";}
+requests.text(){ "$_REQUESTS_JQ" -r '.body' <<<"$1"|string.base64.decode;}
+requests.json(){
+local -r body_text="$(requests.text "$1")"
+[[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r "$2" <<<"$body_text"||echo "$body_text"
+}
+requests.success(){ "$_REQUESTS_JQ" -r '.success' <<<"$1";}
+requests.raise_for_status(){ [[ "$(requests.success "${1:-}")" == "true" ]]||{ log.error "HTTP error: status $(requests.status_code "${1:-}") curl_exit $(requests.exit_code "${1:-}")"&&return 1;};}
+requests.timeout(){ string.natural.check "$1"&&_REQUESTS_TIMEOUT="$1"||{ log.error "timeout must be a positive integer"&&return 1;};}
+requests.headers.append(){
+local key="${1:-}"
+shift
+while [[ -n $key ]];do
+local value="$1"
+shift
+_REQUESTS_HEADERS["$key"]="$value"
+log.debug "default header set: $key"
+key="${1:-}"
+shift||true
+done
+}
+requests.base_url(){ _REQUESTS_BASE_URL="$1";}
+requests.headers.clear(){ _REQUESTS_HEADERS=();}
+requests.auth(){ _REQUESTS_AUTH["Authorization"]="Basic $("$_REQUESTS_JQ" -nr --arg c "$1:$2" '$c | @base64')";}
+requests.auth_bearer(){ _REQUESTS_AUTH["Authorization"]="Bearer $1";}
+_PARSE_JQ_BIN=""
+parse.jq.bin(){
+if [[ -z $_PARSE_JQ_BIN ]];then
+system.command.required jq
+_PARSE_JQ_BIN="$(command -v jq)"
+fi
+printf '%s' "$_PARSE_JQ_BIN"
+}
+read -r -d '' _PARSE_JQ_LIB <<'JQ'||true
+# 带时区偏移的 RFC3339 -> UTC Z（YouTube 的 publishDate 是 -07:00 这种）
+# 解析不了的日期原样返回，让 schema.pipe 把它当「无日期」保留而不是丢弃。
+def to_utc:
+  if type != "string" then . else
+    sub("\\.[0-9]+"; "") as $s   # 先去掉毫秒（可能在 Z 前或偏移前）
+    | if ($s | test("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$")) then
+        ($s | capture("^(?<d>.{19})(?<sign>[+-])(?<h>\\d{2}):(?<m>\\d{2})$")) as $c
+        | ((($c.d + "Z") | fromdateiso8601)
+           - (if $c.sign == "+" then 1 else -1 end)
+             * ((($c.h | tonumber) * 3600) + (($c.m | tonumber) * 60))
+           | todateiso8601)
+      else $s end
+  end;
+
+# 粗粒度 HTML -> 纯文本：去标签、解常见实体、压空白。
+# HN 评论、SO 正文、B 站简介都是 HTML，agent 读纯文本更省 token 也更不容易误读。
+def html_text:
+  gsub("<[^>]*>"; " ")
+  | gsub("&lt;"; "<") | gsub("&gt;"; ">") | gsub("&quot;"; "\"")
+  | gsub("&#x27;"; "'") | gsub("&#39;"; "'") | gsub("&amp;"; "&")
+  | gsub("&nbsp;"; " ") | gsub("&#x2F;"; "/") | gsub("&#x3D;"; "=")
+  | gsub("[ \t\r]+"; " ") | gsub("\n{2,}"; "\n")
+  | gsub(" +(?<p>[,.!?;:'])"; "\(.p)")
+  | sub("^ +"; "") | sub(" +$"; "");
+
+# XML 值：压平空白 + 解实体（不剥标签 —— 记录本身可能还含子元素）
+def xml_flat:
+  gsub("[ \t\r\n]+"; " ")
+  | gsub("&lt;"; "<") | gsub("&gt;"; ">") | gsub("&quot;"; "\"")
+  | gsub("&#39;"; "'") | gsub("&amp;"; "&")
+  | sub("^ +"; "") | sub(" +$"; "");
+
+# 注意：jq 的 match / capture 在**不匹配时返回 empty，而不是报错**，try/catch 兜不住——
+# `(try capture(..) catch null) as $m` 会让整段变成 empty（调用方的那个字段甚至整行消失）。
+# 所以统一「先 test 再 capture」，缺字段时明确给空串。
+def xml_one($body; $tag):
+  if ($body | test("(?s)<" + $tag + "[^>]*>")) then
+    ($body | capture("(?s)<" + $tag + "[^>]*>(?<v>.*?)</" + $tag + ">") | .v | xml_flat)
+  else "" end;
+
+def xml_many($body; $tag):
+  [ ($body | [match("(?s)<" + $tag + "[^>]*>(?<v>.*?)</" + $tag + ">"; "g")] | .[].captures[0].string | xml_flat) ]
+  | join(", ");
+
+def xml_attr($attrs; $name):
+  if ($attrs | test("(?:^|\\s)" + $name + "=[\"']")) then
+    ($attrs | capture("(?:^|\\s)" + $name + "=[\"'](?<v>[^\"']*)") | .v)
+  else "" end;
+JQ
+parse.json.embedded(){
+local name="${1:-}"
+[[ -n $name ]]||{
+log.error "parse.json.embedded 需要变量名"
+return 1
+}
+tr -d '\n'|awk -v name="$name" '
+	{
+		needle = name " = {"
+		p = index($0, needle)
+		if (p == 0) { exit 1 }
+
+		start = p + length(needle) - 1
+		n = length($0)
+		depth = 0; instr = 0; esc = 0
+		for (i = start; i <= n; i++) {
+			c = substr($0, i, 1)
+			if (instr) {
+				if (esc) { esc = 0 }
+				else if (c == "\\") { esc = 1 }
+				else if (c == "\"") { instr = 0 }
+				continue
+			}
+			if (c == "\"") { instr = 1; continue }
+			if (c == "{") { depth++ }
+			else if (c == "}") {
+				depth--
+				if (depth == 0) { print substr($0, start, i - start + 1); exit 0 }
+			}
+		}
+		exit 1
+	}'
+}
+parse.json.patch(){
+local line="$1"
+shift
+local -a jq_args=()
+local filter="." kv k v
+for kv in "$@";do
+[[ $kv == *=* ]]||continue
+k="${kv%%=*}"
+v="${kv#*=}"
+[[ -n $v ]]||continue
+jq_args+=(--arg "$k" "$v")
+filter+=" | .$k = \$$k"
+done
+printf '%s' "$line"|"$(parse.jq.bin)" -c "${jq_args[@]}" "$filter"
+}
+parse.xml.records(){
+local tag="${1:-}" fields="${2:-}"
+[[ -n $tag && -n $fields ]]||{
+log.error "parse.xml.records 需要 <记录标签> <字段spec>"
+return 1
+}
+"$(parse.jq.bin)" -R -s -r --arg tag "$tag" --arg spec "$fields" "$_PARSE_JQ_LIB"'
+    ($spec | split(",")) as $fields
+    | [ match("(?s)<" + $tag + "(?<attrs>[^>]*)>(?<body>.*?)</" + $tag + ">"; "g") ]
+    | .[]
+    | { attrs: .captures[0].string, body: .captures[1].string } as $rec
+    | [ $fields[] as $f
+        | if ($f | startswith("#")) then ($rec.body | xml_flat)
+          elif ($f | startswith("@")) then xml_attr($rec.attrs; $f[1:])
+          elif ($f | startswith("*")) then xml_many($rec.body; $f[1:])
+          else xml_one($rec.body; $f)
+          end ]
+    | @tsv'
+}
+schema.jq.bin(){ parse.jq.bin;}
+read -r -d '' _SCHEMA_JQ_NORM_URL <<'JQ'||true
+def norm_url:
+  if (. // "") == "" then ""
+  else
+    ((split("#")[0]) | split("?")) as $p
+    | ($p[0]) as $base
+    | ($p[1] // "") as $qs
+    | ($base | capture("^(?<scheme>[A-Za-z][A-Za-z0-9+.-]*)://(?<host>[^/]*)(?<path>.*)$") // null) as $m
+    | (if $m == null then $base
+       else (($m.scheme | ascii_downcase) + "://" + ($m.host | ascii_downcase)
+             + (if ($m.path | length) > 1 and ($m.path | endswith("/")) then $m.path[0:-1] else $m.path end))
+       end) as $norm
+    | ($qs | split("&")
+           | map(select(length > 0
+                        and (test("^(utm_[^=]*|fbclid|gclid|dclid|msclkid|mc_eid|mc_cid|ref|ref_src|spm|share_token|_hsenc|_hsmi|igshid|si)=") | not)))
+           | join("&")) as $keep
+    | $norm + (if $keep == "" then "" else "?" + $keep end)
+  end;
+JQ
+_SCHEMA_JQ_LIB="$_PARSE_JQ_LIB$_SCHEMA_JQ_NORM_URL"
+read -r -d '' _SCHEMA_JQ_REQUIRED <<'JQ'||true
+def require_fields:
+  (["source","id","url","title","created_at"]) as $req
+  | . as $it
+  | ($req | map(. as $k | select($it | has($k) | not))) as $missing
+  | if ($missing | length) > 0 then
+      error("\($it.source // "?")/\($it.id // "?"): 条目缺少必填字段 \($missing | join(","))")
+    else $it end;
+JQ
+read -r -d '' _SCHEMA_JQ_PIPE <<'JQ'||true
+require_fields
+| .fetched_at //= $now
+| .url = (.url | norm_url)
+| (.created_at // "") as $ca
+| (try ($ca | fromdateiso8601) catch null) as $t
+| select(($after == 0) or ($ca == "") or ($t == null) or ($t >= $after))
+JQ
+read -r -d '' _SCHEMA_JQ_RENDER <<'JQ'||true
+# 正文预览：-t/-d/-c/-a 抓进 text 的正文必须在默认输出里看得见（完整正文用 --json）
+def text_preview:
+  (. // "") | gsub("\\s+"; " ") | sub("^ +"; "") | sub(" +$"; "")
+  | if . == "" then "" else "  " + (if length > 200 then "\(.[0:200])…" else . end) + "\n" end;
+"\(.title // "(无标题)")\n  "
++ (([ "[" + (.source // "?") + "]",
+      (.author // ""),
+      ((.engagement // {}) | to_entries
+        | map(if (.value | type) == "number" then "\(.value) \(.key)" else "\(.key) \(.value)" end)
+        | join(" ")),
+      (.created_at // ""),
+      (.url // "")
+    ] | map(select(. != "")) | join("  ·  ")))
++ "\n"
++ (.text | text_preview)
+JQ
+schema.now(){ date -u +%Y-%m-%dT%H:%M:%SZ;}
+schema.epoch.date(){
+if date -u -d "@$1" +%F 2>/dev/null;then return 0;fi
+date -u -r "$1" +%F
+}
+schema.period.after(){
+local p="${1:-all}"
+local now
+now="$(date -u +%s)"
+case $p in
+last24h|pastday)echo $((now-86400));;
+pastweek|lastweek)echo $((now-604800));;
+pastmonth|lastmonth)echo $((now-2592000));;
+pastyear|lastyear)echo $((now-31536000));;
+all)echo 0;;
+*)log.error "未知时间窗口: $p（可选 last24h / pastweek / pastmonth / pastyear / all）"
+return 1
+esac
+}
+schema.pipe(){
+local after="${1:-0}"
+"$(schema.jq.bin)" -c --arg now "$(schema.now)" --argjson after "$after" \
+"$_SCHEMA_JQ_LIB$_SCHEMA_JQ_REQUIRED$_SCHEMA_JQ_PIPE"
+}
+schema.limit(){
+local n="${1:-0}" i=0 line
+while IFS= read -r line;do
+if ((n<=0||i<n));then
+printf '%s\n' "$line"
+fi
+i=$((i+1))
+done
+}
+schema.enrich(){
+local n="${1:-0}" fn="$2"
+shift 2
+local i=0 line out
+while IFS= read -r line;do
+i=$((i+1))
+if ((i<=n));then
+if out="$("$fn" "$line" "$i" "$@")"&&[[ -n $out ]];then
+line="$out"
+fi
+fi
+printf '%s\n' "$line"
+done
+}
+schema.render(){ "$(schema.jq.bin)" -r "$_SCHEMA_JQ_RENDER";}
+schema.output(){
+if [[ ${DIG_JSON:-false} == true ]];then
+cat
+else
+schema.render
+fi
+}
+declare -ga _SOURCE_ORDER=()
+declare -gA _SOURCE_DESC=() _SOURCE_CAPS=() _SOURCE_REQUIRES=() _SOURCE_URL_HOSTS=()
+source.register(){
+local name="$1"
+[[ -n $name ]]||{
+log.error "source.register 缺少源名"
+return 1
+}
+_SOURCE_ORDER+=("$name")
+_SOURCE_DESC[$name]="${2:-}"
+_SOURCE_CAPS[$name]="${3:-}"
+_SOURCE_REQUIRES[$name]="${4:-}"
+}
+source.list(){ printf '%s\n' "${_SOURCE_ORDER[@]}";}
+source.desc(){ printf '%s' "${_SOURCE_DESC[$1]:-}";}
+source.requires(){ printf '%s' "${_SOURCE_REQUIRES[$1]:-}";}
+source.url.register(){
+local src="$1"
+shift
+[[ -n $src && $# -gt 0 ]]||{
+log.error "source.url.register 需要 <源> <host...>"
+return 1
+}
+_SOURCE_URL_HOSTS[$src]="$*"
+}
+source.url.hosts(){ printf '%s' "${_SOURCE_URL_HOSTS[$1]:-}";}
+source.cap(){
+local caps=" ${_SOURCE_CAPS[$1]:-} " key="$2"
+[[ $caps == *" $key:"* ]]||return 1
+caps="${caps#* "$key":}"
+printf '%s' "${caps%% *}"
+}
+declare -g _DIG_HTTP_STATUS=""
+dig.requests.init(){
+local missing=""
+system.command.exist curl||missing+="${missing:+, }curl"
+system.command.exist jq||missing+="${missing:+, }jq"
+[[ -z $missing ]]||{
+log.error "缺少依赖：$missing（dig 需要 curl 与 jq）"
+return 3
+}
+local -a extra=()
+[[ -n ${DIG_PROXY:-} ]]&&extra+=(--proxy "$DIG_PROXY")
+[[ -n ${DIG_COOKIE:-} ]]&&extra+=(-H "Cookie: $DIG_COOKIE")
+[[ -n ${DIG_AUTH:-} ]]&&extra+=(-H "Authorization: $DIG_AUTH")
+requests.init ${extra[@]+"${extra[@]}"} 2>/dev/null
+}
+dig.http.status(){ printf '%s' "$_DIG_HTTP_STATUS";}
+dig.cookie.set(){ export DIG_COOKIE="${1:-}";}
+dig.auth.set(){ export DIG_AUTH="${1:-}";}
+dig.clamp(){
+local want="$1" max="$2" who="$3"
+if ((want>max));then
+log.warn "$who 单次最多 $max 条，请求的 $want 按 $max 处理"
+printf '%s' "$max"
+else
+printf '%s' "$want"
+fi
+}
+dig.http.request(){
+local method="$1" url="$2" body="${3:-}" ctype="${4:-}"
+local tries=$((${DIG_RETRY:-2}+1)) i=0 resp code rc
+local retry_re='^(429|5[0-9][0-9])$'
+if [[ -n ${DIG_HTTP_RETRY_CODES:-} ]];then
+if [[ $DIG_HTTP_RETRY_CODES =~ ^[0-9]+([[:space:]]+[0-9]+)*$ ]];then
+retry_re="^(429|5[0-9][0-9]|$(printf '%s' "${DIG_HTTP_RETRY_CODES// /|}"))$"
+else
+log.warn "DIG_HTTP_RETRY_CODES 只接受空格分隔的状态码数字，忽略：$DIG_HTTP_RETRY_CODES"
+fi
+fi
+while :;do
+i=$((i+1))
+resp="" code="" rc=""
+resp="$(requests.request "$method" "$url" "$body" "$ctype")"||resp=""
+if [[ -n $resp ]];then
+code="$(requests.status_code "$resp")"
+rc="$(requests.exit_code "$resp")"
+_DIG_HTTP_STATUS="$code"
+if [[ $(requests.success "$resp") == "true" ]];then
+requests.text "$resp"
+return 0
+fi
+if [[ $rc == "0" && $code != "000" && $code != "0" && ! $code =~ $retry_re ]];then
+log.error "请求被拒：$url (HTTP $code)"
+return 1
+fi
+fi
+if ((i<tries));then
+log.warn "请求失败（HTTP ${code:-?} curl ${rc:-?}），$((i*2))s 后重试（$i/$((tries-1))）：$url"
+sleep $((i*2))
+continue
+fi
+if [[ -z $resp ]];then
+log.error "无法连接 $url：请求未产生响应"
+elif [[ $rc != "0" || $code == "000" || $code == "0" ]];then
+log.error "无法连接 $url：网络不通（curl exit $rc）。若该站点需代理，设 DIG_PROXY 或写 ~/.config/dig/config.toml"
+else
+log.error "请求被拒：$url (HTTP $code)，已重试 $((i-1)) 次"
+fi
+return 1
+done
+}
+dig.http.get(){
+local url="$1"
+shift
+dig.requests.init||return $?
+dig.http.request GET "$url$(requests.query.build "$@")" "" ""
+}
+dig.http.post_json(){
+dig.requests.init||return $?
+dig.http.request POST "$1" "$2" "application/json"
+}
+dig.http.probe(){
+local url="$1" host
+host="$(printf '%s' "$url"|sed -E 's#^https?://([^/]+).*#\1#')"
+dig.requests.init||{
+printf '缺少 curl 或 jq'
+return 3
+}
+requests.timeout "${DIG_PROBE_TIMEOUT:-5}"
+local resp code rc
+resp="$(requests.get "$url")"||{
+printf '%s 网络不通' "$host"
+return 2
+}
+code="$(requests.status_code "$resp")"
+rc="$(requests.exit_code "$resp")"
+if [[ -n $rc && $rc != 0 ]]||[[ $code == 0 || $code == 000 ]];then
+printf '%s 网络不通（curl exit %s）' "$host" "${rc:-未知}"
+return 2
+fi
+if [[ $(requests.success "$resp") == "true" ]];then
+printf '%s 可达' "$host"
+return 0
+fi
+printf '%s 返回 HTTP %s' "$host" "$code"
+return 1
+}
+dig.opt(){ args.get "$@"||true;}
+dig.opt.natural(){
+local default="$1"
+shift
+local v
+v="$(dig.opt "$@")"
+if [[ -z $v ]];then
+printf '%s' "$default"
+elif string.natural.check "$v";then
+printf '%s' "$v"
+else
+log.error "选项 $1 需要正整数，得到：$v"
+return 1
+fi
+}
+dig.query(){
+local -n _dig_args_ref="$(args.args)"
+string.trim "${_dig_args_ref[*]:-}"
+}
+dig.num(){
+local v
+v="$(config.get "$1" 2>/dev/null||true)"
+if string.int.check "$v"||string.float.check "$v";then
+printf '%s' "$v"
+else
+printf '%s' "$2"
+fi
+}
+dig.options.common(){
+args.add_options "limit" "n" "返回条目上限" "NUMBER"
+args.add_options "period" "p" "时间窗口 last24h|pastweek|pastmonth|pastyear|all" "WINDOW"
+args.add_options "json" "" "输出 JSONL（默认人类可读）"
+args.add_options "output" "o" "结果落盘文件" "FILE"
+args.add_options "no-cache" "" "跳过结果缓存，强制走网络"
+}
+dig.common.apply(){
+local mod="${1:-}"
+local explicit period_override=""
+DIG_LIMIT="$(dig.opt.natural "$_DIG_DEFAULT_LIMIT" -n --limit)"||return 1
+if [[ -n $mod ]];then
+local declared
+declared="$(source.cap "$mod" period 2>/dev/null||true)"
+case $declared in
+yes|no|"");;
+*)period_override="$declared"
+esac
+fi
+explicit="$(dig.opt -p --period)"
+if [[ -n $explicit ]];then
+DIG_PERIOD="$explicit"
+elif [[ -n $period_override ]];then
+DIG_PERIOD="$period_override"
+else
+DIG_PERIOD="$_DIG_DEFAULT_PERIOD"
+fi
+DIG_AFTER="$(schema.period.after "$DIG_PERIOD")"||return 1
+DIG_JSON=false
+args.has "--json"&&DIG_JSON=true
+DIG_OUTPUT="$(dig.opt -o --output)"
+DIG_QUERY="$(dig.query)"
+DIG_URL="$(dig.opt -u --url)"
+args.has "--no-cache"&&DIG_NO_CACHE=1
+export DIG_LIMIT DIG_PERIOD DIG_AFTER DIG_JSON DIG_OUTPUT DIG_QUERY DIG_URL DIG_NO_CACHE
+}
+dig.output(){
+if [[ -n ${DIG_OUTPUT:-} ]];then
+mkdir -p "$(dirname "$DIG_OUTPUT")"
+tee "$DIG_OUTPUT"|schema.output
+else
+schema.output
+fi
+}
+_DIG_CACHE_TTL="${DIG_CACHE_TTL:-86400}"
+dig.cache.enabled(){ [[ ${DIG_NO_CACHE:-} != 1 ]]&&((_DIG_CACHE_TTL>0));}
+dig.cached(){
+local key="$1"
+shift
+[[ ${1:-} == "--" ]]&&shift
+if dig.cache.enabled;then
+local hit
+if hit="$(cache.get result "$key" "$_DIG_CACHE_TTL")";then
+log.info "结果缓存命中（${_DIG_CACHE_TTL}s 内）：要最新数据加 --no-cache"
+[[ -n $hit ]]&&printf '%s\n' "$hit"
+return 0
+fi
+fi
+local out
+out="$("$@")"||return 1
+if dig.cache.enabled;then
+cache.put result "$key" "$out"||log.warn "结果缓存写入失败，忽略（不影响本次输出）"
+fi
+[[ -n $out ]]&&printf '%s\n' "$out"
+return 0
+}
+_BROWSER_API="https://api.cloudflare.com/client/v4/accounts"
+_BROWSER_MIN_INTERVAL="${DIG_BROWSER_MIN_INTERVAL:-12}"
+_BROWSER_PROBE_MSG=""
+_BROWSER_PROBE_RC=""
+browser.available(){ [[ -n ${CLOUDFLARE_ACCOUNT_ID:-} && -n ${CLOUDFLARE_API_TOKEN:-} ]];}
+browser.creds.check(){
+browser.available||{
+log.error "需要 Cloudflare Browser Run 凭证：CLOUDFLARE_ACCOUNT_ID 与 CLOUDFLARE_API_TOKEN（见 env.example）"
+return 1
+}
+}
+browser.probe(){
+if [[ -n $_BROWSER_PROBE_MSG ]];then
+printf '%s' "$_BROWSER_PROBE_MSG"
+return "${_BROWSER_PROBE_RC:-1}"
+fi
+if ! browser.available;then
+local missing=""
+[[ -n ${CLOUDFLARE_ACCOUNT_ID:-} ]]||missing+="${missing:+, }CLOUDFLARE_ACCOUNT_ID"
+[[ -n ${CLOUDFLARE_API_TOKEN:-} ]]||missing+="${missing:+, }CLOUDFLARE_API_TOKEN"
+_BROWSER_PROBE_MSG="缺 $missing"
+_BROWSER_PROBE_RC=3
+printf '%s' "$_BROWSER_PROBE_MSG"
+return 3
+fi
+if browser.markdown "https://example.com" >/dev/null;then
+_BROWSER_PROBE_MSG="凭证有效，云端浏览器可达"
+_BROWSER_PROBE_RC=0
+else
+_BROWSER_PROBE_MSG="Cloudflare Browser Run 调用失败（见上面的错误）"
+_BROWSER_PROBE_RC=1
+fi
+printf '%s' "$_BROWSER_PROBE_MSG"
+return "$_BROWSER_PROBE_RC"
+}
+browser.throttle.wait(){
+local now="$1" last="$2"
+((_BROWSER_MIN_INTERVAL>0))||{
+printf '0'
+return 0
+}
+[[ $last =~ ^[0-9]+$ ]]||{
+printf '0'
+return 0
+}
+local wait=$((_BROWSER_MIN_INTERVAL-(now-last)))
+((wait>0))&&printf '%s' "$wait"||printf '0'
+}
+browser.throttle(){
+((_BROWSER_MIN_INTERVAL>0))||return 0
+local dir stamp now last wait
+dir="$(cache.dir browser 2>/dev/null)"||return 0
+stamp="$dir/last-call"
+now="$(date +%s)"
+last="$(cat "$stamp" 2>/dev/null||true)"
+wait="$(browser.throttle.wait "$now" "$last")"
+if ((wait>0));then
+log.info "云端浏览器免费档限流 6 次/分钟：等 ${wait}s（DIG_BROWSER_MIN_INTERVAL 可调）"
+sleep "$wait"
+now="$(date +%s)"
+fi
+printf '%s' "$now" >"$stamp" 2>/dev/null||true
+}
+browser.markdown(){
+local url="$1" payload raw md err
+browser.throttle
+payload="$("$(schema.jq.bin)" -nc --arg u "$url" '{url:$u, gotoOptions:{waitUntil:"networkidle0"}}')"||return 1
+local prev_auth="${DIG_AUTH:-}" i=0
+dig.auth.set "Bearer $CLOUDFLARE_API_TOKEN"
+while :;do
+i=$((i+1))
+if raw="$(dig.http.post_json "$_BROWSER_API/$CLOUDFLARE_ACCOUNT_ID/browser-run/markdown" "$payload")";then
+break
+fi
+if [[ $(dig.http.status) == 429 && $i -lt 3 ]];then
+log.warn "云端浏览器限流（HTTP 429）：等 ${_BROWSER_MIN_INTERVAL}s 再试（$i/2）"
+sleep "$_BROWSER_MIN_INTERVAL"
+browser.throttle
+continue
+fi
+dig.auth.set "$prev_auth"
+return 1
+done
+dig.auth.set "$prev_auth"
+md="$(printf '%s' "$raw"|"$(schema.jq.bin)" -r 'if .success == true then (.result // "") else "" end' 2>/dev/null||true)"
+[[ -n $md ]]||{
+err="$(printf '%s' "$raw"|"$(schema.jq.bin)" -c '.errors // .messages // "未知原因"' 2>/dev/null|cut -c1-200)"
+log.error "Cloudflare Browser Run 没返回内容：$err"
+log.error '（10000 Authentication error = token 没授「Browser Rendering - Edit」，或 account 与 token 不匹配）'
+return 1
+}
+printf '%s' "$md"
+}
+browser.page(){
+local url="$1" md
+md="$(browser.markdown "$url")"||return 1
+printf '%s' "$md"|browser.parse
+}
+browser.parse(){
+"$(schema.jq.bin)" -R -s -c '
+    def grab($s; $re): if ($s | test($re)) then ($s | capture($re) | .v) else "" end;
+    def clean: gsub("^\"|\"$"; "") | sub("[ ]+$"; "");
+    . as $md
+    | (if ($md | test("(?s)^---\n.*?\n---\n"))
+       then ($md | capture("(?s)^---\n(?<fm>.*?)\n---\n(?<body>.*)$"))
+       else { fm: "", body: $md } end) as $m
+    | {
+        title: (grab($m.fm; "(?m)^title:[ ]*(?<v>.*)$") | clean),
+        author: (grab($m.fm; "(?m)^[ ]+author:[ ]*(?<v>.*)$") | clean),
+        description: (grab($m.fm; "(?m)^[ ]+description:[ ]*(?<v>.*)$") | clean),
+        text: $m.body
+      }'
+}
+fetch.host(){
+local h="${1#*://}"
+h="${h%%[/?#]*}"
+h="${h##*@}"
+h="${h%%:*}"
+printf '%s' "${h,,}"
+}
+fetch.host.any(){
+local url="$1" host h
+shift
+host="$(fetch.host "$url")"
+for h in "$@";do
+if [[ $host == "$h" || $host == *".$h" ]];then
+return 0
+fi
+done
+return 1
+}
+fetch.route(){
+local url="$1" src host
+while IFS= read -r src;do
+if declare -F "$src.url.hosts" >/dev/null 2>&1;then
+while IFS= read -r host;do
+if [[ -n $host ]]&&fetch.host.any "$url" "$host";then
+printf '%s\t-u\t%s' "$src" "$url"
+return 0
+fi
+done < <("$src.url.hosts")
+continue
+fi
+for host in $(source.url.hosts "$src");do
+if fetch.host.any "$url" "$host";then
+printf '%s\t-u\t%s' "$src" "$url"
+return 0
+fi
+done
+done < <(source.list)
+return 1
+}
+fetch.fallback.enabled(){
+case "${DIG_FETCH_FALLBACK:-}" in
+""|0|false|no|off)return 1;;
+*)return 0
+esac
+}
+fetch.fallback.item(){
+local url="$1"
+browser.page "$url"|"$(schema.jq.bin)" -c --arg url "$url" '
+    {
+        source: "browser",
+        id: $url,
+        url: $url,
+        title: (.title // ""),
+        text: (.text // ""),
+        author: (.author // ""),
+        created_at: "",
+        engagement: {},
+        tags: [],
+        query: ""
+      }'
+}
+fetch.fallback(){
+local url="$1"
+dig.cached "$(cache.key webfallback "$url")" -- fetch.fallback.item "$url"
+}
+_HN_COMMENT_KEEP=12
+_HN_COMMENT_MIN=24
+hn.options(){
+args.add_options "type" "T" "搜索类型 stories|comments，默认 stories" "STRING"
+args.add_options "comments" "c" "为前 N 条故事抓评论树填进 text（仅 stories 模式）" "NUMBER"
+}
+hn.probe(){ dig.http.probe "https://hn.algolia.com/api/v1/search?query=test&hitsPerPage=1";}
+hn.url.id(){
+local u="$1"
+if [[ $u =~ [\?\&]id=([0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+return 1
+}
+hn.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig hn "关键词"（-T comments 可直接搜评论）'
+return 1
+}
+local type
+type="$(dig.opt -T --type)"
+case "${type:-stories}" in
+stories)hn.search_stories;;
+comments)hn.search_comments;;
+*)log.error "未知类型: $type（可选 stories / comments）"
+return 1
+esac
+}
+hn.search_stories(){
+local body
+body="$(dig.http.get "https://hn.algolia.com/api/v1/search" \
+"query=$DIG_QUERY" \
+"tags=story" \
+"hitsPerPage=$DIG_LIMIT" \
+"numericFilters=created_at_i>$DIG_AFTER")"||return 1
+local n
+n="$(dig.opt.natural 0 -c --comments)"||return 1
+printf '%s' "$body"|hn.map|schema.enrich "$n" hn.enrich_one|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+hn.search_url(){
+local url="$1" id body
+id="$(hn.url.id "$url")"||{
+log.error "不是合法的 HN item URL：$url"
+return 1
+}
+body="$(dig.http.get "https://hn.algolia.com/api/v1/items/$id")"||return 1
+printf '%s' "$body"|"$(schema.jq.bin)" -c '
+        { hits: [ {
+            objectID: (.id | tostring),
+            title: (.title // ""),
+            url: .url,
+            story_text: (.text // ""),
+            author: (.author // ""),
+            created_at: (.created_at // ""),
+            points: (.points // 0),
+            num_comments: ((.children // []) | length),
+            _tags: ([.type] | map(select(. != null and . != "")))
+          } ] }'|hn.map|schema.pipe 0|schema.limit 1
+}
+hn.search_comments(){
+local body
+body="$(dig.http.get "https://hn.algolia.com/api/v1/search" \
+"query=$DIG_QUERY" \
+"tags=comment" \
+"hitsPerPage=$DIG_LIMIT" \
+"numericFilters=created_at_i>$DIG_AFTER")"||return 1
+printf '%s' "$body"|hn.map_comments|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+hn.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" "$_SCHEMA_JQ_LIB"'
+    (.hits // [])[]
+    | {
+        source: "hn",
+        id: (.objectID | tostring),
+        url: (.url // ("https://news.ycombinator.com/item?id=" + .objectID)),
+        title: (.title // .story_title // ""),
+        text: ((.story_text // "") | html_text),
+        author: (.author // ""),
+        created_at: (.created_at // ""),
+        engagement: { points: (.points // 0), comments: (.num_comments // 0) },
+        tags: (._tags // []),
+        query: $query
+      }'
+}
+hn.map_comments(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" "$_SCHEMA_JQ_LIB"'
+    (.hits // [])[]
+    | {
+        source: "hn",
+        id: (.objectID | tostring),
+        url: ("https://news.ycombinator.com/item?id=" + .objectID),
+        title: (.story_title // "(无标题)"),
+        text: ((.comment_text // "") | html_text),
+        author: (.author // ""),
+        created_at: (.created_at // ""),
+        engagement: { points: (.points // 0) },
+        tags: (._tags // []),
+        query: $query
+      }'
+}
+hn.enrich_one(){
+local line="$1" id item text
+id="$(printf '%s' "$line"|"$(schema.jq.bin)" -r '.id // empty')"
+[[ -n $id ]]||{
+printf '%s' "$line"
+return 0
+}
+if item="$(dig.http.get "https://hn.algolia.com/api/v1/items/$id")";then
+text="$(printf '%s' "$item"|hn.comments_text)"
+else
+text=""
+fi
+parse.json.patch "$line" "text=$text"
+}
+hn.comments_text(){
+"$(schema.jq.bin)" -r --argjson keep "$_HN_COMMENT_KEEP" --argjson min "$_HN_COMMENT_MIN" "$_SCHEMA_JQ_LIB"'
+    [ .. | objects | select(.text? != null) | (.text | html_text) ]
+    | map(select(length >= $min))
+    | .[0:$keep]
+    | join("\n\n---\n\n")'
+}
+source.url.register hn news.ycombinator.com
+source.register hn "Hacker News（-T stories|comments，-c N 抓评论树）" "tier:core period:yes proxy:no key:none"
+github.options(){
+args.add_options "type" "T" "搜索类型 issues|repos|code|commits|discussions，默认 issues（repos 的时间轴是最后更新）" "STRING"
+}
+github.probe(){
+local user
+user="$(gh api user --jq .login 2>/dev/null||true)"
+[[ -n $user ]]&&{
+printf 'gh 已认证（%s）' "$user"
+return 0
+}
+printf 'gh 已安装但未认证，先跑 gh auth login'
+return 1
+}
+github.url.path(){
+local u="$1"
+u="${u#*://}"
+u="${u#*/}"
+printf '%s' "${u%%[?#]*}"
+}
+github.url.parse(){
+local url="$1" path
+path="$(github.url.path "$url")"
+if [[ $path =~ ^([^/]+)/([^/]+)/(issues|pull)/([0-9]+)(/.*)?$ ]];then
+printf 'issue %s %s %s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[4]}"
+return 0
+fi
+if [[ $path =~ ^([^/]+)/([^/]+)$ ]];then
+printf 'repo %s %s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+return 0
+fi
+return 1
+}
+github.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig github "关键词"（-T issues|repos|code|commits）'
+return 1
+}
+local type
+type="$(dig.opt -T --type)"
+case "${type:-issues}" in
+issues)github.search_issues;;
+repos)github.search_repos;;
+code)github.search_code;;
+commits)github.search_commits;;
+discussions)github.search_discussions;;
+*)log.error "未知类型: $type（可选 issues / repos / code / commits / discussions）"
+return 1
+esac
+}
+github.search_url(){
+local url="$1" kind o r n body parsed
+parsed="$(github.url.parse "$url")"||{
+log.error "不是合法的 GitHub 仓库 / issue URL：$url"
+return 1
+}
+read -r kind o r n <<<"$parsed"
+if [[ $kind == issue ]];then
+body="$(gh api "repos/$o/$r/issues/$n")"||return 1
+printf '%s' "$body"|"$(schema.jq.bin)" -c --arg repo "$o/$r" '
+            [ {
+              repository: { nameWithOwner: $repo },
+              number: .number,
+              url: .html_url,
+              title: .title,
+              body: (.body // ""),
+              author: { login: (.user.login // "") },
+              createdAt: (.created_at // ""),
+              commentsCount: (.comments // 0),
+              state: (.state // ""),
+              isPullRequest: (.pull_request != null)
+            } ]'|github.map_issues|schema.pipe 0|schema.limit 1
+else
+body="$(gh api "repos/$o/$r")"||return 1
+printf '%s' "$body"|"$(schema.jq.bin)" -c '
+            [ {
+              fullName: .full_name,
+              url: .html_url,
+              description: (.description // ""),
+              stargazersCount: (.stargazers_count // 0),
+              forksCount: (.forks_count // 0),
+              createdAt: (.created_at // ""),
+              updatedAt: (.updated_at // ""),
+              language: (.language // "")
+            } ]'|github.map_repos|schema.pipe 0|schema.limit 1
+fi
+}
+github.search_issues(){
+local -a created=()
+((DIG_AFTER>0))&&created=(--created ">=$(schema.epoch.date "$DIG_AFTER")")
+gh search issues "$DIG_QUERY" \
+--limit "$DIG_LIMIT" \
+--json number,title,url,state,body,author,createdAt,commentsCount,repository,isPullRequest \
+"${created[@]}"|github.map_issues|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+github.search_repos(){
+gh search repos "$DIG_QUERY" \
+--limit "$DIG_LIMIT" \
+--json fullName,url,description,stargazersCount,forksCount,createdAt,updatedAt,language|github.map_repos|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+github.search_code(){
+gh search code "$DIG_QUERY" \
+--limit "$DIG_LIMIT" \
+--json path,repository,url|github.map_code|schema.pipe 0|schema.limit "$DIG_LIMIT"
+}
+github.search_commits(){
+gh search commits "$DIG_QUERY" \
+--limit "$DIG_LIMIT" \
+--json sha,commit,repository,url|github.map_commits|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+github.search_discussions(){
+local q="$DIG_QUERY"
+((DIG_AFTER>0))&&q+=" created:>=$(schema.epoch.date "$DIG_AFTER")"
+local n="$DIG_LIMIT"
+if ((n>100));then
+n=100
+log.warn "GitHub 搜索的 GraphQL 上限是 100 条，-n $DIG_LIMIT 按 100 处理"
+fi
+gh api graphql \
+-f query='query($q:String!,$n:Int!){search(query:$q,type:DISCUSSION,first:$n){nodes{... on Discussion{number title url createdAt body upvoteCount category{name} answer{isAnswer} comments{totalCount} author{login} repository{nameWithOwner}}}}}' \
+-F q="$q" -F n="$n"|github.map_discussions|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+github.map_issues(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    .[]
+    | {
+        source: "github",
+        id: ((.repository.nameWithOwner // "?") + "#" + (.number | tostring)),
+        url: .url,
+        title: .title,
+        text: (.body // ""),
+        author: (.author.login // ""),
+        created_at: (.createdAt // ""),
+        engagement: { comments: (.commentsCount // 0) },
+        tags: ([ .state, (if .isPullRequest then "pr" else "issue" end) ] | map(select(. != null and . != ""))),
+        query: $query
+      }'
+}
+github.map_repos(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    .[]
+    | {
+        source: "github",
+        id: .fullName,
+        url: .url,
+        title: .fullName,
+        text: (.description // ""),
+        author: (.fullName | split("/")[0]),
+        # 项目是长期存在的：时间轴取「最后更新」而不是「创建」，这样 -p 筛的是还在维护的项目
+        created_at: (.updatedAt // .createdAt // ""),
+        engagement: { stars: (.stargazersCount // 0), forks: (.forksCount // 0) },
+        tags: ((.language // "") | tostring | if . == "" then [] else [ . ] end),
+        query: $query
+      }'
+}
+github.map_code(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    .[]
+    | {
+        source: "github",
+        id: .url,
+        url: .url,
+        title: ((.repository.nameWithOwner // "?") + ": " + .path),
+        text: "",
+        author: ((.repository.nameWithOwner // "/") | split("/")[0]),
+        created_at: "",
+        engagement: {},
+        tags: ["code"],
+        query: $query
+      }'
+}
+github.map_commits(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" "$_SCHEMA_JQ_LIB"'
+    .[]
+    | {
+        source: "github",
+        id: .sha,
+        url: .url,
+        title: ((.commit.message // "") | split("\n")[0]),
+        text: (.commit.message // ""),
+        author: (.commit.author.name // ""),
+        created_at: ((.commit.author.date // "") | to_utc),
+        engagement: { comments: (.commit.comment_count // 0) },
+        tags: ["commit"],
+        query: $query
+      }'
+}
+github.map_discussions(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    (.data.search.nodes // [])[]
+    | select(.number != null)
+    | {
+        source: "github",
+        id: ((.repository.nameWithOwner // "?") + "#" + (.number | tostring)),
+        url: .url,
+        title: .title,
+        text: (.body // ""),
+        author: (.author.login // ""),
+        created_at: (.createdAt // ""),
+        engagement: { comments: (.comments.totalCount // 0), upvotes: (.upvoteCount // 0) },
+        tags: ([ "discussion", (.category.name // ""),
+                 (if .answer.isAnswer == true then "answered" else "" end) ]
+               | map(select(. != null and . != ""))),
+        query: $query
+      }'
+}
+source.url.register github github.com
+source.register github "GitHub 搜索（-T issues|repos|code|commits|discussions，走 gh）" "tier:core period:yes proxy:no key:none" "gh"
+_SO_TEXT_CAP=4000
+so.options(){
+args.add_options "site" "s" "StackExchange 站点，默认 stackoverflow" "STRING"
+args.add_options "answers" "a" "为前 N 条抓高赞回答填进 text（1 次请求，默认 0）" "NUMBER"
+}
+so.probe(){ dig.http.probe "https://api.stackexchange.com/2.3/info?site=stackoverflow";}
+so.url.id(){
+local u="$1"
+if [[ $u =~ /(questions|q)/([0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[2]}"
+return 0
+fi
+return 1
+}
+so.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig so "关键词"（-s 可换 StackExchange 站点）'
+return 1
+}
+local site
+site="$(dig.opt -s --site)"
+[[ -n $site ]]||site="stackoverflow"
+local -a params=(
+"order=desc"
+"sort=relevance"
+"q=$DIG_QUERY"
+"site=$site"
+"pagesize=$(dig.clamp "$DIG_LIMIT" 100 "Stack Exchange")"
+"filter=withbody")
+((DIG_AFTER>0))&&params+=("fromdate=$DIG_AFTER")
+local body
+body="$(dig.http.get "https://api.stackexchange.com/2.3/search/advanced" "${params[@]}")"||return 1
+local n
+n="$(dig.opt.natural 0 -a --answers)"||return 1
+if ((n>0));then
+printf '%s' "$body"|so.map "$site"|so.answers "$n" "$site"|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+else
+printf '%s' "$body"|so.map "$site"|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+fi
+}
+so.search_url(){
+local url="$1" id body
+id="$(so.url.id "$url")"||{
+log.error "不是合法的 Stack Overflow 问题 URL：$url"
+return 1
+}
+body="$(dig.http.get "https://api.stackexchange.com/2.3/questions/$id" "site=stackoverflow" "filter=withbody")"||return 1
+printf '%s' "$body"|so.map stackoverflow|schema.pipe 0|schema.limit 1
+}
+so.map(){
+local site="${1:-stackoverflow}"
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" --arg site "$site" "$_SCHEMA_JQ_LIB"'
+    (.items // [])[]
+    | {
+        source: "so",
+        id: (.question_id | tostring),
+        url: .link,
+        title: .title,
+        text: ((.body // "") | html_text),
+        author: (.owner.display_name // ""),
+        created_at: ((.creation_date // 0) | if . > 0 then todateiso8601 else "" end),
+        engagement: { score: (.score // 0), answers: (.answer_count // 0), views: (.view_count // 0) },
+        tags: ((.tags // []) + [ $site ] | unique),
+        query: $query
+      }'
+}
+so.answers(){
+local n="${1:-0}" site="${2:-stackoverflow}"
+local -a lines=() ids=()
+local i=0 line
+while IFS= read -r line;do
+lines+=("$line")
+i=$((i+1))
+if ((i<=n));then
+ids+=("$(printf '%s' "$line"|"$(schema.jq.bin)" -r '.id // empty')")
+fi
+done
+if ((${#ids[@]}==0));then
+((${#lines[@]}))&&printf '%s\n' "${lines[@]}"
+return 0
+fi
+local joined answers answers_json="[]"
+joined="$(IFS=';'&&echo "${ids[*]}")"
+if answers="$(dig.http.get "https://api.stackexchange.com/2.3/questions/$joined/answers" \
+"order=desc" "sort=votes" "site=$site" "filter=withbody" "pagesize=$(dig.clamp "$((n*3))" 100 "Stack Exchange")")";then
+answers_json="$(printf '%s' "$answers"|"$(schema.jq.bin)" -c '.items // []')"
+fi
+printf '%s\n' "${lines[@]}"|"$(schema.jq.bin)" -c \
+--argjson ans "$answers_json" --argjson cap "$_SO_TEXT_CAP" "$_SCHEMA_JQ_LIB"'
+    . as $item
+    | ([ $ans[] | select(.question_id == ($item.id | tonumber)) ]
+       | sort_by([(if .is_accepted then 0 else 1 end), -.score])
+       | .[0:2]
+       | map("--- 回答（\(.score) 分\(if .is_accepted then "，已采纳" else "" end)）---\n"
+             + (.body | html_text))) as $parts
+    | if ($parts | length) == 0 then $item
+      else $item | .text = (((.text // "") + "\n\n" + ($parts | join("\n\n"))) | .[0:$cap])
+      end'
+}
+source.url.register so stackoverflow.com
+source.register so "Stack Exchange 问答（-s 换站点，-a N 抓高赞回答）" "tier:core period:yes proxy:no key:none"
+arxiv.probe(){ dig.http.probe "https://export.arxiv.org/api/query?search_query=all:test&max_results=1";}
+arxiv.url.id(){
+local u="$1" id
+if [[ $u =~ /(abs|pdf)/([^/?#]+) ]];then
+id="${BASH_REMATCH[2]}"
+id="${id%.pdf}"
+printf '%s' "$id"
+return 0
+fi
+return 1
+}
+arxiv.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig arxiv "主题"'
+return 1
+}
+local fetch=$((DIG_LIMIT*5))
+((fetch>100))&&fetch=100
+local body
+body="$(dig.http.get "https://export.arxiv.org/api/query" \
+"search_query=all:\"$DIG_QUERY\"" \
+"start=0" \
+"max_results=$fetch" \
+"sortBy=relevance" \
+"sortOrder=descending")"||return 1
+printf '%s' "$body"|arxiv.map|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+arxiv.search_url(){
+local url="$1" id body
+id="$(arxiv.url.id "$url")"||{
+log.error "不是合法的 arXiv 论文 URL：$url"
+return 1
+}
+body="$(dig.http.get "https://export.arxiv.org/api/query" "id_list=$id" "max_results=1")"||return 1
+printf '%s' "$body"|arxiv.map|schema.pipe 0|schema.limit 1
+}
+arxiv.map(){
+parse.xml.records entry 'published,id,title,summary,*name'|"$(schema.jq.bin)" -R -s -c --arg query "${DIG_QUERY:-}" '
+    [ split("\n")[] | select(length > 0) | split("\t") ][]
+    | {
+        source: "arxiv",
+        id: .[1],
+        url: (.[1] | sub("^http://"; "https://")),
+        title: .[2],
+        text: .[3],
+        author: .[4],
+        created_at: .[0],
+        engagement: {},
+        tags: [],
+        query: $query
+      }'
+}
+source.url.register arxiv arxiv.org
+source.register arxiv "arXiv 论文摘要" "tier:topic period:pastyear proxy:no key:none"
+zhihu.probe(){
+if ! zhihu.credential >/dev/null 2>&1;then
+printf '设置 ZHIHU_ACCESS_SECRET，或写 ~/.config/zhihu-search/credentials.json'
+return 3
+fi
+if zhihu.fetch /api/v1/quota >/dev/null 2>&1;then
+printf '凭证有效，开发者接口可达'
+return 0
+fi
+printf '凭证或接口异常'
+return 1
+}
+zhihu.options(){
+args.add_options "hot" "H" "取知乎热榜（忽略查询词）"
+}
+zhihu.credential(){
+if [[ -n ${ZHIHU_ACCESS_SECRET:-} ]];then
+printf '%s' "$ZHIHU_ACCESS_SECRET"
+return 0
+fi
+local dir="${ZHIHU_SEARCH_HOME:-$HOME/.config/zhihu-search}"
+local file="$dir/credentials.json"
+if [[ -f $file ]];then
+local s
+s="$("$(schema.jq.bin)" -r '.access_secret // empty' "$file" 2>/dev/null||true)"
+if [[ -n $s ]];then
+printf '%s' "$s"
+return 0
+fi
+log.error "凭证文件 $file 缺少 access_secret 字段"
+return 1
+fi
+log.error "缺少知乎凭证：设置 ZHIHU_ACCESS_SECRET，或写入 $file 的 {\"access_secret\":\"...\"}；免费申请 https://developer.zhihu.com/personal"
+return 1
+}
+zhihu.fetch(){
+local path="$1"
+shift
+local secret
+secret="$(zhihu.credential)"||return 1
+dig.requests.init||return $?
+requests.headers.append "Authorization" "Bearer $secret"
+requests.headers.append "X-Request-Timestamp" "$(date -u +%s)"
+dig.http.request GET "https://developer.zhihu.com$path$(requests.query.build "$@")" "" ""
+}
+zhihu.check(){
+"$(schema.jq.bin)" -c '
+    def hint($c):
+      if $c == 10001 then "（参数错误）"
+      elif $c == 20001 then "（token 无效或过期，去 developer.zhihu.com/personal 重新生成）"
+      elif $c == 30001 then "（触发频率限制，稍后重试）"
+      elif $c == 30002 then "（当日配额用尽）"
+      elif $c == 30003 then "（风控拦截）"
+      else "" end;
+    if (.Code // 0) != 0 then
+      error("知乎错误 \(.Code)\(hint(.Code))：\(.Message // "未知错误")")
+    else . end'
+}
+zhihu.search(){
+zhihu.credential >/dev/null||return 1
+local count="$DIG_LIMIT"
+if args.has "-H" "--hot";then
+((count>30))&&count=30
+local hot_body
+hot_body="$(zhihu.fetch /api/v1/content/hot_list "Limit=$count")"||return 1
+printf '%s' "$hot_body"|zhihu.check|zhihu.hot.map|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+return $?
+fi
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig zhihu "关键词"（或加 -H 取热榜）'
+return 1
+}
+((count>10))&&count=10
+local body
+body="$(zhihu.fetch /api/v1/content/zhihu_search "Query=$DIG_QUERY" "Count=$count")"||return 1
+printf '%s' "$body"|zhihu.check|zhihu.map|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+zhihu.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    (.Data.Items // [])[]
+    | {
+        source: "zhihu",
+        id: ((.Url // "") | if . == "" then (.Title // "?") else . end),
+        url: (.Url // ""),
+        title: (.Title // ""),
+        text: (.ContentText // ""),
+        author: (.AuthorName // ""),
+        created_at: ((.EditTime // 0) | if . > 0 then todateiso8601 else "" end),
+        engagement: { votes: (.VoteUpCount // 0), comments: (.CommentCount // 0) },
+        tags: ([.ContentType] | map(select(. != null and . != ""))),
+        query: $query
+      }'
+}
+zhihu.hot.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    (.Data.Items // [])[]
+    | {
+        source: "zhihu",
+        id: ((.Url // "") | if . == "" then (.Title // "?") else . end),
+        url: (.Url // ""),
+        title: (.Title // ""),
+        text: (.Summary // ""),
+        author: "",
+        created_at: "",
+        engagement: {},
+        tags: ["hot"],
+        query: $query
+      }'
+}
+source.register zhihu "知乎搜索 / 热榜" "tier:topic period:yes proxy:no key:required"
+weread.probe(){
+if ! weread.key >/dev/null 2>&1;then
+printf 'WEREAD_API_KEY，或 pass insert weread'
+return 3
+fi
+if weread.api.call /store/search keyword test scope 10 count 1 >/dev/null 2>&1;then
+printf '凭证有效，网关可达'
+return 0
+fi
+printf '凭证或网关异常'
+return 1
+}
+_WEREAD_GATEWAY="https://i.weread.qq.com/api/agent/gateway"
+_WEREAD_SKILL_VERSION="1.0.4"
+_WEREAD_KEY_CACHE=""
+weread.key(){
+if [[ -n ${WEREAD_API_KEY:-} ]];then
+printf '%s' "$WEREAD_API_KEY"
+return 0
+fi
+if [[ -n $_WEREAD_KEY_CACHE ]];then
+printf '%s' "$_WEREAD_KEY_CACHE"
+return 0
+fi
+if system.command.exist pass;then
+local k
+if k="$(pass weread 2>/dev/null)"&&[[ -n $k ]];then
+_WEREAD_KEY_CACHE="$k"
+printf '%s' "$k"
+return 0
+fi
+fi
+log.error "缺少微信读书凭证：设置 WEREAD_API_KEY 环境变量，或执行 pass insert weread"
+return 1
+}
+weread.body(){
+local api_name="$1"
+shift
+(($#%2==0))||{
+log.error "参数必须成对给出：$*"
+return 1
+}
+local filter='{api_name:$api, skill_version:$ver}'
+local -a jqargs=(--arg api "$api_name")
+local i=0
+while [[ $# -ge 2 ]];do
+filter+=" + {(\$k$i): \$v$i}"
+if [[ $2 =~ ^-?[0-9]+$ ]];then
+jqargs+=(--arg "k$i" "$1" --argjson "v$i" "$2")
+else
+jqargs+=(--arg "k$i" "$1" --arg "v$i" "$2")
+fi
+shift 2
+i=$((i+1))
+done
+"$(schema.jq.bin)" -n --arg ver "$_WEREAD_SKILL_VERSION" "$filter" "${jqargs[@]}"
+}
+weread.api.call(){
+local api_name="$1"
+shift
+local key body
+key="$(weread.key)"||return 1
+body="$(weread.body "$api_name" "$@")"||return 1
+dig.requests.init||return $?
+requests.headers.append "Authorization" "Bearer $key"
+dig.http.request POST "$_WEREAD_GATEWAY" "$body" "application/json"
+}
+weread.check(){
+local body="$1" code up
+up="$(printf '%s' "$body"|"$(schema.jq.bin)" -r '.upgrade_info.message // empty')"
+[[ -n $up ]]&&log.warn "$up"
+code="$(printf '%s' "$body"|"$(schema.jq.bin)" -r '.errcode // 0')"
+[[ $code == "0" ]]||{
+log.error "微信读书网关错误 errcode=$code"
+return 1
+}
+return 0
+}
+declare -ga _WEREAD_SCOPES=(10 16 14 6 12 13 2 4)
+weread.options(){
+args.add_options "scope" "s" "搜索类型 10=电子书(默认) 16=网文 14=有声书 6=作者 12=全文 13=书单 2=公众号 4=文章" "NUMBER"
+args.add_options "info" "i" "为前 N 本抓简介填进 text（每本 1 个请求，默认 0）" "NUMBER"
+}
+weread.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig weread "书名或关键词"'
+return 1
+}
+local scope
+scope="$(dig.opt.natural 10 -s --scope)"||return 1
+array.contains _WEREAD_SCOPES "$scope"||{
+log.error "无效的 -s/--scope：$scope（可选：${_WEREAD_SCOPES[*]}）"
+return 1
+}
+local body
+body="$(weread.api.call /store/search keyword "$DIG_QUERY" scope "$scope" count "$DIG_LIMIT")"||return 1
+weread.check "$body"||return 1
+local n
+n="$(dig.opt.natural 0 -i --info)"||return 1
+printf '%s' "$body"|weread.map|schema.pipe 0|schema.enrich "$n" weread.enrich_one|schema.limit "$DIG_LIMIT"
+}
+weread.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    [ .results[]? as $r | $r.books[]? | { group: ($r.title // ""), book: . } ]
+    | map(select(.book.bookInfo.bookId != null))
+    | reduce .[] as $x (
+        { seen: {}, out: [] };
+        ($x.book.bookInfo.bookId) as $id
+        | if .seen[$id] then . else .seen[$id] = true | .out += [$x] end
+      )
+    | .out[]
+    | (.book.bookInfo) as $b
+    | {
+        source: "weread",
+        id: $b.bookId,
+        url: ($b.deepLink // ""),
+        title: ($b.title // ""),
+        text: "",
+        author: ($b.author // ""),
+        created_at: "",
+        engagement: {
+          rating: ($b.newRating // 0),
+          ratings: ($b.newRatingCount // 0),
+          reading: (.book.readingCount // 0)
+        },
+        tags: ([ $b.newRatingDetail.title, .group ] | map(select(. != null and . != ""))),
+        query: $query
+      }'
+}
+weread.enrich_one(){
+local line="$1" id info text
+id="$(printf '%s' "$line"|"$(schema.jq.bin)" -r '.id // empty')"
+[[ -n $id ]]||{
+printf '%s' "$line"
+return 0
+}
+if info="$(weread.api.call /book/info bookId "$id")";then
+text="$(printf '%s' "$info"|"$(schema.jq.bin)" -r '.intro // ""')"
+else
+text=""
+fi
+parse.json.patch "$line" "text=$text"
+}
+source.register weread "微信读书书目（无评论区）" "tier:niche period:no proxy:no key:required"
+_YT_API="https://www.youtube.com/youtubei/v1"
+_YT_KEY="${DIG_YT_KEY:-AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8}"
+_YT_WEB_VERSION="2.20240726.00.00"
+_YT_TEXT_CAP=1500
+youtube.options(){
+args.add_options "detail" "t" "为前 N 条抓精确发布日期与简介（每条 1 个页面请求，默认 0）" "NUMBER"
+}
+youtube.probe(){ dig.http.probe "https://www.youtube.com/";}
+youtube.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig youtube "关键词"'
+return 1
+}
+local body out
+body="$("$(schema.jq.bin)" -n --arg q "$DIG_QUERY" --arg v "$_YT_WEB_VERSION" \
+'{context:{client:{clientName:"WEB",clientVersion:$v,hl:"en",gl:"US"}},query:$q}')"
+out="$(dig.http.post_json "$_YT_API/search?key=$_YT_KEY&prettyPrint=false" "$body")"||return 1
+local n
+n="$(dig.opt.natural 0 -t --detail)"||return 1
+printf '%s' "$out"|youtube.map|schema.enrich "$n" youtube.enrich_one|schema.pipe 0|schema.limit "$DIG_LIMIT"
+}
+youtube.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    [ .. | objects | select(has("videoRenderer")) | .videoRenderer ][]
+    | {
+        source: "youtube",
+        id: .videoId,
+        url: ("https://www.youtube.com/watch?v=" + .videoId),
+        title: (.title.runs[0].text // .title.simpleText // ""),
+        text: "",
+        author: (.ownerText.runs[0].text // ""),
+        created_at: "",
+        engagement: {
+          views: (((.viewCountText.simpleText // "") | gsub("[^0-9]"; "")) as $v | if $v == "" then 0 else ($v | tonumber) end),
+          duration: (.lengthText.simpleText // ""),
+          age: (.publishedTimeText.simpleText // "")
+        },
+        tags: [],
+        query: $query
+      }'
+}
+youtube.enrich_one(){
+local line="$1" vid player date desc
+vid="$(printf '%s' "$line"|"$(schema.jq.bin)" -r '.id // empty')"
+[[ -n $vid ]]||{
+printf '%s' "$line"
+return 0
+}
+if ! player="$(youtube.player "$vid")";then
+printf '%s' "$line"
+return 0
+fi
+date="$(printf '%s' "$player"|"$(schema.jq.bin)" -r "$_SCHEMA_JQ_LIB"'
+    .microformat.playerMicroformatRenderer.publishDate // "" | to_utc')"
+desc="$(printf '%s' "$player"|"$(schema.jq.bin)" -r --argjson cap "$_YT_TEXT_CAP" '
+    (.videoDetails.shortDescription // "") | if length > $cap then .[0:$cap] else . end')"
+parse.json.patch "$line" "created_at=$date" "text=$desc"
+}
+youtube.player(){
+local vid="$1" html
+html="$(dig.http.get "https://www.youtube.com/watch?v=$vid")"||return 1
+printf '%s' "$html"|parse.json.embedded ytInitialPlayerResponse
+}
+source.register youtube "YouTube 视频搜索（-t 补发布日期与简介，字幕不可得）" "tier:niche period:no proxy:yes key:none"
+_BILI_API="https://api.bilibili.com"
+_BILI_TEXT_CAP=8000
+_BILI_DM_STEP=41
+_BILI_DM_KEEP=30
+bilibili.options(){
+args.add_options "transcript" "t" "为前 N 条抓字幕全文稿（需 BILI_SESSDATA，每条 3 个请求）" "NUMBER"
+args.add_options "danmaku" "d" "为前 N 条抓弹幕填进 text（每条 2 个请求，默认 0）" "NUMBER"
+}
+bilibili.probe(){ dig.http.probe "$_BILI_API/x/web-interface/search/all/v2?keyword=test";}
+bilibili.url.param(){
+local u="$1"
+if [[ $u =~ /video/(BV[A-Za-z0-9]+) ]];then
+printf 'bvid=%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+if [[ $u =~ /video/av([0-9]+) ]];then
+printf 'aid=%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+return 1
+}
+bilibili.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig bilibili "关键词"'
+return 1
+}
+if [[ -n ${BILI_SESSDATA:-} ]];then
+dig.cookie.set "SESSDATA=$BILI_SESSDATA"
+fi
+local dn tn
+dn="$(dig.opt.natural 0 -d --danmaku)"||return 1
+tn="$(dig.opt.natural 0 -t --transcript)"||return 1
+if ((tn>0))&&[[ -z ${BILI_SESSDATA:-} ]];then
+log.error "B 站字幕需要登录态：设置 BILI_SESSDATA 环境变量（匿名实测 0/10 视频可得字幕）"
+return 1
+fi
+local out
+out="$(dig.http.get "$_BILI_API/x/web-interface/search/all/v2" "keyword=$DIG_QUERY")"||return 1
+[[ "$(printf '%s' "$out"|"$(schema.jq.bin)" -r '.code // 0')" == "0" ]]||{
+log.error "B 站接口返回 code=$(printf '%s' "$out"|"$(schema.jq.bin)" -r '.code // "?"')：$(printf '%s' "$out"|"$(schema.jq.bin)" -r '.message // ""')"
+return 1
+}
+printf '%s' "$out"|bilibili.map|schema.pipe "$DIG_AFTER"|schema.enrich "$((dn>tn?dn:tn))" bilibili.enrich_one "$dn" "$tn"|schema.limit "$DIG_LIMIT"
+}
+bilibili.map_view(){
+"$(schema.jq.bin)" -c '
+    { data: { result: [ { result_type: "video", data: [ {
+        bvid: .data.bvid,
+        title: (.data.title // ""),
+        author: (.data.owner.name // ""),
+        pubdate: (.data.pubdate // 0),
+        play: (.data.stat.view // 0),
+        danmaku: (.data.stat.danmaku // 0),
+        review: (.data.stat.reply // 0),
+        tag: "",
+        typename: (.data.tname // ""),
+        description: (.data.desc // "")
+      } ] } ] } }'
+}
+bilibili.search_url(){
+local url="$1" param view bvid cid line text="" sub="" dm=""
+param="$(bilibili.url.param "$url")"||{
+log.error "不是合法的 B 站视频 URL：$url"
+return 1
+}
+if [[ -n ${BILI_SESSDATA:-} ]];then
+dig.cookie.set "SESSDATA=$BILI_SESSDATA"
+else
+log.warn "B 站字幕需要登录态（BILI_SESSDATA），本次只抓弹幕与视频元数据"
+fi
+view="$(dig.http.get "$_BILI_API/x/web-interface/view" "$param")"||return 1
+[[ "$(printf '%s' "$view"|"$(schema.jq.bin)" -r '.code // 0')" == "0" ]]||{
+log.error "B 站接口返回 code=$(printf '%s' "$view"|"$(schema.jq.bin)" -r '.code // "?"')：$(printf '%s' "$view"|"$(schema.jq.bin)" -r '.message // ""')"
+return 1
+}
+bvid="$(printf '%s' "$view"|"$(schema.jq.bin)" -r '.data.bvid // empty')"
+cid="$(printf '%s' "$view"|"$(schema.jq.bin)" -r '.data.cid // empty')"
+line="$(printf '%s' "$view"|bilibili.map_view|bilibili.map|head -1)"
+[[ -n $line ]]||return 1
+if [[ -n ${BILI_SESSDATA:-} && -n $cid ]];then
+sub="$(bilibili.subtitle "$bvid" "$cid")"||sub=""
+fi
+if [[ -n $cid ]];then
+dm="$(bilibili.danmaku_text "$cid")"||dm=""
+fi
+text="$sub"
+if [[ -n $dm ]];then
+text="${text:+$text
+
+--- 弹幕 ---
+}$dm"
+fi
+parse.json.patch "$line" "text=$text"|schema.pipe 0|schema.limit 1
+}
+bilibili.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    def num: if type == "number" then . elif type == "string" then (tonumber? // 0) else 0 end;
+    [ .data.result[]? | select(.result_type == "video") | .data[]? ][]
+    | {
+        source: "bilibili",
+        id: .bvid,
+        url: ("https://www.bilibili.com/video/" + .bvid),
+        title: ((.title // "") | gsub("<[^>]*>"; "")),
+        text: ((.description // "") | gsub("<[^>]*>"; "")),
+        author: (.author // ""),
+        created_at: ((.pubdate // 0) | if . > 0 then todateiso8601 else "" end),
+        engagement: { play: (.play | num), danmaku: (.danmaku | num), comments: (.review | num) },
+        tags: ((((.tag // "") | split(",")) + [ (.typename // "") ]) | map(select(. != ""))),
+        query: $query
+      }'
+}
+bilibili.enrich_one(){
+local line="$1" i="$2" dn="$3" tn="$4"
+local bvid cid view text=""
+bvid="$(printf '%s' "$line"|"$(schema.jq.bin)" -r '.id // empty')"
+[[ -n $bvid ]]||{
+printf '%s' "$line"
+return 0
+}
+if view="$(dig.http.get "$_BILI_API/x/web-interface/view" "bvid=$bvid")";then
+cid="$(printf '%s' "$view"|"$(schema.jq.bin)" -r '.data.cid // empty')"
+else
+cid=""
+fi
+[[ -n $cid ]]||{
+printf '%s' "$line"
+return 0
+}
+if ((i<=tn));then
+text="$(bilibili.subtitle "$bvid" "$cid")"
+fi
+if ((i<=dn));then
+local dm
+dm="$(bilibili.danmaku_text "$cid")"
+if [[ -n $dm ]];then
+text="${text:+$text
+
+--- 弹幕 ---
+}$dm"
+fi
+fi
+parse.json.patch "$line" "text=$text"
+}
+bilibili.subtitle(){
+local bvid="$1" cid="$2" player url raw
+player="$(dig.http.get "$_BILI_API/x/player/v2" "bvid=$bvid" "cid=$cid")"||return 0
+url="$(printf '%s' "$player"|"$(schema.jq.bin)" -r '
+    (.data.subtitle.subtitles // []) as $t
+    | ( ($t | map(select(.lan == "ai-zh"))[0])
+      // ($t | map(select((.lan // "") | startswith("zh")))[0])
+      // ($t | map(select((.lan // "") | startswith("ai-")))[0])
+      // $t[0] ) | .subtitle_url // empty')"
+[[ -n $url ]]||return 0
+[[ $url == //* ]]&&url="https:$url"
+raw="$(dig.http.get "$url")"||return 0
+printf '%s' "$raw"|"$(schema.jq.bin)" -r --argjson cap "$_BILI_TEXT_CAP" '
+    ([.body[]?.content] | join(" ")) | if length > $cap then .[0:$cap] else . end'
+}
+bilibili.danmaku_text(){
+local cid="$1" raw
+raw="$(dig.http.get "$_BILI_API/x/v1/dm/list.so" "oid=$cid")"||return 0
+bilibili.danmaku_sample "$raw"
+}
+bilibili.danmaku_sample(){
+local out
+out="$(printf '%s' "$1"|parse.xml.records d '#'|awk -v step="$_BILI_DM_STEP" 'NR % step == 1'|head -"$_BILI_DM_KEEP"||true)"
+printf '%s' "$out"|awk '{ s = (NR == 1 ? $0 : s " / " $0) } END { print s }'
+}
+source.url.register bilibili bilibili.com
+source.register bilibili "B 站视频搜索（字幕需 BILI_SESSDATA，弹幕免登录）" "tier:niche period:yes proxy:no key:optional"
+v2ex.probe(){ dig.http.probe "https://www.v2ex.com/api/topics/hot.json";}
+v2ex.search(){
+local out
+if [[ -z $DIG_QUERY ]];then
+out="$(dig.http.get "https://www.v2ex.com/api/topics/hot.json")"||return 1
+printf '%s' "$out"|v2ex.map_hot|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+return 0
+fi
+out="$(dig.http.get "https://www.sov2ex.com/api/search" "q=$DIG_QUERY" "size=$DIG_LIMIT" "sort=created")"||return 1
+printf '%s' "$out"|v2ex.map_search|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+v2ex.map_hot(){
+"$(schema.jq.bin)" -c --arg query "" '
+    .[]
+    | {
+        source: "v2ex",
+        id: (.id | tostring),
+        url: .url,
+        title: (.title // ""),
+        text: (.content // ""),
+        author: "",
+        created_at: ((.created // 0) | if . > 0 then todateiso8601 else "" end),
+        engagement: { replies: (.replies // 0) },
+        tags: ([.node.name] | map(select(. != null and . != ""))),
+        query: $query
+      }'
+}
+v2ex.map_search(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    .hits[]?
+    | ._source
+    | {
+        source: "v2ex",
+        id: (.id | tostring),
+        url: ("https://www.v2ex.com/t/" + (.id | tostring)),
+        title: (.title // ""),
+        text: (.content // ""),
+        author: (.member // ""),
+        created_at: ((.created // "")
+          | (try (strptime("%Y-%m-%dT%H:%M:%S") | mktime - 28800 | todateiso8601) catch "")),
+        engagement: { replies: (.replies // 0) },
+        tags: [],
+        query: $query
+      }'
+}
+v2ex.url.id(){
+local u="$1"
+if [[ $u =~ /t/([0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+return 1
+}
+v2ex.search_url(){
+local url="$1" id
+id="$(v2ex.url.id "$url")"||{
+log.error "不是合法的 V2EX 主题 URL：$url（形如 www.v2ex.com/t/123456）"
+return 1
+}
+browser.creds.check||{
+log.error '本机直连 www.v2ex.com 不通，取主题需要 Cloudflare Browser Run 凭证（见 env.example）'
+return 1
+}
+browser.page "https://www.v2ex.com/t/$id"|v2ex.map_topic "$id"|schema.pipe 0|schema.limit 1
+}
+v2ex.map_topic(){
+local id="$1"
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" --arg id "$id" --arg url "https://www.v2ex.com/t/$id" '
+    def opt($s; $re): if ($s | test($re)) then ($s | capture($re) | .v) else "" end;
+    def trim_text:
+      sub("(?ms)^.*?(?=^# )"; "")            # 标题之前的导航与广告
+      | sub("(?s)\nVERSION:.*$"; "")        # 页脚
+      | sub("^\\s+"; "") | sub("\\s+$"; "");
+    (.text | trim_text) as $t
+    | {
+        source: "v2ex",
+        id: $id,
+        url: $url,
+        title: (.title // ""),
+        text: $t,
+        author: (if (.author // "") != "" then .author else opt($t; "/member/(?<v>[^)]*)\\)") end),
+        created_at: "",
+        engagement: { replies: (opt($t; "(?<v>[0-9]+) replies?") | tonumber? // 0) },
+        tags: [],
+        query: $query
+      }'
+}
+source.url.register v2ex v2ex.com
+source.register v2ex "V2EX 热帖与关键词搜索（搜索走 sov2ex）" "tier:topic period:yes proxy:yes key:none"
+polymarket.probe(){ dig.http.probe "https://gamma-api.polymarket.com/public-search?q=test&page=1";}
+polymarket.url.slug(){
+local u="$1"
+if [[ $u =~ /(event|market)/([^/?#]+) ]];then
+printf '%s' "${BASH_REMATCH[2]}"
+return 0
+fi
+return 1
+}
+polymarket.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig polymarket "事件关键词"'
+return 1
+}
+local out
+out="$(dig.http.get "https://gamma-api.polymarket.com/public-search" \
+"q=$DIG_QUERY" "page=1" "events_status=active" "keep_closed_markets=0")"||return 1
+printf '%s' "$out"|polymarket.map|schema.pipe 0|schema.limit "$DIG_LIMIT"
+}
+polymarket.search_url(){
+local url="$1" slug out
+slug="$(polymarket.url.slug "$url")"||{
+log.error "不是合法的 Polymarket URL：$url"
+return 1
+}
+out="$(dig.http.get "https://gamma-api.polymarket.com/public-search" \
+"q=$slug" "page=1" "events_status=active" "keep_closed_markets=0")"||return 1
+printf '%s' "$out"|"$(schema.jq.bin)" -c --arg slug "$slug" '
+        { events: [ (.events // [])[] | select(.slug == $slug or ([.markets[]?.slug] | index($slug))) ] }'|polymarket.map|schema.pipe 0|schema.limit 1
+}
+polymarket.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    def num: if type == "number" then . elif type == "string" then (tonumber? // 0) else 0 end;
+    .events[]?
+    | {
+        source: "polymarket",
+        id: (.slug // (.id | tostring)),
+        url: ("https://polymarket.com/event/" + (.slug // "")),
+        title: (.title // ""),
+        text: ([.markets[]? | .question] | map(select(. != null and . != "")) | join(" / ")),
+        author: "",
+        created_at: "",
+        engagement: { volume: (.volume | num), liquidity: (.liquidity | num) },
+        tags: ["prediction-market"],
+        query: $query
+      }'
+}
+source.url.register polymarket polymarket.com
+source.register polymarket "Polymarket 预测市场赔率与成交量" "tier:niche period:no proxy:yes key:none"
+openalex.probe(){ dig.http.probe "https://api.openalex.org/works?search=test&per-page=1";}
+openalex.url.work_id(){
+local u="$1"
+if [[ $u =~ (W[0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+return 1
+}
+openalex.url.doi(){
+local u="$1"
+if [[ $u =~ doi\.org/([^?#]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+return 1
+}
+openalex.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig openalex "主题"'
+return 1
+}
+[[ -n ${OPENALEX_API_KEY:-} ]]&&dig.auth.set "Bearer $OPENALEX_API_KEY"
+local -a params=("search=$DIG_QUERY" "per-page=$(dig.clamp "$DIG_LIMIT" 100 "OpenAlex")" "sort=relevance_score:desc")
+[[ -n ${OPENALEX_MAILTO:-} ]]&&params+=("mailto=$OPENALEX_MAILTO")
+local out
+if ! out="$(dig.http.get "https://api.openalex.org/works" "${params[@]}")";then
+case "$(dig.http.status)" in
+429|503)log.error "OpenAlex 匿名访问被限流（HTTP $(dig.http.status)）：去 openalex.org 免费申请 API key 后设 OPENALEX_API_KEY；退一步设 OPENALEX_MAILTO 进 polite pool"
+esac
+return 1
+fi
+printf '%s' "$out"|openalex.map|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+openalex.search_url(){
+local url="$1" body
+[[ -n ${OPENALEX_API_KEY:-} ]]&&dig.auth.set "Bearer $OPENALEX_API_KEY"
+if fetch.host.any "$url" doi.org;then
+local doi
+doi="$(openalex.url.doi "$url")"||{
+log.error "不是合法的 DOI URL：$url"
+return 1
+}
+body="$(dig.http.get "https://api.openalex.org/works" "filter=doi:$doi" "per-page=1")"||return 1
+else
+local id
+id="$(openalex.url.work_id "$url")"||{
+log.error "不是合法的 OpenAlex 作品 URL：$url"
+return 1
+}
+body="$(dig.http.get "https://api.openalex.org/works/$id")"||return 1
+body="$(printf '%s' "$body"|"$(schema.jq.bin)" -c '{ results: [.] }')"
+fi
+printf '%s' "$body"|openalex.map|schema.pipe 0|schema.limit 1
+}
+openalex.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    # 摘要在 OpenAlex 里是倒排索引，按位置还原成正文
+    def abstract:
+      .abstract_inverted_index as $ix
+      | if $ix == null then ""
+        else [ $ix | to_entries[] as $w | $w.value[] | { p: ., w: $w.key } ]
+             | sort_by(.p) | map(.w) | join(" ")
+        end;
+    .results[]?
+    | {
+        source: "openalex",
+        id: (.id // .doi // ""),
+        url: (.primary_location.landing_page_url // .doi // ""),
+        title: (.display_name // ""),
+        text: (abstract | .[0:1200]),
+        author: ([.authorships[0:3][].author.display_name] | join(", ")),
+        created_at: ((.publication_date // "")
+          | if length == 10 then . + "T00:00:00Z" else . end),
+        engagement: { cited: (.cited_by_count // 0) },
+        tags: ([.primary_location.source.display_name // empty]
+               + [.type_crossref // empty] | map(select(. != null and . != ""))),
+        query: $query
+      }'
+}
+source.url.register openalex openalex.org doi.org
+source.register openalex "OpenAlex 学术文献（含被引数与摘要）" "tier:topic period:all proxy:no key:optional"
+discourse.options(){
+args.add_options "site" "s" "逗号分隔的实例清单，默认用配置里的一组" "STRING"
+}
+discourse.probe(){ dig.http.probe "https://${_DIG_DISCOURSE_SITES%%,*}/search.json?q=test";}
+discourse.url.id(){
+local u="$1"
+if [[ $u =~ /t/[^/]+/([0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+if [[ $u =~ /t/([0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+return 1
+}
+discourse.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig discourse "关键词"'
+return 1
+}
+local sites
+sites="$(dig.opt -s --site)"
+[[ -n $sites ]]||sites="$_DIG_DISCOURSE_SITES"
+[[ -n $sites ]]||{
+log.error "没有可搜的 Discourse 实例：设置 -s 或配置 discourse.sites"
+return 1
+}
+local -a hosts
+IFS=, read -ra hosts <<<"$sites"
+local host ok=0 out combined=""
+for host in "${hosts[@]}";do
+host="${host// /}"
+[[ $host =~ ^[A-Za-z0-9.-]+(:[0-9]+)?$ ]]||{
+log.error "-s/--site 需要形如 discuss.python.org 的 host，得到：$host"
+return 1
+}
+if out="$(dig.http.get "https://$host/search.json" "q=$DIG_QUERY")";then
+combined+="$(printf '%s' "$out"|discourse.map "$host")"$'\n'
+ok=$((ok+1))
+else
+log.warn "$host 搜索失败，跳过"
+fi
+done
+((ok>0))||{
+log.error "所有 Discourse 实例都失败了（网络不通？见 dig doctor）"
+return 1
+}
+printf '%s' "$combined"|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+discourse.map_topic(){
+local host="${1:-}"
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" --arg host "$host" "$_SCHEMA_JQ_LIB"'
+    {
+      source: "discourse",
+      id: ($host + "#" + (.id | tostring)),
+      url: ("https://" + $host + "/t/" + (.slug // "topic") + "/" + (.id | tostring)),
+      title: (.title // ""),
+      text: ((.post_stream.posts[0].cooked // "") | html_text),
+      author: (.post_stream.posts[0].username // ""),
+      created_at: ((.details.created_at // .created_at // "") | to_utc),
+      engagement: ({ replies: ((.posts_count // 0) | if . > 0 then . - 1 else 0 end) }
+        + (if (.views // null) != null then { views: .views } else {} end)),
+      tags: ([ $host ]
+        + [(.tags // [])[]? | if type == "object" then (.name // "") else (. | tostring) end]
+        | map(select(. != null and . != ""))),
+      query: $query
+    }'
+}
+discourse.search_url(){
+local url="$1" host id body
+host="$(fetch.host "$url")"
+id="$(discourse.url.id "$url")"||{
+log.error "不是合法的 Discourse 主题 URL：$url"
+return 1
+}
+body="$(dig.http.get "https://$host/t/$id.json")"||return 1
+printf '%s' "$body"|discourse.map_topic "$host"|schema.pipe 0|schema.limit 1
+}
+discourse.map(){
+local host="${1:-}"
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" --arg host "$host" "$_SCHEMA_JQ_LIB"'
+    (.posts // []) as $posts
+    | (.topics // [])[]
+    | . as $t
+    | ($posts | map(select(.topic_id == $t.id)) | first) as $p
+    | {
+        source: "discourse",
+        id: ($host + "#" + ($t.id | tostring)),
+        url: ("https://" + $host + "/t/" + ($t.slug // "topic") + "/" + ($t.id | tostring)),
+        title: ($t.title // ""),
+        text: ($p.blurb // "" | html_text),
+        author: ($p.username // ""),
+        created_at: (($p.created_at // $t.created_at // "") | to_utc),
+        engagement: ({ replies: ($t.reply_count // 0) }
+          + (if ($t.views // null) != null then { views: $t.views } else {} end)
+          + (if ($t.like_count // null) != null then { likes: $t.like_count } else {} end)),
+        tags: ([ $host ] + ($t.tags // []) | map(select(. != null and . != ""))),
+        query: $query
+      }'
+}
+discourse.url.hosts(){
+local -a sites=()
+[[ -n ${_DIG_DISCOURSE_SITES:-} ]]||return 0
+IFS=, read -ra sites <<<"$_DIG_DISCOURSE_SITES"
+printf '%s\n' "${sites[@]}"
+}
+source.register discourse "Discourse 社区（Python/PyTorch/Rust/OpenAI/HF 等官方论坛）" "tier:topic period:pastyear proxy:yes key:none"
+hf.options(){
+args.add_options "type" "T" "models|datasets，默认 models" "STRING"
+}
+hf.probe(){ dig.http.probe "https://huggingface.co/api/models?search=test&limit=1";}
+hf.url.parse(){
+local url="$1" path type
+path="${url#*://}"
+path="${path#*/}"
+path="${path%%[?#]*}"
+[[ $path == */* ]]||return 1
+type="models"
+case $path in
+datasets/*)type="datasets"
+path="${path#datasets/}"
+;;
+spaces/*)type="spaces"
+path="${path#spaces/}"
+;;
+models/*)type="models"
+path="${path#models/}"
+esac
+[[ $path =~ ^([^/]+)/([^/]+)$ ]]||return 1
+printf '%s %s' "$type" "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+}
+hf.search(){
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig hf "模型或数据集关键词"'
+return 1
+}
+local type
+type="$(dig.opt -T --type)"
+type="${type:-models}"
+case $type in
+models|datasets);;
+*)log.error "未知类型: $type（可选 models / datasets）"
+return 1
+esac
+local out
+out="$(dig.http.get "https://huggingface.co/api/$type" \
+"search=$DIG_QUERY" \
+"limit=$DIG_LIMIT" \
+"sort=downloads" \
+"direction=-1")"||return 1
+printf '%s' "$out"|hf.map "$type"|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+hf.search_url(){
+local url="$1" type id out parsed
+parsed="$(hf.url.parse "$url")"||{
+log.error "不是合法的 Hugging Face 仓库 URL：$url"
+return 1
+}
+read -r type id <<<"$parsed"
+[[ -n $type && -n $id ]]||return 1
+out="$(dig.http.get "https://huggingface.co/api/$type/$id")"||return 1
+printf '%s' "$out"|"$(schema.jq.bin)" -c '[.]'|hf.map "$type"|schema.pipe 0|schema.limit 1
+}
+hf.map(){
+local type="${1:-models}"
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" --arg type "$type" "$_SCHEMA_JQ_LIB"'
+    .[]
+    | {
+        source: "hf",
+        id: .id,
+        url: ("https://huggingface.co/" + $type + "/" + .id),
+        title: .id,
+        text: ([ .pipeline_tag // empty ] | map(select(. != null and . != "")) | join(" ")),
+        author: (.author // (.id | split("/")[0])),
+        # 列表接口里 models 没有 lastModified，退回 createdAt；都是「活跃度」而非严格创建时间
+        created_at: ((.lastModified // .createdAt // "") | to_utc),
+        engagement: { downloads: (.downloads // 0), likes: (.likes // 0) },
+        tags: ((.tags // []) | map(select(. != null and . != "")) | .[0:8]),
+        query: $query
+      }'
+}
+source.url.register hf huggingface.co
+source.register hf "Hugging Face 模型 / 数据集（下载量与点赞）" "tier:topic period:all proxy:yes key:none"
+_REDDIT_FIELDS="id,title,selftext,author,created_utc,score,num_comments,subreddit"
+_REDDIT_COMMENT_KEEP=12
+_REDDIT_COMMENT_MIN=24
+reddit.options(){
+args.add_options "subreddit" "s" "要搜的 subreddit（必填）" "NAME"
+args.add_options "comments" "r" "为前 N 条抓嵌套评论树填进 text" "NUMBER"
+}
+reddit.probe(){
+local out="" rc=1 i
+for i in 1 2 3;do
+if out="$(dig.http.probe "https://arctic-shift.photon-reddit.com/api/posts/search?subreddit=linux&limit=1&fields=id")";then
+printf '%s' "$out"
+return 0
+else
+rc=$?
+fi
+if ((i<3));then
+sleep "${DIG_PROBE_RETRY_SLEEP:-2}"
+fi
+done
+printf 'Arctic Shift 背压或超时（上游偶发，与代理无关）：%s' "$out"
+return "$rc"
+}
+reddit.url.id(){
+local u="$1"
+if [[ $u =~ /comments/([A-Za-z0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+if [[ $u =~ redd\.it/([A-Za-z0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+return 1
+}
+reddit.fetch(){
+local url="$1"
+shift
+local DIG_HTTP_RETRY_CODES="${DIG_HTTP_RETRY_CODES:+$DIG_HTTP_RETRY_CODES }422"
+local tries=$((${DIG_RETRY:-2}+1)) i=0 body err
+while :;do
+i=$((i+1))
+body="$(dig.http.get "$url" "$@")"||return 1
+err="$(printf '%s' "$body"|"$(schema.jq.bin)" -r 'if type == "object" then (.error // "") else "" end' 2>/dev/null||true)"
+if [[ -z $err ]];then
+printf '%s' "$body"
+return 0
+fi
+if ((i<tries));then
+log.warn "Arctic Shift 返回错误：$err；$((i*2))s 后重试（$i/$((tries-1))）)"
+sleep $((i*2))
+continue
+fi
+log.error "Arctic Shift 返回错误：$err（已重试 $((i-1)) 次）"
+return 1
+done
+}
+reddit.search(){
+local sub
+sub="$(dig.opt -s --subreddit)"
+[[ -n $sub ]]||{
+log.error '需要 -s/--subreddit 圈定社区：Arctic Shift 的免 key 层做不到跨全站关键词搜索（只给 query 不给 subreddit/author 会直接报错）'
+return 1
+}
+local -a params=(
+"subreddit=$sub"
+"limit=$(dig.clamp "$DIG_LIMIT" 100 "Arctic Shift")"
+"sort=desc"
+"fields=$_REDDIT_FIELDS")
+[[ -n $DIG_QUERY ]]&&params+=("query=$DIG_QUERY")
+local body
+body="$(reddit.fetch "https://arctic-shift.photon-reddit.com/api/posts/search" "${params[@]}")"||return 1
+local n
+n="$(dig.opt.natural 0 -r --comments)"||return 1
+printf '%s' "$body"|reddit.map|schema.enrich "$n" reddit.enrich_one|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+reddit.search_url(){
+local url="$1" id body
+id="$(reddit.url.id "$url")"||{
+log.error "不是合法的 Reddit 帖子 URL：$url"
+return 1
+}
+body="$(reddit.fetch "https://arctic-shift.photon-reddit.com/api/posts/ids" "ids=$id" "fields=$_REDDIT_FIELDS")"||return 1
+local n
+n="$(dig.opt.natural 0 -r --comments)"||return 1
+printf '%s' "$body"|reddit.map|schema.enrich "$n" reddit.enrich_one|schema.pipe 0|schema.limit 1
+}
+reddit.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" '
+    (.data // [])[]
+    | {
+        source: "reddit",
+        id: (.id | tostring),
+        url: ("https://www.reddit.com/r/" + (.subreddit // "") + "/comments/" + (.id | tostring) + "/"),
+        title: (.title // ""),
+        text: (.selftext // ""),
+        author: (.author // ""),
+        created_at: ((.created_utc // 0) | if . > 0 then todateiso8601 else "" end),
+        engagement: { score: (.score // 0), comments: (.num_comments // 0) },
+        tags: ([.subreddit] | map(select(. != null and . != ""))),
+        query: $query
+      }'
+}
+reddit.enrich_one(){
+local line="$1" id item text
+id="$(printf '%s' "$line"|"$(schema.jq.bin)" -r '.id // empty')"
+[[ -n $id ]]||{
+printf '%s' "$line"
+return 0
+}
+if item="$(reddit.fetch "https://arctic-shift.photon-reddit.com/api/comments/tree" "link_id=t3_$id" "limit=9999")";then
+text="$(printf '%s' "$item"|reddit.comments_text)"
+else
+text=""
+fi
+parse.json.patch "$line" "text=$text"
+}
+reddit.comments_text(){
+"$(schema.jq.bin)" -r --argjson keep "$_REDDIT_COMMENT_KEEP" --argjson min "$_REDDIT_COMMENT_MIN" '
+    [ .. | objects | select(.body? != null and .author? != "AutoModerator") | .body ]
+    | map(gsub("\\s+"; " ") | sub("^ +"; "") | sub(" +$"; ""))
+    | map(select(length >= $min))
+    | .[0:$keep]
+    | join("\n\n---\n\n")'
+}
+source.url.register reddit reddit.com redd.it
+source.register reddit "Reddit（-s 必给 subreddit，-r N 抓嵌套评论树；走 Arctic Shift，跨全站搜索做不到）" "tier:topic period:yes proxy:no key:none"
+wechat.probe(){ browser.probe;}
+wechat.search(){
+log.error '微信公众号没有公开检索接口：发现用 web 检索，正文用 dig fetch "<文章链接>"'
+return 1
+}
+wechat.search_url(){
+local url="$1"
+browser.creds.check||return 1
+browser.page "$url"|wechat.map "$(wechat.url.clean "$url")"|schema.pipe 0|schema.limit 1
+}
+wechat.url.id(){
+local u="$1" mid idx=""
+if [[ $u =~ /s/([A-Za-z0-9_-]+) ]];then
+printf '%s' "${BASH_REMATCH[1]}"
+return 0
+fi
+if [[ $u =~ [?\&]mid=([0-9]+) ]];then
+mid="${BASH_REMATCH[1]}"
+[[ $u =~ [?\&]idx=([0-9]+) ]]&&idx="${BASH_REMATCH[1]}"
+printf '%s_%s' "$mid" "${idx:-1}"
+return 0
+fi
+return 1
+}
+wechat.url.clean(){
+local u="$1" base="${1%%\?*}" joined="" p
+[[ $u == *\?* ]]||{
+printf '%s' "$u"
+return 0
+}
+local -a parts=() keep=()
+IFS='&' read -ra parts <<<"${u#*\?}"
+for p in "${parts[@]}";do
+[[ ${p%%=*} == "poc_token" ]]&&continue
+keep+=("$p")
+done
+((${#keep[@]}))||{
+printf '%s' "$base"
+return 0
+}
+joined="$(printf '%s&' "${keep[@]}")"
+printf '%s?%s' "$base" "${joined%&}"
+}
+wechat.map(){
+local url="$1" id
+id="$(wechat.url.id "$url"||printf '%s' "$url")"
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" --arg url "$url" --arg id "$id" '
+    {
+        source: "wechat",
+        id: $id,
+        url: $url,
+        title: (.title // ""),
+        text: (.text // ""),
+        author: (.author // ""),
+        created_at: "",
+        engagement: {},
+        tags: [],
+        query: $query
+      }'
+}
+source.url.register wechat mp.weixin.qq.com
+source.register wechat "微信公众号文章正文（只按 URL 取，需 Cloudflare Browser Run 凭证）" "tier:topic period:no proxy:no key:required"
+doctor.row(){ printf '%-8s  %-10s %s\n' "$1" "$2" "$3";}
+doctor.source(){
+local src="$1" cmd
+for cmd in $(source.requires "$src");do
+system.command.exist "$cmd"||{
+doctor.row "$src" "缺少 $cmd" "先安装 $cmd，再重跑 doctor"
+return 0
+}
+done
+if ! declare -F "$src.probe" >/dev/null;then
+doctor.row "$src" "无探活" "该源未提供 <源>.probe"
+return 0
+fi
+local detail rc=0
+detail="$("$src.probe")"||rc=$?
+case $rc in
+0)doctor.row "$src" "ok" "$detail";;
+2)doctor.row "$src" "不可达" "${detail:-网络不通}；需代理时设置 DIG_PROXY 或 https_proxy"
+return 2
+;;
+3)doctor.row "$src" "缺前置" "$detail";;
+*)doctor.row "$src" "失败" "${detail:-凭证或接口异常}"
+esac
+}
+doctor.hint(){
+local n="${1:-0}"
+((n>0))||return 0
+log.info "$n 个源不可达；若属本机 DNS 污染站点，设置 DIG_PROXY 或 https_proxy 后重跑"
+}
+doctor.run(){
+doctor.row "源" "状态" "说明"
+printf '%s\n' "------------------------------------------------------------"
+local src unreachable=0
+local -a srcs=()
+mapfile -t srcs < <(source.list)
+for src in "${srcs[@]}";do
+doctor.source "$src"||unreachable=$((unreachable+1))
+done
+printf '\n能力模块（不是源，但决定 wechat / v2ex 的 URL 取数与 dig fetch 兜底能不能用）：\n'
+doctor.capabilities
+printf '\n'
+doctor.hint "$unreachable"
+}
+doctor.capabilities(){
+local detail rc=0
+detail="$(browser.probe)"||rc=$?
+case $rc in
+0)doctor.row "browser" "ok" "$detail";;
+3)doctor.row "browser" "缺前置" "$detail";;
+*)doctor.row "browser" "失败" "${detail:-Cloudflare Browser Run 调用失败}"
+esac
+}
+VERSION="0.1.0"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"&&pwd)"
+.env
+dig.settings.load(){
+config.register "defaults.limit" "20" "number" "默认条目上限"
+config.register "defaults.period" "pastmonth" "string" "默认时间窗口"
+config.register "proxy.url" "" "string" "网络代理（DIG_PROXY 环境变量优先）"
+config.register "discourse.sites" "discuss.python.org,community.openai.com,discuss.huggingface.co,discuss.pytorch.org,users.rust-lang.org,meta.discourse.org,community.fly.io,discuss.elastic.co" "string" "dig discourse 默认搜的实例列表"
+config.load "$PROJECT_ROOT/config.toml" 2>/dev/null||true
+config.load "${XDG_CONFIG_HOME:-$HOME/.config}/dig/config.toml" 2>/dev/null||true
+_DIG_DEFAULT_LIMIT="$(dig.num "defaults.limit" 20)"
+_DIG_DEFAULT_PERIOD="$(config.get "defaults.period" 2>/dev/null||true)"
+[[ -n $_DIG_DEFAULT_PERIOD ]]||_DIG_DEFAULT_PERIOD="pastmonth"
+if [[ -z ${DIG_PROXY:-} ]];then
+DIG_PROXY="$(config.get "proxy.url" 2>/dev/null||true)"
+fi
+_DIG_DISCOURSE_SITES="$(config.get "discourse.sites" 2>/dev/null||true)"
+if [[ -n ${DIG_RETRY:-} ]]&&! string.natural.check "$DIG_RETRY";then
+log.warn "DIG_RETRY 需要非负整数，得到：$DIG_RETRY；按默认 2 处理"
+DIG_RETRY=2
+fi
+if [[ -n ${DIG_CACHE_TTL:-} ]]&&! string.natural.check "$DIG_CACHE_TTL";then
+log.warn "DIG_CACHE_TTL 需要非负整数（秒），得到：$DIG_CACHE_TTL；按默认 86400 处理"
+_DIG_CACHE_TTL=86400
+fi
+if [[ -n ${DIG_BROWSER_MIN_INTERVAL:-} ]]&&! string.natural.check "$DIG_BROWSER_MIN_INTERVAL";then
+log.warn "DIG_BROWSER_MIN_INTERVAL 需要非负整数（秒），得到：$DIG_BROWSER_MIN_INTERVAL；按默认 12 处理"
+_BROWSER_MIN_INTERVAL=12
+fi
+export _DIG_DEFAULT_LIMIT _DIG_DEFAULT_PERIOD DIG_PROXY _DIG_DISCOURSE_SITES DIG_RETRY
+}
+_dig_source(){
+local mod="$_ARGS_CURRENT_SUBCOMMAND"
+args.init
+dig.options.common
+if declare -F "$mod.search_url" >/dev/null;then
+args.add_options "url" "u" "按 URL 直取这一条（dig fetch 用）" "URL"
+fi
+if declare -F "$mod.options" >/dev/null;then
+"$mod.options"
+fi
+args.add_options "ARG" "查询词" "要搜索的关键词"
+args.process "$@"
+dig.common.apply "$mod"||exit 1
+local key
+local -a action=("$mod.search")
+[[ -n $DIG_URL ]]&&action=("$mod.search_url" "$DIG_URL")
+key="$(cache.key "$mod" "$DIG_QUERY" "$DIG_LIMIT" "$DIG_PERIOD" "$*" "${BILI_SESSDATA:+sess}" "${DIG_COOKIE:+cookie}")"
+dig.cached "$key" -- "${action[@]}"|dig.output
+}
+cmd_doctor(){
+args.init "探活：逐个源检查外部命令、凭证与可达性"
+args.process "$@"
+doctor.run
+}
+dig.fetch.usage(){
+args.init '给 URL 取这一条：自动判断属于哪个源'
+args.add_options "ARG" "URL" "页面地址，必须是第一个实参"
+args.add_options "EXAMPLE" "https://github.com/curl/curl" "取仓库详情"
+args.add_options "EXAMPLE" "https://arxiv.org/abs/1706.03762" "取论文摘要"
+args.add_options "EXAMPLE" "https://www.reddit.com/r/linux/comments/<id> -r 3" "取帖子 + 评论树"
+args.add_options "NOTICE" "URL 之后的实参原样转给认领它的源，所以该源自己的选项（-r 3、--no-cache）都能照用"
+args.show_help
+}
+cmd_fetch(){
+if [[ ${1:-} == "-h" || ${1:-} == "--help" ]];then
+dig.fetch.usage
+return 0
+fi
+local url="${1:-}"
+[[ -n $url ]]||{
+log.error '需要 URL：dig fetch "<url>" [该源自己的选项…]'
+return 1
+}
+shift
+local route
+route="$(fetch.route "$url")"||{
+if fetch.fallback.enabled;then
+browser.creds.check||return 1
+fetch.fallback "$url"|dig.output||return 1
+return 0
+fi
+log.error "认不出这个 URL 属于哪个源：$url"
+log.error 'dig fetch 只处理已知站点：这个 URL 没有对应的源。按关键词检索用 dig <源> "<词>"（或用 DIG_FETCH_FALLBACK=1 让云端浏览器兜底）'
+return 1
+}
+local -a argv=()
+IFS=$'\t' read -r -a argv <<<"$route"
+_ARGS_CURRENT_SUBCOMMAND="${argv[0]}"
+_dig_source "${argv[@]:1}" "$@"
+}
+main(){
+args.init "按站点取数的工具箱：HN / GitHub / Stack Overflow / arXiv / 知乎 / 微信读书"
+args.add_options "version" "v" "显示版本信息"
+local src
+local -a srcs=()
+mapfile -t srcs < <(source.list)
+for src in "${srcs[@]}";do
+args.add_subcommand "$src" "$(source.desc "$src")" "_dig_source"
+done
+args.add_subcommand "doctor" "探活：哪个源缺密钥 / 缺代理 / 不可达" "cmd_doctor"
+args.add_subcommand "fetch" "给 URL 取这一条（自动判断属于哪个源）" "cmd_fetch"
+dig.settings.load
+args.process "$@"
+args.has "-v" "--version"&&usage.version&&exit 0
+(($#==0))&&args.show_help&&exit 0
+}
+if [[ ${BASH_SOURCE[0]} == "$0" ]];then main "$@";fi

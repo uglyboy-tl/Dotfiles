@@ -33,7 +33,7 @@ run_in_background: true
   └─ 其他描述 → 按描述定位文件
 ```
 
-只看 diff 不够:读完整文件、相关测试与调用方,再判断既有模式与错误处理约定;文件过大时先 grep 定位再 read 局部。
+只看 diff 不够:读完整文件、相关测试与调用方,再判断既有模式与错误处理约定;文件过大时先 grep 定位再 read 局部。变更量大时先用 `git diff --stat` / `git diff --name-only` 概览,再挑重点逐个深入,避免一次读入超长 diff。
 
 hash 与分支名都可能命中十六进制串,判别:纯 hex 且 `git cat-file -t <input>` 返回 commit → 按 hash;`git show-ref --verify refs/heads/<input>` 或 `refs/remotes/<input>` 成功 → 按分支;都不成立时用 `git rev-parse --verify <input>^{commit}` 确认能否解析;多重命中优先 hash,其次 PR。
 
