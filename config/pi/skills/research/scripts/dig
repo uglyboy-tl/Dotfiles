@@ -971,14 +971,23 @@ read -r -d '' _SCHEMA_JQ_RENDER <<'JQ'||true
 def text_preview:
   (. // "") | gsub("\\s+"; " ") | sub("^ +"; "") | sub(" +$"; "")
   | if . == "" then "" else "  " + (if length > 200 then "\(.[0:200])…" else . end) + "\n" end;
-"\(.title // "(无标题)")\n  "
+# tags 是「这条到底是什么」的元信息：hn 的 comment、reddit 的 subreddit、arxiv 的分类都在这里。
+# 不渲染的话，HN 评论与主帖在终端里长得一样，评论的 points:0 会被误读成「抓取失败」而非「这是评论」。
+def tags_seg:
+  (.tags // []) | if length > 0 then "tags: " + join(",") else "" end;
+def is_comment: ((.tags // []) | index("comment")) != null;
+((.title // "") | if . == "" then "(无标题)" else . end)
++ (if is_comment then "  ← 评论，不是主帖（points 是这条评论的）" else "" end)
++ (if .truncated == true then "  ← 正文被上游截断，不是全文" else "" end)
++ "\n  "
 + (([ "[" + (.source // "?") + "]",
       (.author // ""),
       ((.engagement // {}) | to_entries
         | map(if (.value | type) == "number" then "\(.value) \(.key)" else "\(.key) \(.value)" end)
         | join(" ")),
       (.created_at // ""),
-      (.url // "")
+      (.url // ""),
+      tags_seg
     ] | map(select(. != "")) | join("  ·  ")))
 + "\n"
 + (.text | text_preview)
@@ -1072,6 +1081,8 @@ printf '%s' "${caps%% *}"
 }
 declare -g _DIG_HTTP_STATUS=""
 dig.requests.init(){
+local no_creds=false
+[[ ${1:-} == "--no-creds" ]]&&no_creds=true
 local missing=""
 system.command.exist curl||missing+="${missing:+, }curl"
 system.command.exist jq||missing+="${missing:+, }jq"
@@ -1081,8 +1092,10 @@ return 3
 }
 local -a extra=()
 [[ -n ${DIG_PROXY:-} ]]&&extra+=(--proxy "$DIG_PROXY")
+if [[ $no_creds == false ]];then
 [[ -n ${DIG_COOKIE:-} ]]&&extra+=(-H "Cookie: $DIG_COOKIE")
 [[ -n ${DIG_AUTH:-} ]]&&extra+=(-H "Authorization: $DIG_AUTH")
+fi
 requests.init ${extra[@]+"${extra[@]}"} 2>/dev/null
 }
 dig.http.status(){ printf '%s' "$_DIG_HTTP_STATUS";}
@@ -1096,6 +1109,12 @@ printf '%s' "$max"
 else
 printf '%s' "$want"
 fi
+}
+dig.http.body_snippet(){
+local s
+s="$(requests.text "$1" 2>/dev/null||true)"
+s="$(printf '%s' "$s"|tr -d '\000-\010\013\014\016-\037\177'|tr -s '[:space:]' ' ')"
+printf '%s' "${s:0:200}"
 }
 dig.http.request(){
 local method="$1" url="$2" body="${3:-}" ctype="${4:-}"
@@ -1121,7 +1140,9 @@ requests.text "$resp"
 return 0
 fi
 if [[ $rc == "0" && $code != "000" && $code != "0" && ! $code =~ $retry_re ]];then
-log.error "请求被拒：$url (HTTP $code)"
+local early_snippet
+early_snippet="$(dig.http.body_snippet "$resp")"
+log.error "请求被拒：$url (HTTP $code)${early_snippet:+：$early_snippet}"
 return 1
 fi
 fi
@@ -1135,7 +1156,9 @@ log.error "无法连接 $url：请求未产生响应"
 elif [[ $rc != "0" || $code == "000" || $code == "0" ]];then
 log.error "无法连接 $url：网络不通（curl exit $rc）。若该站点需代理，设 DIG_PROXY（要持久化就写进包内 .env）"
 else
-log.error "请求被拒：$url (HTTP $code)，已重试 $((i-1)) 次"
+local snippet
+snippet="$(dig.http.body_snippet "$resp")"
+log.error "请求被拒：$url (HTTP $code)，已重试 $((i-1)) 次${snippet:+：$snippet}"
 fi
 return 1
 done
@@ -1145,6 +1168,18 @@ local url="$1"
 shift
 dig.requests.init||return $?
 dig.http.request GET "$url$(requests.query.build "$@")" "" ""
+}
+dig.http.get_public(){
+local url="$1"
+shift
+local -a saved=()
+if [[ ${_REQUESTS_CURL_EXTRA+set} ]];then saved=("${_REQUESTS_CURL_EXTRA[@]}");fi
+dig.requests.init --no-creds||return $?
+local rc=0
+dig.http.request GET "$url$(requests.query.build "$@")" "" ""||rc=$?
+_REQUESTS_CURL_EXTRA=()
+if ((${#saved[@]}));then _REQUESTS_CURL_EXTRA=("${saved[@]}");fi
+return $rc
 }
 dig.http.post_json(){
 dig.requests.init||return $?
@@ -1520,7 +1555,7 @@ hn.map(){
         author: (.author // ""),
         created_at: (.created_at // ""),
         engagement: { points: (.points // 0), comments: (.num_comments // 0) },
-        tags: (._tags // []),
+        tags: ((._tags // []) | map(select(test("^(author|story)_") | not))),
         query: $query
       }'
 }
@@ -1536,7 +1571,7 @@ hn.map_comments(){
         author: (.author // ""),
         created_at: (.created_at // ""),
         engagement: { points: (.points // 0) },
-        tags: (._tags // []),
+        tags: ((._tags // []) | map(select(test("^(author|story)_") | not))),
         query: $query
       }'
 }
@@ -1614,6 +1649,10 @@ esac
 }
 github.search_url(){
 local url="$1" kind o r n body parsed
+if [[ ${url,,} == *gist.github.com* ]];then
+log.error "gist 不在 dig 的 github 源里：取正文优先 gh gist view <id> --raw，失败时退到 fetch_content"
+return 1
+fi
 parsed="$(github.url.parse "$url")"||{
 log.error "不是合法的 GitHub 仓库 / issue URL：$url"
 return 1
@@ -3209,6 +3248,12 @@ return 0
 fi
 return 1
 }
+x.tweet.full_text(){
+local user="$1" id="$2" body
+[[ $user =~ ^[A-Za-z0-9_]+$ ]]||return 1
+body="$(dig.http.get_public "https://api.fxtwitter.com/$user/status/$id")"||return 1
+printf '%s' "$body"|"$(schema.jq.bin)" -r '.tweet.text // empty' 2>/dev/null
+}
 x.tweet(){
 local id
 id="$(x.tweet.id "$1")"||{
@@ -3220,6 +3265,16 @@ body="$(x.get "https://cdn.syndication.twimg.com/tweet-result?id=$id&token=dig")
 if [[ "$(printf '%s' "$body"|"$(schema.jq.bin)" -r 'has("id_str")' 2>/dev/null)" != "true" ]];then
 log.error "取不到这条推文（id=$id）：可能不存在、已删除，或作者设了保护 —— syndication 端点对这类情况只回 {}"
 return 1
+fi
+if [[ "$(printf '%s' "$body"|"$(schema.jq.bin)" -r 'has("note_tweet")' 2>/dev/null)" == "true" ]];then
+local user full
+user="$(printf '%s' "$body"|"$(schema.jq.bin)" -r '.user.screen_name // "i"' 2>/dev/null)"
+if full="$(x.tweet.full_text "$user" "$id")"&&[[ -n $full ]];then
+body="$(printf '%s' "$body"|"$(schema.jq.bin)" -c --arg t "$full" '.text = $t')"
+else
+body="$(printf '%s' "$body"|"$(schema.jq.bin)" -c '.truncated = true')"
+log.warn "这是长推文（note tweet），syndication 只回约 280 字的截断版，取全文失败：text 不完整（条目带 truncated:true）"
+fi
 fi
 printf '%s' "$body"
 }
@@ -3239,7 +3294,8 @@ x.tweet.map(){
       # syndication 端点的键是复数 hashtags；单数写法也接（老响应与部分变体）
       tags: [(.entities.hashtags // .entities.hashtag // [])[] | .text // empty],
       query: $query
-    }'
+    }
+    + (if .truncated == true then { truncated: true } else {} end)'
 }
 x.search_url(){
 local out
@@ -3424,11 +3480,16 @@ _ARGS_CURRENT_SUBCOMMAND="${argv[0]}"
 _dig_source "${argv[@]:1}" "$@"
 }
 main(){
-args.init "按站点取数的工具箱：HN / GitHub / Stack Overflow / arXiv / 知乎 / 微信读书"
-args.add_options "version" "v" "显示版本信息"
 local src
 local -a srcs=()
 mapfile -t srcs < <(source.list)
+local desc="按站点取数的工具箱：" sep=""
+for src in "${srcs[@]}";do
+desc+="$sep$src"
+sep=" / "
+done
+args.init "$desc"
+args.add_options "version" "v" "显示版本信息"
 for src in "${srcs[@]}";do
 args.add_subcommand "$src" "$(source.desc "$src")" "_dig_source"
 done
