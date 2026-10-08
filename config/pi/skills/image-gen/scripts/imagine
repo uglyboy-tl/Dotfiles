@@ -20,6 +20,109 @@ string.natural.check(){ [[ $1 =~ ^[1-9][0-9]*$ ]];}
 string.float.check(){ [[ $1 =~ ^-?[0-9]+\.[0-9]+$ ]];}
 string.is_ascii(){ [[ $1 != *[![:ascii:]]* ]];}
 string.has_ansi(){ [[ $1 == *$'\x1b'* ]];}
+console.stdout(){ printf "%s\n" "$*";}
+console.stderr(){ printf "%s\n" "$*" >&2;}
+console.repeat(){
+local char="$1" repeat=${2:-0}
+((repeat<=0))&&return
+if [[ ${#char} -eq 1 ]];then
+local _pad
+printf -v _pad '%*s' "$repeat" ''
+printf '%s' "${_pad// /$char}"
+else
+local result="" i
+for ((i=0; i<repeat; i++));do
+result+="$char"
+done
+printf "%s" "$result"
+fi
+}
+console.align(){
+local padding=$(($1-$(console.display_width "$2")))
+((padding>0))&&printf "%s%${padding}s%s\n" "$2" "" "${*:3}"||printf "%s%s\n" "$2" "${*:3}"
+}
+console.indent(){ console.align $(($1*2)) "" "${*:2}";}
+console.ansi_width(){
+local width=0 i=0 len=${#1} flag=0
+while ((i<len));do
+local char="${1:$((i++)):1}"
+((flag))&&{
+[[ $char =~ [a-zA-Z] ]]&&flag=0
+continue
+}
+[[ $char == $'\x1b' ]]&&flag=1&&continue
+((width++))
+done
+echo "$width"
+}
+console.mixed_width(){
+local width=0 flag=0 i=0
+local hex_bytes=$(printf "%s" "$1"|od -An -tx1 -v|tr -d ' \n')
+local len=${#hex_bytes}
+while ((i<len));do
+local num=$((0x${hex_bytes:i:2}))
+i=$((i+2))
+((flag))&&{
+(((num>=0x41&&num<=0x5A)||(num>=0x61&&num<=0x7A)))&&flag=0
+continue
+}
+((num==0x1b))&&{
+flag=1
+continue
+}
+((num<=0x7F))&&{
+((width++))
+continue
+}
+((num>=0xC2&&num<=0xDF))&&{
+((width++))
+i=$((i+2))
+continue
+}
+((num>=0xE0&&num<=0xEF))&&{
+((width+=2))
+i=$((i+4))
+continue
+}
+((num>=0xF0&&num<=0xF7))&&{
+((width+=2))
+i=$((i+6))
+}
+done
+echo "$width"
+}
+console.display_width(){
+[[ $1 ]]||{
+echo "0"
+return
+}
+! string.is_ascii "$1"&&console.mixed_width "$1"&&return
+string.has_ansi "$1"&&console.ansi_width "$1"||echo "${#1}"
+}
+_CONSOLE_LAYOUT_UNDERLINE=$(console.repeat "=" 20)
+_CONSOLE_LAYOUT_DEPTH=0
+console.layout.section(){
+console.stdout "$1:"
+console.stdout "=${_CONSOLE_LAYOUT_UNDERLINE:0:$(console.display_width "$1")}"
+}
+console.layout.footer(){
+console.stdout "========="
+console.stdout "$*"
+}
+console.layout.item.title(){
+console.indent "$1" "${*:2}"
+_CONSOLE_LAYOUT_DEPTH=$(($1+1))
+}
+console.layout.item.item(){
+console.indent "$_CONSOLE_LAYOUT_DEPTH" "$*"
+}
+console.layout.item.mid(){
+console.layout.item.item "├─" "$*"
+}
+console.layout.item.end(){
+console.layout.item.item "└─" "$*"
+echo ""
+}
 ANSI_ESC=$'\033'
 ANSI_CSI="$ANSI_ESC["
 ansi.Color.IsAvailable(){
@@ -113,85 +216,6 @@ ansi.disable.color
 ansi.disable.style
 }
 ansi.enable
-console.stdout(){ printf "%s\n" "$*";}
-console.stderr(){ printf "%s\n" "$*" >&2;}
-console.repeat(){
-local char="$1" repeat=${2:-0}
-((repeat<=0))&&return
-if [[ ${#char} -eq 1 ]];then
-local _pad
-printf -v _pad '%*s' "$repeat" ''
-printf '%s' "${_pad// /$char}"
-else
-local result="" i
-for ((i=0; i<repeat; i++));do
-result+="$char"
-done
-printf "%s" "$result"
-fi
-}
-console.align(){
-local padding=$(($1-$(console.display_width "$2")))
-((padding>0))&&printf "%s%${padding}s%s\n" "$2" "" "${*:3}"||printf "%s%s\n" "$2" "${*:3}"
-}
-console.indent(){ console.align $(($1*2)) "" "${*:2}";}
-console.ansi_width(){
-local width=0 i=0 len=${#1} flag=0
-while ((i<len));do
-local char="${1:$((i++)):1}"
-((flag))&&{
-[[ $char =~ [a-zA-Z] ]]&&flag=0
-continue
-}
-[[ $char == $'\x1b' ]]&&flag=1&&continue
-((width++))
-done
-echo "$width"
-}
-console.mixed_width(){
-local width=0 flag=0 i=0
-local hex_bytes=$(printf "%s" "$1"|od -An -tx1 -v|tr -d ' \n')
-local len=${#hex_bytes}
-while ((i<len));do
-local num=$((0x${hex_bytes:i:2}))
-i=$((i+2))
-((flag))&&{
-(((num>=0x41&&num<=0x5A)||(num>=0x61&&num<=0x7A)))&&flag=0
-continue
-}
-((num==0x1b))&&{
-flag=1
-continue
-}
-((num<=0x7F))&&{
-((width++))
-continue
-}
-((num>=0xC2&&num<=0xDF))&&{
-((width++))
-i=$((i+2))
-continue
-}
-((num>=0xE0&&num<=0xEF))&&{
-((width+=2))
-i=$((i+4))
-continue
-}
-((num>=0xF0&&num<=0xF7))&&{
-((width+=2))
-i=$((i+6))
-}
-done
-echo "$width"
-}
-console.display_width(){
-[[ $1 ]]||{
-echo "0"
-return
-}
-! string.is_ascii "$1"&&console.mixed_width "$1"&&return
-string.has_ansi "$1"&&console.ansi_width "$1"||echo "${#1}"
-}
 : "${_LOG_USE_EXTRA:=false}"
 : "${_LOG_LEVEL:=INFO}"
 declare -gA _LOG_LEVEL_MAP=(
@@ -1394,11 +1418,13 @@ printf '%s\n' "$1"|awk -F= -v k="providers.$2.$3" '$1 == k { print substr($0, le
 }
 declare -gA PROV_LABEL=() PROV_CREDS=() PROV_DEFAULT_MODEL=() PROV_DEFAULT_REF_MODEL=()
 declare -gA PROV_CAPS=() PROV_SIZES=() PROV_HOST=() PROV_XGET=() PROV_FREE=() PROV_MODEL_LIST=()
+declare -gA PROV_PROBE=()
 declare -ga PROV_ORDER=()
 provider.register(){
 local name="$1"
 PROVIDER_LABEL="" PROVIDER_DEFAULT_MODEL="" PROVIDER_DEFAULT_REF_MODEL="" PROVIDER_CAPS=""
 PROVIDER_HOST="" PROVIDER_XGET_PREFIX="" PROVIDER_FREE=false PROVIDER_MODEL_LIST=""
+PROVIDER_PROBE_PATH=""
 PROVIDER_CREDS=() PROVIDER_SIZES=()
 "provider_${name}_meta"||{
 log.error "provider 适配器 $name 的 meta 失败"
@@ -1414,6 +1440,7 @@ PROV_HOST[$name]="$PROVIDER_HOST"
 PROV_XGET[$name]="$PROVIDER_XGET_PREFIX"
 PROV_FREE[$name]="$PROVIDER_FREE"
 PROV_MODEL_LIST[$name]="$PROVIDER_MODEL_LIST"
+PROV_PROBE[$name]="$PROVIDER_PROBE_PATH"
 PROV_ORDER+=("$name")
 }
 provider.exists(){ [[ -v "PROV_LABEL[$1]" ]];}
@@ -1488,6 +1515,74 @@ declare -F "provider_${name}_models" >/dev/null||return 1
 live="$("provider_${name}_models")"||return 1
 [[ -n $live ]]||return 1
 printf '%s\n' "$live"
+}
+provider.probe(){
+local name="$1"
+provider.creds_ok "$name"||{
+printf 'missing\t%s' "$(provider.creds_missing "$name")"
+return 0
+}
+local path="${PROV_PROBE[$name]:-}"
+[[ -n $path ]]||{
+printf 'noprobe\t-'
+return 0
+}
+requests.init 2>/dev/null||{
+printf 'noruntime\t缺 curl 或 jq'
+return 0
+}
+local probe_timeout="${IMAGINE_PROBE_TIMEOUT:-8}"
+[[ $probe_timeout =~ ^[0-9]+$ ]]||probe_timeout=8
+requests.timeout "$probe_timeout"
+requests.base_url "$(provider.base_url "$name")"
+provider.auth "$name"
+local resp code
+resp="$(requests.get "$path")"||{
+printf 'unreachable\t%s' "$(provider.probe_hint "$name")"
+return 0
+}
+code="$(requests.status_code "$resp")"
+case "$code" in
+2*)printf 'ok\t-';;
+401|403)printf 'rejected\t-';;
+000|0)printf 'unreachable\t%s' "$(provider.probe_hint "$name")";;
+*)printf 'http\tHTTP %s' "$code"
+esac
+}
+provider.probe_hint(){
+if [[ -n ${PROV_XGET[$1]:-} ]];then
+if [[ -n ${XGET_BASE_URL:-} ]];then
+printf '不通（已走 XGET，检查 XGET_BASE_URL 本身）'
+else
+printf '不通（这家在墙外，配 XGET_BASE_URL 后重试）'
+fi
+else
+printf '不通'
+fi
+}
+provider.probe_reason(){
+case "$1" in
+missing)printf '缺 %s' "$2";;
+rejected)printf 'key 被上游拒绝（换一个）';;
+unreachable)printf '%s' "$2";;
+noprobe)printf '没有只读端点，无法验证（只能试生成）';;
+noruntime)printf '%s' "$2";;
+unknown)printf '探活没拿到结果（临时目录不可用？）';;
+http)printf '%s' "$2";;
+*)printf '%s' "$1"
+esac
+}
+provider.probe_all(){
+local dir name
+dir="$(fs.mktemp -d)"||return 1
+while IFS= read -r name;do
+provider.creds_ok "$name"||continue
+(printf '%s\t%s\n' "$name" "$(provider.probe "$name")" >"$dir/$name") \
+&
+done < <(provider.list)
+wait
+cat "$dir"/* 2>/dev/null||true
+rm -rf "$dir"
 }
 provider.auto_select(){
 local need_ref="${1:-}" name cap_ref
@@ -1714,9 +1809,10 @@ openai_compat.parse(){ common.data_b64_or_url "$1";}
 provider_agnes_meta(){
 PROVIDER_LABEL="Agnes AI"
 PROVIDER_CREDS=(AGNES_API_KEY)
-PROVIDER_DEFAULT_MODEL="agnes-image-2.1-flash"
+PROVIDER_DEFAULT_MODEL="agnes-image-2.5-flash"
 PROVIDER_CAPS="size:any ref:multi seed:yes negative:no quality:yes style:no n:1"
 PROVIDER_HOST="apihub.agnes-ai.com"
+PROVIDER_PROBE_PATH="/v1/models"
 PROVIDER_FREE=true
 }
 provider_agnes_auth(){ openai_compat.auth "$AGNES_API_KEY";}
@@ -1737,12 +1833,17 @@ provider.register agnes
 provider_cloudflare_meta(){
 PROVIDER_LABEL="Cloudflare Workers AI"
 PROVIDER_CREDS=(CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID)
-PROVIDER_DEFAULT_MODEL="@cf/black-forest-labs/flux-1-schnell"
+PROVIDER_DEFAULT_MODEL="@cf/black-forest-labs/flux-2-klein-9b"
 PROVIDER_CAPS="size:none ref:none seed:no negative:no quality:no style:no n:1"
 PROVIDER_HOST="api.cloudflare.com"
+PROVIDER_PROBE_PATH="/client/v4/user/tokens/verify"
 PROVIDER_FREE=true
-PROVIDER_MODEL_LIST="@cf/black-forest-labs/flux-1-schnell
-@cf/black-forest-labs/flux-2-dev"
+PROVIDER_MODEL_LIST="@cf/black-forest-labs/flux-2-klein-9b
+@cf/black-forest-labs/flux-2-klein-4b
+@cf/black-forest-labs/flux-1-schnell
+@cf/black-forest-labs/flux-2-dev
+@cf/leonardo/phoenix-1.0
+@cf/leonardo/lucid-origin"
 }
 provider_cloudflare_auth(){ requests.auth_bearer "$CLOUDFLARE_API_TOKEN";}
 provider_cloudflare_endpoint(){ printf '/client/v4/accounts/%s/ai/run/%s' "$CLOUDFLARE_ACCOUNT_ID" "$1";}
@@ -1758,14 +1859,20 @@ return 1
 IMAGINE_RESULT_TYPE=base64
 IMAGINE_RESULTS=$(requests.json "$resp" '.result.image')
 }
+provider_cloudflare_models(){
+requests.json "$(requests.get "/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/ai/models/search?per_page=100")" \
+'.result[] | select(.task.name == "Text-to-Image") | .name'
+}
 provider.register cloudflare
 provider_google_meta(){
 PROVIDER_LABEL="Google Gemini"
 PROVIDER_CREDS=(GOOGLE_API_KEY)
-PROVIDER_DEFAULT_MODEL="gemini-2.5-flash-image"
+PROVIDER_DEFAULT_MODEL="gemini-3.1-flash-image"
+PROVIDER_DEFAULT_REF_MODEL="gemini-3.1-flash-image"
 PROVIDER_CAPS="size:aspect ref:multi seed:no negative:no quality:yes style:no n:4"
 PROVIDER_HOST="generativelanguage.googleapis.com"
 PROVIDER_XGET_PREFIX="gemini"
+PROVIDER_PROBE_PATH="/v1beta/models"
 }
 provider_google_auth(){ requests.headers.append "x-goog-api-key" "$GOOGLE_API_KEY";}
 provider_google_endpoint(){ printf '/v1beta/models/%s:generateContent' "$1";}
@@ -1797,10 +1904,11 @@ provider.register google
 provider_dashscope_meta(){
 PROVIDER_LABEL="阿里云 DashScope"
 PROVIDER_CREDS=(DASHSCOPE_API_KEY)
-PROVIDER_DEFAULT_MODEL="qwen-image-plus"
-PROVIDER_DEFAULT_REF_MODEL="wan2.7-image-pro"
+PROVIDER_DEFAULT_MODEL="qwen-image-3.0"
+PROVIDER_DEFAULT_REF_MODEL="wan2.7-image"
 PROVIDER_CAPS="size:star ref:multi seed:yes negative:yes quality:yes style:no n:4"
 PROVIDER_HOST="dashscope.aliyuncs.com"
+PROVIDER_PROBE_PATH="/compatible-mode/v1/models"
 }
 provider_dashscope_auth(){ requests.auth_bearer "$DASHSCOPE_API_KEY";}
 provider_dashscope_endpoint(){ printf '/api/v1/services/aigc/multimodal-generation/generation';}
@@ -1839,8 +1947,10 @@ provider_doubao_meta(){
 PROVIDER_LABEL="火山方舟 Doubao"
 PROVIDER_CREDS=(ARK_API_KEY)
 PROVIDER_DEFAULT_MODEL="doubao-seedream-5-0-260128"
+PROVIDER_DEFAULT_REF_MODEL="doubao-seedream-5-0-pro-260628"
 PROVIDER_CAPS="size:any ref:multi seed:yes negative:yes quality:yes style:no n:10"
 PROVIDER_HOST="ark.cn-beijing.volces.com"
+PROVIDER_PROBE_PATH="/api/v3/models"
 }
 provider_doubao_auth(){ openai_compat.auth "$ARK_API_KEY";}
 provider_doubao_endpoint(){ openai_compat.endpoint "/api/v3/images/generations";}
@@ -1871,9 +1981,9 @@ PROVIDER_CREDS=(MINIMAX_API_KEY)
 PROVIDER_DEFAULT_MODEL="image-01"
 PROVIDER_CAPS="size:any ref:multi seed:yes negative:no quality:yes style:no n:9"
 PROVIDER_HOST="api.minimaxi.com"
+PROVIDER_PROBE_PATH="/v1/models"
 PROVIDER_MODEL_LIST="image-01
-image-01-plus
-image-02"
+image-01-live"
 }
 provider_minimax_auth(){ requests.auth_bearer "$MINIMAX_API_KEY";}
 provider_minimax_endpoint(){ printf '/v1/image_generation';}
@@ -1913,10 +2023,18 @@ provider.register minimax
 provider_openai_meta(){
 PROVIDER_LABEL="OpenAI"
 PROVIDER_CREDS=(OPENAI_API_KEY)
-PROVIDER_DEFAULT_MODEL="gpt-image-1"
+PROVIDER_DEFAULT_MODEL="gpt-image-2.5-flare"
+PROVIDER_DEFAULT_REF_MODEL="gpt-image-2.5-sunburst"
 PROVIDER_CAPS="size:any ref:none seed:no negative:no quality:yes style:yes n:10"
 PROVIDER_HOST="api.openai.com"
 PROVIDER_XGET_PREFIX="openai"
+PROVIDER_PROBE_PATH="/v1/models"
+PROVIDER_MODEL_LIST="gpt-image-2.5-sunburst
+gpt-image-2.5-flare
+gpt-image-2
+gpt-image-1.5
+gpt-image-1-mini
+gpt-image-1"
 }
 provider_openai_auth(){ openai_compat.auth "$OPENAI_API_KEY";}
 provider_openai_endpoint(){ openai_compat.endpoint "/v1/images/generations";}
@@ -1941,17 +2059,19 @@ openai_compat.body "$extra" "$sz" "$count"
 }
 provider_openai_parse(){ openai_compat.parse "$1";}
 provider_openai_models(){
-requests.json "$(requests.get "/v1/models")" '.data[].id | select(test("dall|image"))'
+requests.json "$(requests.get "/v1/models")" '.data[].id | select(test("^(gpt-image|dall-e)"))'
 }
 provider.register openai
 provider_openrouter_meta(){
 PROVIDER_LABEL="OpenRouter"
 PROVIDER_CREDS=(OPENROUTER_API_KEY)
-PROVIDER_DEFAULT_MODEL="openai/gpt-image-1"
+PROVIDER_DEFAULT_MODEL="qwen/qwen-image-3"
+PROVIDER_DEFAULT_REF_MODEL="google/gemini-3.1-flash-image"
 PROVIDER_CAPS="size:fixed ref:multi seed:yes negative:no quality:no style:no n:10"
 PROVIDER_SIZES=(1024x1024 1536x1024 1024x1536)
 PROVIDER_HOST="openrouter.ai"
 PROVIDER_XGET_PREFIX="openrouter"
+PROVIDER_PROBE_PATH="/api/v1/key"
 }
 provider_openrouter_auth(){ openai_compat.auth "$OPENROUTER_API_KEY";}
 provider_openrouter_endpoint(){ openai_compat.endpoint "/api/v1/images";}
@@ -1976,6 +2096,7 @@ PROVIDER_CREDS=(ZAI_API_KEY)
 PROVIDER_DEFAULT_MODEL="glm-image"
 PROVIDER_CAPS="size:any ref:none seed:no negative:no quality:yes style:no n:4"
 PROVIDER_HOST="api.z.ai"
+PROVIDER_PROBE_PATH="/api/paas/v4/models"
 PROVIDER_MODEL_LIST="glm-image"
 }
 provider_zai_auth(){ openai_compat.auth "$ZAI_API_KEY";}
@@ -2071,8 +2192,7 @@ return 1
 }
 else
 PROVIDER="$(provider.auto_select "$REF")"||{
-common.fail "没有可用的 provider（检查 API key，或用 --provider 指定）"
-_providers_table
+common.fail "没有可用的 provider（检查 API key，或用 --provider 指定）；imagine providers --offline 看每家缺什么"
 return 1
 }
 fi
@@ -2093,31 +2213,106 @@ compose.apply_caps "$PROVIDER"||return 1
 OUTPUT="$(common.output_path "$OUTPUT" "$PROVIDER")"
 compose.generate "$PROVIDER" "$OUTPUT"
 }
-_providers_table(){
-printf '  %-12s %-22s %-5s %-5s %-8s %-7s %-3s %s\n' "PROVIDER" "LABEL" "FREE" "CRED" "SIZE" "REF" "N" "DEFAULT MODEL"
-printf '  %s\n' "--------------------------------------------------------------------------------------------------"
-local name free cred cap_size cap_ref maxn
+_providers_pad(){
+local w="$1" s="$2" pad
+pad=$((w-$(console.display_width "$s")))
+((pad<0))&&pad=0
+printf '%s%*s' "$s" "$pad" ""
+}
+_providers_caps(){
+printf '  %s%s%s%s\n' "$(_providers_pad 14 "PROVIDER")" "$(_providers_pad 10 "SIZE")" \
+"$(_providers_pad 8 "REF")" "N"
+printf '  %s\n' "$(console.repeat "-" 33)"
+local name cap_size cap_ref maxn
 while IFS= read -r name;do
 [[ -z $name ]]&&continue
-free="no"
-[[ ${PROV_FREE[$name]:-} == true ]]&&free="yes"
-cred="ok"
-provider.creds_ok "$name"||cred="-"
 cap_size="$(provider.cap "$name" size)"||cap_size="-"
 cap_ref="$(provider.cap "$name" ref)"||cap_ref="-"
 maxn="$(provider.cap "$name" n)"||maxn="-"
-printf '  %-12s %-22s %-5s %-5s %-8s %-7s %-3s %s\n' \
-"$name" "$(provider.label "$name")" "$free" "$cred" "$cap_size" "$cap_ref" "$maxn" "$(provider.default_model "$name")"
+printf '  %s%s%s%s\n' \
+"$(_providers_pad 14 "$name")" "$(_providers_pad 10 "$cap_size")" \
+"$(_providers_pad 8 "$cap_ref")" "n=$maxn"
 done < <(provider.list)
-echo ""
-echo "  SIZE: any=原样直传 / star=星号分隔 / fixed=就近映射 / aspect=宽高比 / none=忽略"
-echo "  REF:  none=不支持 / one=单张 / multi=多张；CRED: ok=凭证齐全 -=缺凭证"
+printf '  %s\n' "SIZE: any=原样直传 / star=星号分隔 / fixed=就近映射 / aspect=宽高比 / none=忽略"
+printf '  %s\n' "REF:  none=不支持 / one=单张 / multi=多张；N=单次最大张数"
 }
 cmd_providers(){
-args.init "列出各 provider 的能力与凭证状态"
+args.init "列出各 provider 的可用状态（探活验证 key 真的能用）"
+args.add_options "offline" "" "只读配置，不发探活请求"
+args.add_options "caps" "" "只看能力明细（尺寸 / 参考图 / 张数），不跑探活"
 args.process "$@"
-registry.ensure||true
-_providers_table
+local offline=false caps=false
+args.has "--offline"&&offline=true
+args.has "--caps"&&caps=true
+if [[ $caps == true ]];then
+console.layout.section "能力明细"
+_providers_caps
+console.layout.footer "可用状态与凭证：imagine providers（--offline 跳过探活）"
+return 0
+fi
+[[ $offline == true ]]||registry.ensure||true
+local -A status=() detail=() name st text
+while IFS= read -r name;do
+if provider.creds_ok "$name";then
+status[$name]=unknown
+detail[$name]=-
+else
+status[$name]=missing
+detail[$name]="$(provider.creds_missing "$name")"
+fi
+done < <(provider.list)
+if [[ $offline == true ]];then
+for name in "${!status[@]}";do
+[[ ${status[$name]} == unknown ]]&&status[$name]=ok
+done
+else
+while IFS=$'\t' read -r name st text;do
+[[ -n $name ]]||continue
+status[$name]="$st"
+detail[$name]="$text"
+done < <(provider.probe_all)
+fi
+local -a usable=() blocked=()
+while IFS= read -r name;do
+if [[ ${status[$name]:-} == ok ]];then usable+=("$name");else blocked+=("$name");fi
+done < <(provider.list)
+console.layout.section "Providers"
+printf '\n可用\n'
+if ((${#usable[@]}==0));then
+printf '  （没有可用的 provider）\n'
+else
+printf '  %s%s%s%s\n' "$(_providers_pad 14 "PROVIDER")" "$(_providers_pad 24 "LABEL")" \
+"$(_providers_pad 6 "FREE")" "DEFAULT MODEL"
+printf '  %s\n' "$(console.repeat "-" 57)"
+local free
+for name in "${usable[@]}";do
+free="付费"
+[[ ${PROV_FREE[$name]} == true ]]&&free="免费"
+printf '  %s%s%s%s\n' \
+"$(_providers_pad 14 "$name")" \
+"$(_providers_pad 24 "$(provider.label "$name")")" \
+"$(_providers_pad 6 "$free")" \
+"$(provider.default_model "$name")"
+done
+fi
+printf '\n不可用\n'
+if ((${#blocked[@]}==0));then
+printf '  （无）\n'
+else
+for name in "${blocked[@]}";do
+printf '  %s%s\n' "$(_providers_pad 14 "$name")" \
+"$(provider.probe_reason "${status[$name]}" "${detail[$name]}")"
+done
+fi
+local auto
+if [[ $offline == true ]];then
+console.layout.footer "离线模式：没有发探活请求；--caps 看能力明细"
+elif auto="$(provider.auto_select)";then
+console.layout.footer "未指定 --provider 时会选 $auto（按凭证与能力挑，不预探活）；--caps 看能力明细"
+else
+console.layout.footer "没有可用的 provider：照 env.example 配一家，再跑一次看缺什么"
+fi
+return 0
 }
 cmd_update(){
 args.init "从远端刷新模型目录到本地缓存"
@@ -2174,19 +2369,26 @@ provider.exists "$name"||{
 log.error "未知 provider: $name"
 return 1
 }
+if [[ $live == true ]];then
 provider.creds_ok "$name"||{
-log.error "$name 缺少凭证：$(provider.creds_missing "$name")"
+log.error "$name 缺少凭证：$(provider.creds_missing "$name")（--live 要打它的列表 API）"
 return 1
 }
-if [[ $live == true ]];then
 compose.init "$name"||return 1
 provider.models_live "$name"
 return
 fi
 printf '  %s (default: %s)\n' "$name" "$(provider.default_model "$name")"
 printf '  %s\n' "------------------------------------------"
+if provider.creds_ok "$name";then
 compose.init "$name"||return 1
-provider.models "$name"
+fi
+local missing
+missing="$(provider.creds_missing "$name")"
+provider.models "$name"||{
+log.error "$name 拿不到模型清单${missing:+（缺 $missing）}"
+return 1
+}
 }
 main(){
 args.init "命令行文生图 / 图生图工具 — 一套参数调用多家 provider"
