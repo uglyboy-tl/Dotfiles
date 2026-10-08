@@ -36,7 +36,7 @@ run_in_background: true
 
 **上表之外的取数工具**:环境若另有面向特定来源的搜索/取数手段(MCP 工具、扩展、技能附带的脚本与文档),对当前子问题更对口就用它。读它自己的说明再用,不猜参数;需要凭据或网络的先跑其自检/探活;只用环境实际提供的那个;按其声明的字段取结果,热度/排名类数字只用来挑候选。
 
-**GitHub 一律走 `gh`,不要用 `fetch_content`**:本机 `fetch_content` 抓 github.com / raw.githubusercontent.com 会被 SSRF 拦截(实测 `Blocked internal address`)。用 `gh search repos/code`、`gh api repos/<owner>/<repo>/readme`、`gh api repos/<o>/<r>/contents/<path>`、`gh pr view`、`gh issue view`。
+**GitHub 走 `gh`**：`gh search repos/code`、`gh api repos/<owner>/<repo>/readme`、`gh api repos/<owner>/<repo>/contents/<path>`、`gh pr view`、`gh issue view`、`gh gist view <id> --raw`。`gist.github.com`、`gist.githubusercontent.com`、`raw.githubusercontent.com` 是 `github.com` 之外的 host，同样用 `gh`；`gh` 失败时才用 `fetch_content`。
 
 **PDF 与视频当前不可用**:本机没有 datalab / gemini key,本地 `unpdf` 在 pi 运行时解析失败,`fetch_content` 抓 PDF 会报错;遇到 PDF 链接直接说明不支持,改找 HTML 版或作者摘要,不要试。`web-search.json` 里 YouTube / 视频分析也是关的。网页与 `gh` 正常。
 
