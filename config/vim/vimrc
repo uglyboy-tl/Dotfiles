@@ -44,9 +44,10 @@ call plug#end()
 " ──────────────────────────────────────────────
 " 外观设置
 " ──────────────────────────────────────────────
-colorscheme nord
+" nord.vim 在 `colorscheme` 执行时就读取这两个变量，必须先 let 再切换配色
 let g:nord_cursor_line_number_background = 1
 let g:nord_italic_comments = 1
+colorscheme nord
 let g:lightline = {'colorscheme': '16color'}
 set noshowmode
 
