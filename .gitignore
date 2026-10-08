@@ -5,3 +5,7 @@ __pycache__/
 # 目录级软链让产物落回仓库，但只落在 desktop/<app>/ 下。
 # 不要图省事写成 `**/colors.*`：那会连主题源文件一起忽略（已踩过）。
 desktop/*/colors.*
+
+# Obsidian 知识库笔记软链（仅本机可见，绝对路径不跨机器）。
+docs/Debian
+docs/Dotfiles

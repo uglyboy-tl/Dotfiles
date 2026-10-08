@@ -37,3 +37,4 @@
 - [架构与设计](architecture.md) - 装配层、脚本分层、渲染流程的完整说明
 - [决策记录（ADR）](adr/) - 为什么这样设计，以及当初排除了什么
 - [问题排查](troubleshooting/) - 已踩过的坑与解法
+- [知识笔记规范](notes.md) - `docs/Debian`、`docs/Dotfiles` 两个 Obsidian 软链的收录判据与结构

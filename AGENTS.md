@@ -60,6 +60,7 @@ $XDG_CONFIG_HOME/zsh/.zshrc: config/zsh/zshrc.zsh
 | 主题颜色/模板、新增主题或应用 | [docs/theming.md](docs/theming.md) |
 | 设置菜单组件、新增设置项、内部脚本 API | [docs/settings.md](docs/settings.md) |
 | 维护笔记（Git 索引技巧、预览缓存、已知问题、待办） | [docs/maintenance.md](docs/maintenance.md) |
+| **Obsidian 笔记怎么写**（收录判据、结构、索引维护） | [docs/notes.md](docs/notes.md) |
 | 为什么这样设计、当初排除了什么 | [docs/adr/](docs/adr/) |
 | 某软件的配置放在哪 | [docs/reference/software.md](docs/reference/software.md) |
 | 与 Omarchy 的选型对比、可借鉴项 | [docs/reference/omarchy.md](docs/reference/omarchy.md) |
@@ -67,3 +68,9 @@ $XDG_CONFIG_HOME/zsh/.zshrc: config/zsh/zshrc.zsh
 | 快捷键 | [docs/reference/keybindings.md](docs/reference/keybindings.md) |
 
 总索引：[docs/README.md](docs/README.md)。
+
+### Obsidian 笔记软链（docs/Debian、docs/Dotfiles）
+
+这两个目录是指向 Obsidian 知识库 `~/Code/Obsidian/知识梳理/` 的软链，记个人使用技巧，已在 `.gitignore` 排除（绝对路径不跨机器，别的 checkout 里不存在属正常）。写法与收录判据见 [docs/notes.md](docs/notes.md)。
+
+同步是这两个链接存在的意义：改 dotfiles 时若波及这两个目录涉及的软件或用法，顺手更新笔记，别让笔记落后于版本。笔记者改动不回写仓库。
