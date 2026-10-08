@@ -505,112 +505,6 @@ path.log_dir(){
 : "${SCRIPT_LOG_DIR:=$(path.state_dir)/logs}"
 echo "$SCRIPT_LOG_DIR"
 }
-declare -ga _CONFIG_REGISTERED=()
-declare -gA _CONFIG_ARRAY_REGISTERED=()
-declare -gA _CONFIG_ARRAY_ITEMS=()
-declare -gA _CONFIG_VALUES=()
-declare -gA _CONFIG_TYPES=()
-declare -gA _CONFIG_DESCS=()
-declare -gi _CONFIG_STRICT_MODE=1
-config.path(){
-[[ -n ${_CONFIG_PATH+x} ]]&&echo "$_CONFIG_PATH"&&return 0
-local _f="config.toml"
-[[ -f $_f ]]&&echo "$_f"&&return 0
-_f="$(path.config_dir)/config.toml"
-[[ -f $_f ]]&&echo "$_f"&&return 0
-log.error "配置文件不存在: $_f"
-return 1
-}
-config.register(){
-array.contains _CONFIG_REGISTERED "$1"&&log.warn "Key $1 重复定义"||_CONFIG_REGISTERED+=("$1")
-_CONFIG_TYPES["$1"]="${3:-string}"
-_CONFIG_DESCS["$1"]="${4:-}"
-(($#>=2))&&_CONFIG_VALUES["$1"]="$2"||true
-}
-config.array.register(){
-_CONFIG_ARRAY_REGISTERED["$1"]+=" $2"
-config.register "$1.$2" "${@:3}"
-unset '_CONFIG_REGISTERED[-1]'
-}
-config.loose(){ _CONFIG_STRICT_MODE=0;}
-config.load(){
-local _f="${1:-$(config.path)}" _in_arr=false _table=""
-[[ -z $_f ]]&&return 1
-while IFS= read -r line||[[ -n $line ]];do
-[[ $line =~ ^[[:space:]]*$ ]]&&continue
-[[ $line =~ ^[[:space:]]*# ]]&&continue
-if [[ $line =~ ^\[([^\]]+)\]$ ]];then
-_table="${BASH_REMATCH[1]}"
-_in_arr=false
-if [[ $_table =~ ^([^.]+)\.(.+)$ ]];then
-local _arr="${BASH_REMATCH[1]}" _itm="${BASH_REMATCH[2]}"
-! ((_CONFIG_STRICT_MODE))||config.array.has "$_arr"&&config.array.add "$_arr" "$_itm"&&_in_arr=true
-fi
-continue
-fi
-[[ $line =~ ^([^=[:space:]]+)[[:space:]]*=[[:space:]]*(.*)$ ]]||continue
-local _ak="${BASH_REMATCH[1]}"
-local _k="${_table:+$_table.}$_ak" _v="${BASH_REMATCH[2]}"
-((_CONFIG_STRICT_MODE))&&[[ $_in_arr != "true" ]]&&{ array.contains "_CONFIG_REGISTERED" "$_k"||continue;}
-((_CONFIG_STRICT_MODE))&&[[ $_in_arr == "true" ]]&&{ config.array.has "$_arr" "$_itm" "$_ak"||continue;}
-_v="${_v%"${_v##*[![:space:]]}"}"
-[[ $_v =~ ^[\'\"](.*)[\'\"]$ ]]&&_v="${BASH_REMATCH[1]}"
-_CONFIG_VALUES["$_k"]="$_v"
-done <"$_f"
-}
-config.keys(){ printf "%s\n" "${_CONFIG_REGISTERED[@]}";}
-config.has(){ [[ -v "_CONFIG_VALUES[$1]" ]];}
-config.get(){ [[ -v "_CONFIG_VALUES[$1]" ]]&&echo "${_CONFIG_VALUES[$1]}"||return 1;}
-config.set(){
-! array.contains "_CONFIG_REGISTERED" "$1"&&{
-log.error "未注册的配置项: $1"
-return 1
-}
-_CONFIG_VALUES["$1"]="$2"
-}
-config.sections(){
-local prefix="${1:-}"
-local -A seen=()
-local key section_prefix="${prefix:+$prefix.}"
-for key in "${!_CONFIG_VALUES[@]}";do
-[[ $key == $section_prefix*.* ]]&&{
-local part=${key#"$section_prefix"}
-seen["${part%%.*}"]=1
-}
-done
-printf "%s\n" "${!seen[@]}"
-}
-config.array.items(){ [[ -v "_CONFIG_ARRAY_ITEMS[$1]" ]]&&echo "${_CONFIG_ARRAY_ITEMS[$1]}";}
-_config.list.contains(){
-local -n _ref="$1"
-local -a _t=()
-read -ra _t <<<"${_ref[$2]:-}"||true
-array.contains _t "${3:-}"
-}
-config.array.has(){
-map.contains _CONFIG_ARRAY_REGISTERED "$1"||return 1
-(($#>=2))&&_config.list.contains _CONFIG_ARRAY_ITEMS "$1" "$2"||(($#<2))||return 1
-(($#>=3))&&_config.list.contains _CONFIG_ARRAY_REGISTERED "$1" "$3"||(($#<3))||return 1
-}
-config.array.get(){ [[ -v "_CONFIG_VALUES["$1.$2.$3"]" ]]&&echo "${_CONFIG_VALUES["$1.$2.$3"]}"||return 1;}
-config.array.add(){
-_config.list.contains _CONFIG_ARRAY_ITEMS "$1" "$2"&&return 0
-_CONFIG_ARRAY_ITEMS["$1"]+=" $2"
-}
-config.array.set(){
-! config.array.has "$1"&&{
-log.error "未注册的数组配置名: $1"
-return 1
-}
-_config.list.contains _CONFIG_ARRAY_REGISTERED "$1" "$3"||{
-log.error "未注册的数组配置项: $1:$3"
-return 1
-}
-config.array.add "$1" "$2"
-_CONFIG_VALUES["$1.$2.$3"]=$4
-}
-config.type(){ [[ -v "_CONFIG_TYPES[$1]" ]]&&echo "${_CONFIG_TYPES[$1]}";}
-config.desc(){ [[ -v "_CONFIG_DESCS[$1]" ]]&&echo "${_CONFIG_DESCS[$1]}";}
 cache.dir(){
 local dir
 dir="$(path.cache_dir)"||return 1
@@ -1216,7 +1110,7 @@ fi
 fi
 while :;do
 i=$((i+1))
-resp="" code="" rc=""
+resp="" code="" rc="" _DIG_HTTP_STATUS=""
 resp="$(requests.request "$method" "$url" "$body" "$ctype")"||resp=""
 if [[ -n $resp ]];then
 code="$(requests.status_code "$resp")"
@@ -1239,7 +1133,7 @@ fi
 if [[ -z $resp ]];then
 log.error "无法连接 $url：请求未产生响应"
 elif [[ $rc != "0" || $code == "000" || $code == "0" ]];then
-log.error "无法连接 $url：网络不通（curl exit $rc）。若该站点需代理，设 DIG_PROXY 或写 ~/.config/dig/config.toml"
+log.error "无法连接 $url：网络不通（curl exit $rc）。若该站点需代理，设 DIG_PROXY（要持久化就写进包内 .env）"
 else
 log.error "请求被拒：$url (HTTP $code)，已重试 $((i-1)) 次"
 fi
@@ -1300,15 +1194,6 @@ fi
 dig.query(){
 local -n _dig_args_ref="$(args.args)"
 string.trim "${_dig_args_ref[*]:-}"
-}
-dig.num(){
-local v
-v="$(config.get "$1" 2>/dev/null||true)"
-if string.int.check "$v"||string.float.check "$v";then
-printf '%s' "$v"
-else
-printf '%s' "$2"
-fi
 }
 dig.options.common(){
 args.add_options "limit" "n" "返回条目上限" "NUMBER"
@@ -1383,7 +1268,7 @@ _BROWSER_PROBE_RC=""
 browser.available(){ [[ -n ${CLOUDFLARE_ACCOUNT_ID:-} && -n ${CLOUDFLARE_API_TOKEN:-} ]];}
 browser.creds.check(){
 browser.available||{
-log.error "需要 Cloudflare Browser Run 凭证：CLOUDFLARE_ACCOUNT_ID 与 CLOUDFLARE_API_TOKEN（见 env.example）"
+log.error "需要 Cloudflare Browser Run 凭证：CLOUDFLARE_ACCOUNT_ID 与 CLOUDFLARE_API_TOKEN（写进脚本同目录的 .env）"
 return 1
 }
 }
@@ -2042,7 +1927,7 @@ source.url.register arxiv arxiv.org
 source.register arxiv "arXiv 论文摘要" "tier:topic period:pastyear proxy:no key:none"
 zhihu.probe(){
 if ! zhihu.credential >/dev/null 2>&1;then
-printf '设置 ZHIHU_ACCESS_SECRET，或写 ~/.config/zhihu-search/credentials.json'
+printf '设置 ZHIHU_ACCESS_SECRET（写进包内 .env）'
 return 3
 fi
 if zhihu.fetch /api/v1/quota >/dev/null 2>&1;then
@@ -2060,19 +1945,7 @@ if [[ -n ${ZHIHU_ACCESS_SECRET:-} ]];then
 printf '%s' "$ZHIHU_ACCESS_SECRET"
 return 0
 fi
-local dir="${ZHIHU_SEARCH_HOME:-$HOME/.config/zhihu-search}"
-local file="$dir/credentials.json"
-if [[ -f $file ]];then
-local s
-s="$("$(schema.jq.bin)" -r '.access_secret // empty' "$file" 2>/dev/null||true)"
-if [[ -n $s ]];then
-printf '%s' "$s"
-return 0
-fi
-log.error "凭证文件 $file 缺少 access_secret 字段"
-return 1
-fi
-log.error "缺少知乎凭证：设置 ZHIHU_ACCESS_SECRET，或写入 $file 的 {\"access_secret\":\"...\"}；免费申请 https://developer.zhihu.com/personal"
+log.error "缺少知乎凭证：设置 ZHIHU_ACCESS_SECRET（写进包内 .env 即可）；免费申请 https://developer.zhihu.com/personal"
 return 1
 }
 zhihu.fetch(){
@@ -2152,7 +2025,7 @@ zhihu.hot.map(){
 source.register zhihu "知乎搜索 / 热榜" "tier:topic period:yes proxy:no key:required"
 weread.probe(){
 if ! weread.key >/dev/null 2>&1;then
-printf 'WEREAD_API_KEY，或 pass insert weread'
+printf '设置 WEREAD_API_KEY（写进包内 .env）'
 return 3
 fi
 if weread.api.call /store/search keyword test scope 10 count 1 >/dev/null 2>&1;then
@@ -2164,25 +2037,12 @@ return 1
 }
 _WEREAD_GATEWAY="https://i.weread.qq.com/api/agent/gateway"
 _WEREAD_SKILL_VERSION="1.0.4"
-_WEREAD_KEY_CACHE=""
 weread.key(){
 if [[ -n ${WEREAD_API_KEY:-} ]];then
 printf '%s' "$WEREAD_API_KEY"
 return 0
 fi
-if [[ -n $_WEREAD_KEY_CACHE ]];then
-printf '%s' "$_WEREAD_KEY_CACHE"
-return 0
-fi
-if system.command.exist pass;then
-local k
-if k="$(pass weread 2>/dev/null)"&&[[ -n $k ]];then
-_WEREAD_KEY_CACHE="$k"
-printf '%s' "$k"
-return 0
-fi
-fi
-log.error "缺少微信读书凭证：设置 WEREAD_API_KEY 环境变量，或执行 pass insert weread"
+log.error "缺少微信读书凭证：设置 WEREAD_API_KEY（写进包内 .env 即可）；取：https://weread.qq.com/r/weread-skills"
 return 1
 }
 weread.body(){
@@ -2588,7 +2448,7 @@ log.error "不是合法的 V2EX 主题 URL：$url（形如 www.v2ex.com/t/123456
 return 1
 }
 browser.creds.check||{
-log.error '本机直连 www.v2ex.com 不通，取主题需要 Cloudflare Browser Run 凭证（见 env.example）'
+log.error '本机直连 www.v2ex.com 不通，取主题需要 Cloudflare Browser Run 凭证（写进脚本同目录的 .env）'
 return 1
 }
 browser.page "https://www.v2ex.com/t/$id"|v2ex.map_topic "$id"|schema.pipe 0|schema.limit 1
@@ -3121,6 +2981,312 @@ id="$(wechat.url.id "$url"||printf '%s' "$url")"
 }
 source.url.register wechat mp.weixin.qq.com
 source.register wechat "微信公众号文章正文（只按 URL 取，需 Cloudflare Browser Run 凭证）" "tier:topic period:no proxy:no key:required"
+_X_BEARER="${DIG_X_BEARER:-AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA}"
+_X_PAGE_MAX=20
+_X_ANON_TOKEN='dig-anon'
+_X_OPS_NS='x-ops'
+_X_OPS_KEY='query-ids'
+_X_OPS_TTL=2592000
+_X_FEATURES='{"rweb_video_screen_enabled":true,"profile_label_improvements_pcf_label_in_post_enabled":true,"responsive_web_profile_redirect_enabled":true,"rweb_tipjar_consumption_enabled":true,"verified_phone_label_enabled":false,"creator_subscriptions_tweet_preview_api_enabled":true,"responsive_web_graphql_timeline_navigation_enabled":true,"responsive_web_graphql_exclude_directive_enabled":true,"responsive_web_graphql_skip_user_profile_image_extensions_enabled":false,"premium_content_api_read_enabled":false,"communities_web_enable_tweet_community_results_fetch":true,"c9s_tweet_anatomy_moderator_badge_enabled":true,"responsive_web_grok_analyze_button_fetch_trends_enabled":false,"responsive_web_grok_analyze_post_followups_enabled":false,"responsive_web_grok_annotations_enabled":false,"responsive_web_jetfuel_frame":true,"post_ctas_fetch_enabled":true,"responsive_web_grok_share_attachment_enabled":true,"responsive_web_edit_tweet_api_enabled":true,"graphql_is_translatable_rweb_tweet_is_translatable_enabled":true,"view_counts_everywhere_api_enabled":true,"longform_notetweets_consumption_enabled":true,"responsive_web_twitter_article_tweet_consumption_enabled":true,"tweet_awards_web_tipping_enabled":false,"responsive_web_grok_show_grok_translated_post":false,"responsive_web_grok_analysis_button_from_backend":true,"creator_subscriptions_quote_tweet_preview_enabled":false,"freedom_of_speech_not_reach_fetch_enabled":true,"standardized_nudges_misinfo":true,"tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled":true,"rweb_video_timestamps_enabled":true,"longform_notetweets_rich_text_read_enabled":true,"longform_notetweets_inline_media_enabled":true,"responsive_web_grok_image_annotation_enabled":true,"responsive_web_grok_imagine_annotation_enabled":true,"responsive_web_grok_community_note_auto_translation_is_enabled":false,"articles_preview_enabled":true,"responsive_web_enhance_cards_enabled":false}'
+read -r -d '' _X_JQ_LIB <<'JQ'||true
+# X 的 legacy.created_at 是 RFC822（"Wed Oct 07 23:06:08 +0000 2026"），jq 没有 strptime，
+# 所以手转成 RFC3339 再交给 to_utc 归一成 UTC Z。解析不了时给空串 —— schema.pipe 会把
+# 无日期的条目保留而不是丢弃（与其它源一致）。
+def x_rfc822:
+  if type != "string" then "" else
+    (capture("^[A-Za-z]{3} (?<mon>[A-Za-z]{3}) +(?<day>[0-9]{1,2}) (?<time>[0-9]{2}:[0-9]{2}:[0-9]{2}) (?<off>[+-][0-9]{4}) (?<year>[0-9]{4})$") // null) as $c
+    | if $c == null then "" else
+        (["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+         | index($c.mon) // 99 | . + 1 | tostring
+         | if length < 2 then "0" + . else . end) as $m
+        | "\($c.year)-\($m)-\($c.day | if length < 2 then "0" + . else . end)T\($c.time)\($c.off[0:3]):\($c.off[3:5])"
+      end
+  end;
+JQ
+x.options(){
+args.add_options "tweet" "" "取单条推文：数字 id 或 x.com/<user>/status/<id> 链接（零凭证）" "URL|ID"
+args.add_options "update-ids" "" "手动刷新 queryId 缓存（失效时会自动刷，一般不用跑；需要真 cookie）"
+}
+x.cache.bypass(){ args.has "--update-ids";}
+x.probe(){
+local -a missing=()
+[[ -n ${X_AUTH_TOKEN:-} && ${X_AUTH_TOKEN:-} != "$_X_ANON_TOKEN" ]]||missing+=("X_AUTH_TOKEN")
+[[ -n ${X_CT0:-} && ${X_CT0:-} != "$_X_ANON_TOKEN" ]]||missing+=("X_CT0")
+if ((${#missing[@]}));then
+local joined
+printf -v joined '%s / ' "${missing[@]}"
+printf '缺少 %s：SearchTimeline 的 queryId 要从 x.com/home 的 main bundle 取，那一步需要登录态' "${joined% / }"
+return 3
+fi
+local probe qid
+probe="$(dig.http.probe "https://x.com/")"||return $?
+qid="$("$(schema.jq.bin)" -r '.SearchTimeline // ""' <<<"$(x.ops.cached)" 2>/dev/null)"||qid=""
+if [[ -n $qid ]];then
+printf '%s；搜索可用（queryId 已缓存）' "$probe"
+else
+printf '%s；搜索可用（queryId 未缓存，首次搜索会现取一次）' "$probe"
+fi
+}
+x.search(){
+if args.has "--update-ids";then
+x.ops.update
+return $?
+fi
+local tweet
+tweet="$(dig.opt --tweet)"
+if [[ -n $tweet ]];then
+local single
+single="$(x.tweet "$tweet")"||return 1
+printf '%s' "$single"|x.tweet.map|schema.pipe 0|schema.limit 1
+return 0
+fi
+[[ -n $DIG_QUERY ]]||{
+log.error '需要查询词：dig x "关键词"（单条用 --tweet <id|url>，刷新 queryId 用 --update-ids）'
+return 1
+}
+local query_id count vars url body resp status attempt out refresh_failed=false
+count="$(dig.clamp "$DIG_LIMIT" "$_X_PAGE_MAX" "X")"
+resp=""
+status=""
+out="$(mktemp)"||{
+log.error "无法创建临时文件，发不出请求"
+return 1
+}
+vars="$("$(schema.jq.bin)" -nc --arg q "$DIG_QUERY" --argjson n "$count" \
+'{rawQuery: $q, count: $n, querySource: "typed_query", product: "Latest"}')"||{
+rm -f "$out"
+return 1
+}
+for ((attempt=1; attempt<=2; attempt++));do
+if ! query_id="$(x.ops.query_id)";then
+rm -f "$out"
+return 1
+fi
+body="$("$(schema.jq.bin)" -nc --argjson f "$_X_FEATURES" --arg id "$query_id" \
+'{features: $f, queryId: $id}')"||{
+rm -f "$out"
+return 1
+}
+url="https://x.com/i/api/graphql/$query_id/SearchTimeline?variables=$("$(schema.jq.bin)" -nr --arg v "$vars" '$v | @uri')"||{
+rm -f "$out"
+return 1
+}
+if x.fetch "$url" "$body" >"$out";then
+resp="$(cat "$out")"
+status=""
+break
+fi
+status="$(dig.http.status)"
+if ((attempt==1))&&[[ $status == 404 || $status == 403 ]]&&x.ops.can_update;then
+log.info "X 返回 $status（queryId $query_id 可能已失效），自动刷新后重试一次"
+if ! x.ops.update;then
+refresh_failed=true
+break
+fi
+continue
+fi
+break
+done
+rm -f "$out"
+if [[ -z $resp ]];then
+if [[ $status == 404 || $status == 403 ]];then
+if [[ $refresh_failed == true ]];then
+log.error "X 返回 $status，而自动刷新 queryId 也失败了（原因见上面的报错）：先解决刷新失败再试"
+elif x.ops.can_update;then
+log.error "X 返回 $status，自动刷新 queryId 之后仍然如此：更可能是 cookie 的问题（更新 X_AUTH_TOKEN / X_CT0）"
+else
+log.error "X 返回 $status：queryId 已失效，而自动刷新需要真 cookie（X_AUTH_TOKEN / X_CT0）—— main bundle 只在 x.com/home，那个页面未登录会 307 到登录页"
+fi
+elif [[ $status == 401 ]];then
+log.error "X 返回 401：登录态被拒（X_AUTH_TOKEN / X_CT0 失效或权限不足），重新从 x.com 复制两个 cookie 再试"
+elif [[ $status == 429 ]];then
+log.error "X 限流（429）：网页端 SearchTimeline 的额度窗口按分钟计，等一下再试；连着跑大批查询时容易撞上"
+fi
+return 1
+fi
+local gql_err
+gql_err="$(printf '%s' "$resp"|"$(schema.jq.bin)" -r '.errors[0].message // ""' 2>/dev/null)"||gql_err=""
+[[ -n $gql_err ]]&&{
+log.error "X 返回 GraphQL 错误：$gql_err"
+return 1
+}
+printf '%s' "$resp"|x.map|schema.pipe "$DIG_AFTER"|schema.limit "$DIG_LIMIT"
+}
+x.headers(){
+requests.headers.append \
+"authorization" "Bearer $_X_BEARER" \
+"cookie" "auth_token=$1; ct0=$2" \
+"x-csrf-token" "$2" \
+"x-twitter-auth-type" "OAuth2Session" \
+"x-twitter-active-user" "yes" \
+"x-twitter-client-language" "en" \
+"origin" "https://x.com" \
+"referer" "https://x.com/"
+}
+x.request(){
+dig.requests.init||return $?
+x.headers "${X_AUTH_TOKEN:-$_X_ANON_TOKEN}" "${X_CT0:-$_X_ANON_TOKEN}"
+dig.http.request "$1" "$2" "${3:-}" "${4:-}"
+}
+x.fetch(){ x.request POST "$1" "$2" "application/json";}
+x.get(){
+dig.requests.init||return $?
+requests.headers.append "accept" "application/json"
+dig.http.request GET "$1" "" ""
+}
+x.get.page(){
+dig.requests.init||return $?
+requests.headers.append "cookie" "auth_token=${X_AUTH_TOKEN:-$_X_ANON_TOKEN}"
+dig.http.request GET "$1" "" ""
+}
+x.ops.cached(){ cache.get "$_X_OPS_NS" "$_X_OPS_KEY" "$_X_OPS_TTL" 2>/dev/null||true;}
+x.ops.can_update(){
+local token="${X_AUTH_TOKEN:-}" ct0="${X_CT0:-}"
+[[ -n $token && $token != "$_X_ANON_TOKEN" && -n $ct0 && $ct0 != "$_X_ANON_TOKEN" ]]
+}
+x.ops.query_id(){
+local id=""
+id="$(x.ops.cached|"$(schema.jq.bin)" -r '.SearchTimeline // ""' 2>/dev/null)"||id=""
+if [[ -n $id ]];then
+printf '%s' "$id"
+return 0
+fi
+if ! x.ops.can_update;then
+log.error "拿不到 SearchTimeline 的 queryId：本地没有缓存，而取它需要 X_AUTH_TOKEN / X_CT0（main bundle 只在 x.com/home，未登录会 307 到登录页）"
+return 1
+fi
+log.info "本地没有 queryId 缓存（或已过期），从 x.com 的 main bundle 现取一次"
+x.ops.update||return 1
+id="$(x.ops.cached|"$(schema.jq.bin)" -r '.SearchTimeline // ""' 2>/dev/null)"||id=""
+[[ -n $id ]]||{
+log.error "刷新完成了，但缓存里没有 SearchTimeline 这一项"
+return 1
+}
+printf '%s' "$id"
+}
+x.ops.update(){
+if ! x.ops.can_update;then
+log.error "刷新 queryId 需要真 cookie（X_AUTH_TOKEN / X_CT0）：main bundle 只在 x.com/home 里，而那个页面未登录会 307 到登录页"
+return 1
+fi
+log.info "抓 x.com/home，找 main bundle"
+local html main_url js table n sid
+html="$(x.get.page "https://x.com/home")"||return 1
+main_url="$(printf '%s' "$html"|tr -d '\0'|sed 's|\\||g'|grep -oE 'https://abs\.twimg\.com[A-Za-z0-9._/-]+/main\.[A-Za-z0-9_-]+\.js'|head -1)"
+if [[ -z $main_url ]];then
+log.error "x.com/home 的 HTML 里没有 main bundle：cookie 可能已失效（该页会 307 到登录页），或 X 改了页面结构"
+return 1
+fi
+log.info "main bundle：$main_url"
+js="$(x.get.page "$main_url")"||return 1
+table="$(printf '%s' "$js"|tr -d '\0'|grep -oE '(queryId:"[A-Za-z0-9_-]+"[[:space:]]*,[[:space:]]*operationName:"[A-Za-z0-9_]+"|operationName:"[A-Za-z0-9_]+"[[:space:]]*,[[:space:]]*queryId:"[A-Za-z0-9_-]+")'|sed -E -e 's/queryId:"([^"]+)"[[:space:]]*,[[:space:]]*operationName:"([^"]+)"/\2\t\1/' \
+-e 's/operationName:"([^"]+)"[[:space:]]*,[[:space:]]*queryId:"([^"]+)"/\1\t\2/'|"$(schema.jq.bin)" -R -s 'split("\n") | map(select(length > 0)) | map(split("\t") | {(.[0]): .[1]}) | add // {}')"||true
+n="$(printf '%s' "$table"|"$(schema.jq.bin)" -r 'length' 2>/dev/null)"||n=0
+if [[ ${n:-0} -eq 0 ]];then
+log.error "没能从 main bundle 里提取出 operation 表（$main_url）：X 可能改了打包格式"
+return 1
+fi
+sid="$(printf '%s' "$table"|"$(schema.jq.bin)" -r '.SearchTimeline // ""')"
+if [[ -z $sid ]];then
+log.error "提取到 $n 个 operation，但里面没有 SearchTimeline"
+return 1
+fi
+if cache.put "$_X_OPS_NS" "$_X_OPS_KEY" "$table";then
+log.info "已缓存 $n 个 operation（SearchTimeline: $sid）"
+else
+log.warn "operation 表写入缓存失败（不影响本次结果），SearchTimeline: $sid"
+fi
+}
+x.tweet.id(){
+local s="$1"
+if [[ $s =~ /status(es)?/([0-9]+) ]];then
+printf '%s' "${BASH_REMATCH[2]}"
+return 0
+fi
+if string.natural.check "$s";then
+printf '%s' "$s"
+return 0
+fi
+return 1
+}
+x.tweet(){
+local id
+id="$(x.tweet.id "$1")"||{
+log.error "认不出推文 id：$1（给 x.com/<user>/status/<id> 这样的链接，或直接给数字 id）"
+return 1
+}
+local body
+body="$(x.get "https://cdn.syndication.twimg.com/tweet-result?id=$id&token=dig")"||return 1
+if [[ "$(printf '%s' "$body"|"$(schema.jq.bin)" -r 'has("id_str")' 2>/dev/null)" != "true" ]];then
+log.error "取不到这条推文（id=$id）：可能不存在、已删除，或作者设了保护 —— syndication 端点对这类情况只回 {}"
+return 1
+fi
+printf '%s' "$body"
+}
+x.tweet.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" "$_SCHEMA_JQ_LIB"'
+	{
+      source: "x",
+      id: .id_str,
+      url: ("https://x.com/" + (.user.screen_name // "i") + "/status/" + .id_str),
+      title: (.text // "" | gsub("\\s+"; " ") | .[0:120]),
+      text: (.text // ""),
+      author: (.user.screen_name // ""),
+      # syndication 给的 created_at 已经是 ISO（带毫秒），过 to_utc 去掉毫秒
+      created_at: (.created_at // "" | to_utc),
+      # 只有点赞与回复数；点赞数可能是慢更新的（实测新推文是 0）
+      engagement: { likes: (.favorite_count // 0), replies: (.conversation_count // 0) },
+      # syndication 端点的键是复数 hashtags；单数写法也接（老响应与部分变体）
+      tags: [(.entities.hashtags // .entities.hashtag // [])[] | .text // empty],
+      query: $query
+    }'
+}
+x.search_url(){
+local out
+out="$(x.tweet "$1")"||return 1
+printf '%s' "$out"|x.tweet.map|schema.pipe 0|schema.limit 1
+}
+x.map(){
+"$(schema.jq.bin)" -c --arg query "${DIG_QUERY:-}" "$_SCHEMA_JQ_LIB$_X_JQ_LIB"'
+    reduce (
+      .data.search_by_raw_query.search_timeline.timeline.instructions[]?
+      | select(.type == "TimelineAddEntries")
+      | .entries[]?
+      | select(.content.entryType == "TimelineTimelineItem")
+      | (.content.itemContent.tweet_results.result? // empty)
+      | if .__typename == "TweetWithVisibilityResults" then .tweet else . end
+      | select(.legacy.full_text? != null)
+    ) as $t ({ seen: [], out: [] };
+      ($t.rest_id // "") as $id
+      | if $id == "" or (.seen | index($id)) then . else { seen: (.seen + [$id]), out: (.out + [$t]) } end
+    )
+    | .out[]
+    | . as $t
+    | ($t.note_tweet.note_tweet_results.result.text // $t.legacy.full_text // "") as $text
+    | {
+        source: "x",
+        id: $t.rest_id,
+        url: ("https://x.com/" + ($t.core.user_results.result.core.screen_name // "i")
+              + "/status/" + $t.rest_id),
+        # X 没有标题这一栏；取正文首 120 字，让默认渲染与 agent 读 JSONL 时都有个抓手
+        title: ($text | gsub("\\s+"; " ") | .[0:120]),
+        text: $text,
+        # 作者的 screen_name 在 core.user_results.result.core（新版路径），不是 legacy.screen_name
+        author: ($t.core.user_results.result.core.screen_name // ""),
+        created_at: ($t.legacy.created_at | x_rfc822 | to_utc),
+        engagement: {
+          likes: ($t.legacy.favorite_count // 0),
+          reposts: ($t.legacy.retweet_count // 0),
+          replies: ($t.legacy.reply_count // 0),
+          quotes: ($t.legacy.quote_count // 0),
+          views: (($t.views.count // 0) | if type == "string" then (tonumber? // 0) else . end)
+        },
+        tags: [($t.legacy.entities.hashtags // [])[] | .text // empty],
+        query: $query
+      }'
+}
+source.url.register x x.com twitter.com
+source.register x "X 搜索 / 单推（--tweet；单页最多 20 条；queryId 失效时 --update-ids）" "tier:topic period:yes proxy:yes key:required"
 doctor.row(){ printf '%-8s  %-10s %s\n' "$1" "$2" "$3";}
 doctor.source(){
 local src="$1" cmd
@@ -3177,19 +3343,9 @@ VERSION="0.1.0"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"&&pwd)"
 .env
 dig.settings.load(){
-config.register "defaults.limit" "20" "number" "默认条目上限"
-config.register "defaults.period" "pastmonth" "string" "默认时间窗口"
-config.register "proxy.url" "" "string" "网络代理（DIG_PROXY 环境变量优先）"
-config.register "discourse.sites" "discuss.python.org,community.openai.com,discuss.huggingface.co,discuss.pytorch.org,users.rust-lang.org,meta.discourse.org,community.fly.io,discuss.elastic.co" "string" "dig discourse 默认搜的实例列表"
-config.load "$PROJECT_ROOT/config.toml" 2>/dev/null||true
-config.load "${XDG_CONFIG_HOME:-$HOME/.config}/dig/config.toml" 2>/dev/null||true
-_DIG_DEFAULT_LIMIT="$(dig.num "defaults.limit" 20)"
-_DIG_DEFAULT_PERIOD="$(config.get "defaults.period" 2>/dev/null||true)"
-[[ -n $_DIG_DEFAULT_PERIOD ]]||_DIG_DEFAULT_PERIOD="pastmonth"
-if [[ -z ${DIG_PROXY:-} ]];then
-DIG_PROXY="$(config.get "proxy.url" 2>/dev/null||true)"
-fi
-_DIG_DISCOURSE_SITES="$(config.get "discourse.sites" 2>/dev/null||true)"
+_DIG_DEFAULT_LIMIT="${DIG_DEFAULT_LIMIT:-20}"
+_DIG_DEFAULT_PERIOD="${DIG_DEFAULT_PERIOD:-pastmonth}"
+_DIG_DISCOURSE_SITES="${DIG_DISCOURSE_SITES:-discuss.python.org,community.openai.com,discuss.huggingface.co,discuss.pytorch.org,users.rust-lang.org,meta.discourse.org,community.fly.io,discuss.elastic.co}"
 if [[ -n ${DIG_RETRY:-} ]]&&! string.natural.check "$DIG_RETRY";then
 log.warn "DIG_RETRY 需要非负整数，得到：$DIG_RETRY；按默认 2 处理"
 DIG_RETRY=2
@@ -3202,7 +3358,7 @@ if [[ -n ${DIG_BROWSER_MIN_INTERVAL:-} ]]&&! string.natural.check "$DIG_BROWSER_
 log.warn "DIG_BROWSER_MIN_INTERVAL 需要非负整数（秒），得到：$DIG_BROWSER_MIN_INTERVAL；按默认 12 处理"
 _BROWSER_MIN_INTERVAL=12
 fi
-export _DIG_DEFAULT_LIMIT _DIG_DEFAULT_PERIOD DIG_PROXY _DIG_DISCOURSE_SITES DIG_RETRY
+export _DIG_DEFAULT_LIMIT _DIG_DEFAULT_PERIOD _DIG_DISCOURSE_SITES DIG_RETRY
 }
 _dig_source(){
 local mod="$_ARGS_CURRENT_SUBCOMMAND"
@@ -3217,6 +3373,9 @@ fi
 args.add_options "ARG" "查询词" "要搜索的关键词"
 args.process "$@"
 dig.common.apply "$mod"||exit 1
+if declare -F "$mod.cache.bypass" >/dev/null 2>&1&&"$mod.cache.bypass";then
+DIG_NO_CACHE=1
+fi
 local key
 local -a action=("$mod.search")
 [[ -n $DIG_URL ]]&&action=("$mod.search_url" "$DIG_URL")
