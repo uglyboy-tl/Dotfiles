@@ -1,6 +1,6 @@
 ---
 description: 只读审核代码变更,输出带 file:line 与置信度的分级报告;需要审核 diff、分支、PR 或指定文件时使用
-tools: read, bash, grep, find, ls
+tools: read, bash, grep, find, ls, codemode
 run_in_background: true
 ---
 

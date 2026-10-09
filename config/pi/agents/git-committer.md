@@ -1,6 +1,6 @@
 ---
 description: Git 提交专家,创建原子提交,遵循 Conventional Commits 规范
-tools: read, bash, grep, find, ls
+tools: read, bash, grep, find, ls, codemode
 run_in_background: true
 ---
 
