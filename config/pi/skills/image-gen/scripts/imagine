@@ -7,6 +7,7 @@ local _d="${BASH_SOURCE[1]:-}"
 [[ $_d == */* ]]&&_d="${_d%/*}"||_d="."
 [[ -f "$_d/.env" ]]&&source "$_d/.env"||true
 }
+.env
 string.base64.encode(){ base64 -w 0 "$1" 2>/dev/null||base64 "$1" 2>/dev/null;}
 string.base64.decode(){ base64 -d 2>/dev/null||base64 -D 2>/dev/null;}
 string.escape.regex(){ printf '%s' "${1:-}"|sed 's/[].[\\^$*+?{}()|]/\\&/g; s/\//\\\//g';}
@@ -458,26 +459,26 @@ for option in "${_ARGS_OPTS[@]}";do
 local opt="${option#--}" another
 opt="${opt#-}"
 array.contains _ARGS_OPTIONS "$opt"||{
-log.error "未知选项: \"$option\""
+log.error "unknown option: \"$option\""
 return 1
 }
 array.contains _ARGS_OPTIONS_SWITCH "$opt"&&{
 another=${_ARGS_OPTIONS_SWITCH[$opt]}
-args.has "-$another" "--$another"&&log.error "重复选项"&&return 1
+args.has "-$another" "--$another"&&log.error "duplicate option"&&return 1
 [[ $option =~ ^-[a-zA-Z]$ ]]&&opt=$another
 }
 case ${_ARGS_OPTIONS_TYPE[$opt]} in
 "NONE")unset "_ARGS_OPT_ARGS[$option]" 2>/dev/null||true;;
-*)[[ -z ${_ARGS_OPT_ARGS[$option]+x} ]]&&log.error "选项 $option 需要参数"&&return 1
+*)[[ -z ${_ARGS_OPT_ARGS[$option]+x} ]]&&log.error "option $option requires an argument"&&return 1
 esac
 done
-array.has_duplicates _ARGS_OPTS&&log.error "重复选项"&&return 1
+array.has_duplicates _ARGS_OPTS&&log.error "duplicate option"&&return 1
 local -a _ARGS_TEMP_ARGS=("${_ARGS_ARGS[@]}")
 for value in "${_ARGS_OPT_ARGS[@]}";do
 unset "_ARGS_TEMP_ARGS[$value]"
 done
 declare -ga _ARGS_FINAL_ARGS=("${_ARGS_TEMP_ARGS[@]}")
-[[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]]&&[[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]]&&log.error "位置参数错误"&&return 1||true
+[[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]]&&[[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]]&&log.error "invalid positional arguments"&&return 1||true
 }
 args.has(){
 for o in "$@";do
@@ -502,7 +503,7 @@ args.show_help(){
 usage.show _ARGS_HELP_OPTIONS _ARGS_HELP_ARGS _ARGS_HELP_EXAMPLES _ARGS_HELP_NOTICES
 }
 system.command.exist(){ command -v "$1" >/dev/null 2>&1;}
-system.command.required(){ ! system.command.exist "$1"&&log.error "This module required \`$1\` command."&&exit 1||return 0;}
+system.command.required(){ ! system.command.exist "$1"&&log.error "required command not found: $1"&&exit 1||return 0;}
 system.gui_supported(){ [[ -n ${DISPLAY:-} || -n ${WAYLAND_DISPLAY:-} ]];}
 system.command.result(){
 local result
@@ -554,7 +555,7 @@ fs.insert(){ sed -i "/$2/a\\$3" "$1" 2>/dev/null;}
 fs.rmline(){ [[ -n $4 ]]&&sed -i "$4,/$2/{/$2/d}" "$1" 2>/dev/null||sed -i "/$2/d" "$1" 2>/dev/null;}
 fs.cleanup(){ ls -t "$1"* 2>/dev/null|tail -n +$((${2:-3}+1))|xargs -r rm -f;}
 fs.mktemp(){ mktemp "$@" 2>/dev/null||{
-echo "fs.mktemp: 创建临时文件失败" >&2
+echo "fs.mktemp: failed to create temp file" >&2
 return 1
 };}
 fs.file.extract(){
@@ -573,24 +574,45 @@ case "${base,,}" in
 cp "$path" "${base%%.*}"
 esac)
 }
+declare -g _JSON_BIN
+_JSON_BIN="$(command -v jq 2>/dev/null||true)"
+json.available(){ [[ -n $_JSON_BIN ]];}
+json.require(){
+json.available&&return 0
+log.error "required command not found: jq"
+exit 1
+}
+json.run(){
+json.require
+"$_JSON_BIN" "$@"
+}
+json.get(){
+json.require
+"$_JSON_BIN" -r "${2:-.}" <<<"$1"
+}
 declare -g _REQUESTS_TIMEOUT=30
 declare -g _REQUESTS_USER_AGENT="bashlet-requests/1.0"
 declare -g _REQUESTS_BASE_URL=""
 declare -gA _REQUESTS_HEADERS=()
 declare -gA _REQUESTS_AUTH=()
 declare -g _REQUESTS_CURL=""
-declare -g _REQUESTS_JQ=""
+requests.curl.available(){ system.command.exist curl||return 3;}
+requests.available(){ requests.curl.available&&json.available;}
 requests.init(){
 declare -ga _REQUESTS_CURL_EXTRA=("$@")
-system.command.required "curl"&&_REQUESTS_CURL="$(command -v curl)"
-system.command.required "jq"&&_REQUESTS_JQ="$(command -v jq)"
+json.require
+requests.curl.available||{
+log.error "required command not found: curl"
+exit 1
+}
+_REQUESTS_CURL="$(command -v curl)"
 _REQUESTS_HEADERS=(
 ["Accept"]="*/*"
 ["Accept-Encoding"]="gzip, deflate"
 ["Connection"]="keep-alive")
 _REQUESTS_AUTH=()
 _REQUESTS_BASE_URL=""
-log.debug "requests module initialized: curl=$_REQUESTS_CURL, jq=$_REQUESTS_JQ"
+log.debug "requests module initialized: curl=$_REQUESTS_CURL"
 return 0
 }
 requests.curl.configure(){
@@ -631,7 +653,7 @@ local full_url="$url"
 cmd_ref+=("$full_url")
 }
 requests._headers_json(){
-"$_REQUESTS_JQ" -Rs '[splits("\r?\n\r?\n")] | map(select(length > 0)) | last // "" | split("\n") | map(select(length > 0 and test(":"))) | map(split(": ") | {(.[0]): .[1] | rtrimstr("\r")}) | add // {}' "$1"
+json.run -Rs '[splits("\r?\n\r?\n")] | map(select(length > 0)) | last // "" | split("\n") | map(select(length > 0 and test(":"))) | map(split(": ") | {(.[0]): .[1] | rtrimstr("\r")}) | add // {}' "$1"
 }
 requests.request(){
 local -r method="$1"
@@ -672,7 +694,7 @@ curl_cmd+=("-o" "$2")
 "${curl_cmd[@]}" "$1"
 }
 requests._urlencode(){
-"$_REQUESTS_JQ" -nr --arg str "$1" '$str | @uri'
+json.run -nr --arg str "$1" '$str | @uri'
 }
 requests.content_type.detect(){
 [[ $1 =~ ^\{.*\}$ ]]&&echo "application/json"&&return 0
@@ -720,15 +742,15 @@ requests.delete(){ requests.request "DELETE" "$1" "" "";}
 requests.patch(){ requests.request "PATCH" "$1" "$2" "${3:-}";}
 requests.head(){ requests.request "HEAD" "$1" "" "";}
 requests.options(){ requests.request "OPTIONS" "$1" "" "";}
-requests.status_code(){ "$_REQUESTS_JQ" -r '.status_code' <<<"$1";}
-requests.exit_code(){ "$_REQUESTS_JQ" -r '.curl_exit' <<<"$1";}
-requests.headers(){ [[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r --arg name "$2" '.headers[$name] // empty' <<<"$1"||"$_REQUESTS_JQ" -r '.headers' <<<"$1";}
-requests.text(){ "$_REQUESTS_JQ" -r '.body' <<<"$1"|string.base64.decode;}
+requests.status_code(){ json.run -r '.status_code' <<<"$1";}
+requests.exit_code(){ json.run -r '.curl_exit' <<<"$1";}
+requests.headers(){ [[ -n ${2:-} ]]&&json.run -r --arg name "$2" '.headers[$name] // empty' <<<"$1"||json.run -r '.headers' <<<"$1";}
+requests.text(){ json.run -r '.body' <<<"$1"|string.base64.decode;}
 requests.json(){
 local -r body_text="$(requests.text "$1")"
-[[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r "$2" <<<"$body_text"||echo "$body_text"
+[[ -n ${2:-} ]]&&json.get "$body_text" "$2"||echo "$body_text"
 }
-requests.success(){ "$_REQUESTS_JQ" -r '.success' <<<"$1";}
+requests.success(){ json.run -r '.success' <<<"$1";}
 requests.raise_for_status(){ [[ "$(requests.success "${1:-}")" == "true" ]]||{ log.error "HTTP error: status $(requests.status_code "${1:-}") curl_exit $(requests.exit_code "${1:-}")"&&return 1;};}
 requests.timeout(){ string.natural.check "$1"&&_REQUESTS_TIMEOUT="$1"||{ log.error "timeout must be a positive integer"&&return 1;};}
 requests.headers.append(){
@@ -745,7 +767,7 @@ done
 }
 requests.base_url(){ _REQUESTS_BASE_URL="$1";}
 requests.headers.clear(){ _REQUESTS_HEADERS=();}
-requests.auth(){ _REQUESTS_AUTH["Authorization"]="Basic $("$_REQUESTS_JQ" -nr --arg c "$1:$2" '$c | @base64')";}
+requests.auth(){ _REQUESTS_AUTH["Authorization"]="Basic $(json.run -nr --arg c "$1:$2" '$c | @base64')";}
 requests.auth_bearer(){ _REQUESTS_AUTH["Authorization"]="Bearer $1";}
 common.fail(){
 IMAGINE_ERROR="$1"
@@ -775,7 +797,7 @@ return 1
 mime=$(common.mime_type "$path")||return 1
 tmp=$(mktemp)||return 1
 string.base64.encode "$path"|tr -d '\n' >"$tmp"
-result=$(jq --rawfile b64 "$tmp" --arg mime "$mime" "$filter" <<<"$result")||{
+result=$(json.run --rawfile b64 "$tmp" --arg mime "$mime" "$filter" <<<"$result")||{
 rm -f "$tmp"
 return 1
 }
@@ -839,14 +861,14 @@ common.fail "无效的 --extra: $pair（应为 key=value）"
 return 1
 }
 case "$value" in
-true|false|null)next=$(jq -c --arg k "$key" --argjson v "$value" 'setpath($k | split("."); $v)' <<<"$json");;
-'')next=$(jq -c --arg k "$key" 'setpath($k | split("."); "")' <<<"$json");;
+true|false|null)next=$(json.run -c --arg k "$key" --argjson v "$value" 'setpath($k | split("."); $v)' <<<"$json");;
+'')next=$(json.run -c --arg k "$key" 'setpath($k | split("."); "")' <<<"$json");;
 *)if
 [[ $value =~ ^-?[0-9]+$ || $value =~ ^-?[0-9]*\.[0-9]+$ ]]
 then
-next=$(jq -c --arg k "$key" --argjson v "$value" 'setpath($k | split("."); $v)' <<<"$json")
+next=$(json.run -c --arg k "$key" --argjson v "$value" 'setpath($k | split("."); $v)' <<<"$json")
 else
-next=$(jq -c --arg k "$key" --arg v "$value" 'setpath($k | split("."); $v)' <<<"$json")
+next=$(json.run -c --arg k "$key" --arg v "$value" 'setpath($k | split("."); $v)' <<<"$json")
 fi
 esac
 [[ -n $next ]]||{
@@ -1040,11 +1062,11 @@ local _f="config.toml"
 [[ -f $_f ]]&&echo "$_f"&&return 0
 _f="$(path.config_dir)/config.toml"
 [[ -f $_f ]]&&echo "$_f"&&return 0
-log.error "配置文件不存在: $_f"
+log.error "config file not found: $_f"
 return 1
 }
 config.register(){
-array.contains _CONFIG_REGISTERED "$1"&&log.warn "Key $1 重复定义"||_CONFIG_REGISTERED+=("$1")
+array.contains _CONFIG_REGISTERED "$1"&&log.warn "key $1 defined more than once"||_CONFIG_REGISTERED+=("$1")
 _CONFIG_TYPES["$1"]="${3:-string}"
 _CONFIG_DESCS["$1"]="${4:-}"
 (($#>=2))&&_CONFIG_VALUES["$1"]="$2"||true
@@ -1085,7 +1107,7 @@ config.has(){ [[ -v "_CONFIG_VALUES[$1]" ]];}
 config.get(){ [[ -v "_CONFIG_VALUES[$1]" ]]&&echo "${_CONFIG_VALUES[$1]}"||return 1;}
 config.set(){
 ! array.contains "_CONFIG_REGISTERED" "$1"&&{
-log.error "未注册的配置项: $1"
+log.error "unregistered config key: $1"
 return 1
 }
 _CONFIG_VALUES["$1"]="$2"
@@ -1121,11 +1143,11 @@ _CONFIG_ARRAY_ITEMS["$1"]+=" $2"
 }
 config.array.set(){
 ! config.array.has "$1"&&{
-log.error "未注册的数组配置名: $1"
+log.error "unregistered config array: $1"
 return 1
 }
 _config.list.contains _CONFIG_ARRAY_REGISTERED "$1" "$3"||{
-log.error "未注册的数组配置项: $1:$3"
+log.error "unregistered config array key: $1:$3"
 return 1
 }
 config.array.add "$1" "$2"
@@ -1224,8 +1246,8 @@ local url="$1" cache
 cache=$(requests.cache.path "$url")||return 1
 requests.cache.fresh "$cache" "${2:-0}"&&return 0
 requests.cache.fetch "$url"&&return 0
-[[ -f $cache ]]&&log.warn "requests.cache: 回源失败，降级使用过期缓存 ($url)"&&return 0
-log.error "requests.cache: 无可用缓存且回源失败 ($url)"
+[[ -f $cache ]]&&log.warn "requests.cache: origin fetch failed, falling back to stale cache ($url)"&&return 0
+log.error "requests.cache: no usable cache and origin fetch failed ($url)"
 return 1
 }
 : "${IMAGINE_REGISTRY_URL:=https://github.com/uglyboy-tl/bashlet-packages/raw/HEAD/packages/imagine/registry.toml}"
@@ -1356,6 +1378,7 @@ cache="$(registry.cache)"
 tmp="$cache.tmp"
 meta="$(registry.meta)"
 mkdir -p "${cache%/*}"||return 1
+requests.available||return 3
 requests.init "-L"
 if [[ -f $meta ]];then
 etag=$(sed -n 's/^etag=//p' "$meta")
@@ -1527,10 +1550,11 @@ local path="${PROV_PROBE[$name]:-}"
 printf 'noprobe\t-'
 return 0
 }
-requests.init 2>/dev/null||{
+requests.available||{
 printf 'noruntime\t缺 curl 或 jq'
 return 0
 }
+requests.init 2>/dev/null
 local probe_timeout="${IMAGINE_PROBE_TIMEOUT:-8}"
 [[ $probe_timeout =~ ^[0-9]+$ ]]||probe_timeout=8
 requests.timeout "$probe_timeout"
@@ -1613,6 +1637,7 @@ declare -ga IMAGINE_FILES=()
 declare -gi IMAGINE_ATTEMPTS=0
 compose.init(){
 local name="$1"
+requests.available||return 3
 requests.init
 requests.timeout "$IMAGINE_TIMEOUT"
 requests.base_url "$(provider.base_url "$name")"
@@ -1667,7 +1692,7 @@ common.fail "构造的请求体为空（检查参数）"
 return 1
 }
 if [[ -n ${EXTRA_JSON:-} ]];then
-body="$(jq -c --argjson e "$EXTRA_JSON" '. * $e' <<<"$body")"||return 1
+body="$(json.run -c --argjson e "$EXTRA_JSON" '. * $e' <<<"$body")"||return 1
 fi
 printf '%s' "$body"
 }
@@ -1686,7 +1711,7 @@ common.fail "HTTP $status${detail:+: $detail}"
 [[ $status == 4* && $status != 429 ]]&&return 1
 return 2
 fi
-if ! requests.text "$response"|jq . >/dev/null 2>&1;then
+if ! requests.text "$response"|json.run . >/dev/null 2>&1;then
 common.fail "响应不是合法 JSON（可能被截断）"
 return 2
 fi
@@ -1776,11 +1801,11 @@ err="$(<"$IMAGINE_ERROR_FILE")"
 rm -f "$IMAGINE_ERROR_FILE"
 fi
 if ((${#IMAGINE_FILES[@]}));then
-files_json=$(printf '%s\n' "${IMAGINE_FILES[@]}"|jq -R .|jq -s -c .)
+files_json=$(printf '%s\n' "${IMAGINE_FILES[@]}"|json.run -R .|json.run -s -c .)
 else
 files_json='[]'
 fi
-base=$(jq -n -c --argjson ok "$ok" --argjson files "$files_json" \
+base=$(json.run -n -c --argjson ok "$ok" --argjson files "$files_json" \
 --arg provider "${PROVIDER:-}" --arg model "${MODEL:-}" \
 --arg requested "${SIZE_REQUESTED:-}" --arg size "${SIZE:-}" --arg aspect "${ASPECT:-}" \
 --argjson count "$count" --argjson attempts "${IMAGINE_ATTEMPTS:-0}" \
@@ -1788,20 +1813,20 @@ base=$(jq -n -c --argjson ok "$ok" --argjson files "$files_json" \
 if ((rc==0));then
 printf '%s\n' "$base"
 else
-jq -c --arg e "$err" '. + {error: $e}' <<<"$base"||printf '%s\n' "$base"
+json.run -c --arg e "$err" '. + {error: $e}' <<<"$base"||printf '%s\n' "$base"
 fi
 }
 openai_compat.auth(){ requests.auth_bearer "$1";}
 openai_compat.endpoint(){ printf '%s' "$1";}
 openai_compat.body(){
 local extra="${1:-}" size="${2:-${SIZE:-}}" count="${3:-${COUNT:-1}}" body
-body=$(jq -n --arg m "$MODEL" --arg p "$PROMPT" --arg s "$size" --argjson n "$count" \
+body=$(json.run -n --arg m "$MODEL" --arg p "$PROMPT" --arg s "$size" --argjson n "$count" \
 '{model: $m, prompt: $p, n: $n, size: $s}')||return 1
 if [[ -n ${SEED:-} ]];then
-body=$(jq --argjson seed "$SEED" '.seed = $seed' <<<"$body")||return 1
+body=$(json.run --argjson seed "$SEED" '.seed = $seed' <<<"$body")||return 1
 fi
 if [[ -n $extra ]];then
-body=$(jq -c --argjson b "$body" '. + $b' <<<"$extra")||return 1
+body=$(json.run -c --argjson b "$body" '. + $b' <<<"$extra")||return 1
 fi
 printf '%s' "$body"
 }
@@ -1821,7 +1846,7 @@ provider_agnes_body(){
 local extra="" refs
 if [[ -n ${REF:-} ]];then
 refs=$(common.ref_build_array "$REF" '. += [("data:\($mime);base64," + $b64)]')||return 1
-extra=$(jq -c '{extra_body: {image: (if (. | length) == 1 then .[0] else . end), response_format: "b64_json"}}' <<<"$refs")||return 1
+extra=$(json.run -c '{extra_body: {image: (if (. | length) == 1 then .[0] else . end), response_format: "b64_json"}}' <<<"$refs")||return 1
 fi
 openai_compat.body "$extra"
 }
@@ -1848,7 +1873,7 @@ PROVIDER_MODEL_LIST="@cf/black-forest-labs/flux-2-klein-9b
 provider_cloudflare_auth(){ requests.auth_bearer "$CLOUDFLARE_API_TOKEN";}
 provider_cloudflare_endpoint(){ printf '/client/v4/accounts/%s/ai/run/%s' "$CLOUDFLARE_ACCOUNT_ID" "$1";}
 provider_cloudflare_body(){
-jq -n --arg p "$PROMPT" '{prompt: $p}'
+json.run -n --arg p "$PROMPT" '{prompt: $p}'
 }
 provider_cloudflare_parse(){
 local resp="$1"
@@ -1880,13 +1905,13 @@ provider_google_body(){
 local parts body
 if [[ -n ${REF:-} ]];then
 parts=$(common.ref_build_array "$REF" '. += [{inlineData: {mimeType: $mime, data: $b64}}]')||return 1
-parts=$(jq --arg p "$PROMPT" '. += [{text: $p}]' <<<"$parts")||return 1
-body=$(jq --arg ar "$ASPECT" --arg is "$IMAGE_SIZE" '{
+parts=$(json.run --arg p "$PROMPT" '. += [{text: $p}]' <<<"$parts")||return 1
+body=$(json.run --arg ar "$ASPECT" --arg is "$IMAGE_SIZE" '{
 			contents: [{role: "user", parts: .}],
 			generationConfig: {responseModalities: ["IMAGE"], imageConfig: {aspectRatio: $ar, imageSize: $is}}
 		}' <<<"$parts")||return 1
 else
-body=$(jq -n --arg p "$PROMPT" --arg ar "$ASPECT" --arg is "$IMAGE_SIZE" '{
+body=$(json.run -n --arg p "$PROMPT" --arg ar "$ASPECT" --arg is "$IMAGE_SIZE" '{
 			contents: [{role: "user", parts: [{text: $p}]}],
 			generationConfig: {responseModalities: ["IMAGE"], imageConfig: {aspectRatio: $ar, imageSize: $is}}
 		}')||return 1
@@ -1918,20 +1943,20 @@ if [[ -n ${REF:-} ]];then
 [[ -n ${SEED:-} ]]&&log.warn "dashscope 参考图模式忽略 --seed"
 [[ -n ${NEGATIVE:-} ]]&&log.warn "dashscope 参考图模式忽略 --negative-prompt"
 content=$(common.ref_build_array "$REF" '. += [{image: ("data:\($mime);base64," + $b64)}]')||return 1
-content=$(jq --arg p "$PROMPT" '. += [{text: $p}]' <<<"$content")||return 1
-body=$(jq --arg m "$MODEL" --arg s "$SIZE" '{
+content=$(json.run --arg p "$PROMPT" '. += [{text: $p}]' <<<"$content")||return 1
+body=$(json.run --arg m "$MODEL" --arg s "$SIZE" '{
 			model: $m,
 			input: {messages: [{role: "user", content: .}]},
 			parameters: {size: $s, n: 1, watermark: false}
 		}' <<<"$content")||return 1
 else
-body=$(jq -n --arg m "$MODEL" --arg p "$PROMPT" --arg s "$SIZE" --argjson n "$COUNT" '{
+body=$(json.run -n --arg m "$MODEL" --arg p "$PROMPT" --arg s "$SIZE" --argjson n "$COUNT" '{
 			model: $m,
 			input: {messages: [{role: "user", content: [{text: $p}]}]},
 			parameters: {size: $s, n: $n, prompt_extend: true, watermark: false}
 		}')||return 1
-[[ -n ${SEED:-} ]]&&body=$(jq --argjson seed "$SEED" '.parameters.seed = $seed' <<<"$body")
-[[ -n ${NEGATIVE:-} ]]&&body=$(jq --arg neg "$NEGATIVE" '.parameters.negative_prompt = $neg' <<<"$body")
+[[ -n ${SEED:-} ]]&&body=$(json.run --argjson seed "$SEED" '.parameters.seed = $seed' <<<"$body")
+[[ -n ${NEGATIVE:-} ]]&&body=$(json.run --arg neg "$NEGATIVE" '.parameters.negative_prompt = $neg' <<<"$body")
 fi
 printf '%s' "$body"
 }
@@ -1963,11 +1988,11 @@ sz="2K"
 fi
 if [[ -n ${REF:-} ]];then
 refs=$(common.ref_build_array "$REF" '. += [("data:\($mime);base64," + $b64)]')||return 1
-extra=$(jq -c '{response_format: "url", watermark: false, image: (if (. | length) == 1 then .[0] else . end)}' <<<"$refs")||return 1
+extra=$(json.run -c '{response_format: "url", watermark: false, image: (if (. | length) == 1 then .[0] else . end)}' <<<"$refs")||return 1
 else
 extra='{"response_format":"url","watermark":false}'
 fi
-[[ -n ${NEGATIVE:-} ]]&&extra=$(jq -c --arg neg "$NEGATIVE" '.negative_prompt = $neg' <<<"$extra")
+[[ -n ${NEGATIVE:-} ]]&&extra=$(json.run -c --arg neg "$NEGATIVE" '.negative_prompt = $neg' <<<"$extra")
 openai_compat.body "$extra" "$sz"
 }
 provider_doubao_parse(){ openai_compat.parse "$1";}
@@ -1991,16 +2016,16 @@ provider_minimax_body(){
 local w="${SIZE%%x*}" h="${SIZE##*x}" refs body
 if [[ -n ${REF:-} ]];then
 refs=$(common.ref_build_array "$REF" '. += [{type: "character", image_file: ("data:\($mime);base64," + $b64)}]')||return 1
-body=$(jq --arg m "$MODEL" --arg p "$PROMPT" --argjson n "$COUNT" --argjson w "$w" --argjson h "$h" '{
+body=$(json.run --arg m "$MODEL" --arg p "$PROMPT" --argjson n "$COUNT" --argjson w "$w" --argjson h "$h" '{
 			model: $m, prompt: $p, n: $n, width: $w, height: $h,
 			response_format: "base64", subject_reference: .
 		}' <<<"$refs")||return 1
 else
-body=$(jq -n --arg m "$MODEL" --arg p "$PROMPT" --argjson n "$COUNT" --argjson w "$w" --argjson h "$h" '{
+body=$(json.run -n --arg m "$MODEL" --arg p "$PROMPT" --argjson n "$COUNT" --argjson w "$w" --argjson h "$h" '{
 			model: $m, prompt: $p, n: $n, width: $w, height: $h
 		}')||return 1
 fi
-[[ -n ${SEED:-} ]]&&body=$(jq --argjson seed "$SEED" '.seed = $seed' <<<"$body")
+[[ -n ${SEED:-} ]]&&body=$(json.run --argjson seed "$SEED" '.seed = $seed' <<<"$body")
 printf '%s' "$body"
 }
 provider_minimax_parse(){
@@ -2053,8 +2078,8 @@ if [[ ${MODEL,,} == *dall-e-* && $count -gt 1 ]];then
 log.warn "openai $MODEL 仅支持 n=1，已从 $count 收敛"
 count=1
 fi
-[[ -n $native_q ]]&&extra=$(jq -c --arg q "$native_q" '.quality = $q' <<<"$extra")
-[[ -n ${STYLE:-} && ${MODEL,,} == *dall-e-3* ]]&&extra=$(jq -c --arg s "$STYLE" '.style = $s' <<<"$extra")
+[[ -n $native_q ]]&&extra=$(json.run -c --arg q "$native_q" '.quality = $q' <<<"$extra")
+[[ -n ${STYLE:-} && ${MODEL,,} == *dall-e-3* ]]&&extra=$(json.run -c --arg s "$STYLE" '.style = $s' <<<"$extra")
 openai_compat.body "$extra" "$sz" "$count"
 }
 provider_openai_parse(){ openai_compat.parse "$1";}
@@ -2079,7 +2104,7 @@ provider_openrouter_body(){
 local extra refs
 if [[ -n ${REF:-} ]];then
 refs=$(common.ref_build_array "$REF" '. += [{type: "image_url", image_url: {url: ("data:\($mime);base64," + $b64)}}]')||return 1
-extra=$(jq -c '{output_format: "png", input_references: .}' <<<"$refs")||return 1
+extra=$(json.run -c '{output_format: "png", input_references: .}' <<<"$refs")||return 1
 else
 extra='{"output_format":"png"}'
 fi
@@ -2108,7 +2133,6 @@ VERSION="0.3.0"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"&&pwd)"
 IMAGINE_ERROR_FILE="${TMPDIR:-/tmp}/.imagine-err.$$"
 rm -f "$IMAGINE_ERROR_FILE"
-.env
 cmd_generate(){
 args.init "用同一套 CLI 调用所有文生图 / 图生图模型"
 args.add_options "prompt" "p" "提示词" "STRING"
@@ -2396,19 +2420,28 @@ args.add_options "version" "v" "显示版本信息"
 args.add_subcommand "models" "查看提供商与可用模型" "cmd_models"
 args.add_subcommand "providers" "列出各 provider 的能力与凭证状态" "cmd_providers"
 args.add_subcommand "update" "从远端刷新模型目录" "cmd_update"
-local cmd="${1:-}" arg
+local cmd="${1:-}" arg need_deps=true
+for arg in "$@";do
+case $arg in
+-v|--version)usage.version
+exit 0
+;;
+-h|--help)need_deps=false
+esac
+done
+if [[ $need_deps == true && $cmd != providers ]];then
+json.require
+requests.curl.available||{
+log.error "缺少依赖：curl"
+exit 1
+}
+fi
 if [[ -v _ARGS_SUBCOMMANDS[$cmd] ]];then
 local handler="${_ARGS_SUBCOMMANDS[$cmd]}"
 shift
 "$handler" "$@"||exit $?
 exit 0
 fi
-for arg in "$@";do
-[[ $arg == "-v" || $arg == "--version" ]]&&{
-usage.version
-exit 0
-}
-done
 local rc=0
 cmd_generate "$@"||rc=$?
 if [[ -n ${IMAGINE_JSON:-} ]];then
