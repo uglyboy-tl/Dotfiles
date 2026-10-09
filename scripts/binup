@@ -428,26 +428,26 @@ for option in "${_ARGS_OPTS[@]}";do
 local opt="${option#--}" another
 opt="${opt#-}"
 array.contains _ARGS_OPTIONS "$opt"||{
-log.error "未知选项: \"$option\""
+log.error "unknown option: \"$option\""
 return 1
 }
 array.contains _ARGS_OPTIONS_SWITCH "$opt"&&{
 another=${_ARGS_OPTIONS_SWITCH[$opt]}
-args.has "-$another" "--$another"&&log.error "重复选项"&&return 1
+args.has "-$another" "--$another"&&log.error "duplicate option"&&return 1
 [[ $option =~ ^-[a-zA-Z]$ ]]&&opt=$another
 }
 case ${_ARGS_OPTIONS_TYPE[$opt]} in
 "NONE")unset "_ARGS_OPT_ARGS[$option]" 2>/dev/null||true;;
-*)[[ -z ${_ARGS_OPT_ARGS[$option]+x} ]]&&log.error "选项 $option 需要参数"&&return 1
+*)[[ -z ${_ARGS_OPT_ARGS[$option]+x} ]]&&log.error "option $option requires an argument"&&return 1
 esac
 done
-array.has_duplicates _ARGS_OPTS&&log.error "重复选项"&&return 1
+array.has_duplicates _ARGS_OPTS&&log.error "duplicate option"&&return 1
 local -a _ARGS_TEMP_ARGS=("${_ARGS_ARGS[@]}")
 for value in "${_ARGS_OPT_ARGS[@]}";do
 unset "_ARGS_TEMP_ARGS[$value]"
 done
 declare -ga _ARGS_FINAL_ARGS=("${_ARGS_TEMP_ARGS[@]}")
-[[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]]&&[[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]]&&log.error "位置参数错误"&&return 1||true
+[[ $(map.len _ARGS_HELP_ARGS) -eq 0 ]]&&[[ $(array.len _ARGS_FINAL_ARGS) -gt 0 ]]&&log.error "invalid positional arguments"&&return 1||true
 }
 args.has(){
 for o in "$@";do
@@ -512,11 +512,11 @@ local _f="config.toml"
 [[ -f $_f ]]&&echo "$_f"&&return 0
 _f="$(path.config_dir)/config.toml"
 [[ -f $_f ]]&&echo "$_f"&&return 0
-log.error "配置文件不存在: $_f"
+log.error "config file not found: $_f"
 return 1
 }
 config.register(){
-array.contains _CONFIG_REGISTERED "$1"&&log.warn "Key $1 重复定义"||_CONFIG_REGISTERED+=("$1")
+array.contains _CONFIG_REGISTERED "$1"&&log.warn "key $1 defined more than once"||_CONFIG_REGISTERED+=("$1")
 _CONFIG_TYPES["$1"]="${3:-string}"
 _CONFIG_DESCS["$1"]="${4:-}"
 (($#>=2))&&_CONFIG_VALUES["$1"]="$2"||true
@@ -557,7 +557,7 @@ config.has(){ [[ -v "_CONFIG_VALUES[$1]" ]];}
 config.get(){ [[ -v "_CONFIG_VALUES[$1]" ]]&&echo "${_CONFIG_VALUES[$1]}"||return 1;}
 config.set(){
 ! array.contains "_CONFIG_REGISTERED" "$1"&&{
-log.error "未注册的配置项: $1"
+log.error "unregistered config key: $1"
 return 1
 }
 _CONFIG_VALUES["$1"]="$2"
@@ -593,11 +593,11 @@ _CONFIG_ARRAY_ITEMS["$1"]+=" $2"
 }
 config.array.set(){
 ! config.array.has "$1"&&{
-log.error "未注册的数组配置名: $1"
+log.error "unregistered config array: $1"
 return 1
 }
 _config.list.contains _CONFIG_ARRAY_REGISTERED "$1" "$3"||{
-log.error "未注册的数组配置项: $1:$3"
+log.error "unregistered config array key: $1:$3"
 return 1
 }
 config.array.add "$1" "$2"
@@ -606,7 +606,7 @@ _CONFIG_VALUES["$1.$2.$3"]=$4
 config.type(){ [[ -v "_CONFIG_TYPES[$1]" ]]&&echo "${_CONFIG_TYPES[$1]}";}
 config.desc(){ [[ -v "_CONFIG_DESCS[$1]" ]]&&echo "${_CONFIG_DESCS[$1]}";}
 system.command.exist(){ command -v "$1" >/dev/null 2>&1;}
-system.command.required(){ ! system.command.exist "$1"&&log.error "This module required \`$1\` command."&&exit 1||return 0;}
+system.command.required(){ ! system.command.exist "$1"&&log.error "required command not found: $1"&&exit 1||return 0;}
 system.gui_supported(){ [[ -n ${DISPLAY:-} || -n ${WAYLAND_DISPLAY:-} ]];}
 system.command.result(){
 local result
@@ -658,7 +658,7 @@ fs.insert(){ sed -i "/$2/a\\$3" "$1" 2>/dev/null;}
 fs.rmline(){ [[ -n $4 ]]&&sed -i "$4,/$2/{/$2/d}" "$1" 2>/dev/null||sed -i "/$2/d" "$1" 2>/dev/null;}
 fs.cleanup(){ ls -t "$1"* 2>/dev/null|tail -n +$((${2:-3}+1))|xargs -r rm -f;}
 fs.mktemp(){ mktemp "$@" 2>/dev/null||{
-echo "fs.mktemp: 创建临时文件失败" >&2
+echo "fs.mktemp: failed to create temp file" >&2
 return 1
 };}
 fs.file.extract(){
@@ -677,24 +677,45 @@ case "${base,,}" in
 cp "$path" "${base%%.*}"
 esac)
 }
+declare -g _JSON_BIN
+_JSON_BIN="$(command -v jq 2>/dev/null||true)"
+json.available(){ [[ -n $_JSON_BIN ]];}
+json.require(){
+json.available&&return 0
+log.error "required command not found: jq"
+exit 1
+}
+json.run(){
+json.require
+"$_JSON_BIN" "$@"
+}
+json.get(){
+json.require
+"$_JSON_BIN" -r "${2:-.}" <<<"$1"
+}
 declare -g _REQUESTS_TIMEOUT=30
 declare -g _REQUESTS_USER_AGENT="bashlet-requests/1.0"
 declare -g _REQUESTS_BASE_URL=""
 declare -gA _REQUESTS_HEADERS=()
 declare -gA _REQUESTS_AUTH=()
 declare -g _REQUESTS_CURL=""
-declare -g _REQUESTS_JQ=""
+requests.curl.available(){ system.command.exist curl||return 3;}
+requests.available(){ requests.curl.available&&json.available;}
 requests.init(){
 declare -ga _REQUESTS_CURL_EXTRA=("$@")
-system.command.required "curl"&&_REQUESTS_CURL="$(command -v curl)"
-system.command.required "jq"&&_REQUESTS_JQ="$(command -v jq)"
+json.require
+requests.curl.available||{
+log.error "required command not found: curl"
+exit 1
+}
+_REQUESTS_CURL="$(command -v curl)"
 _REQUESTS_HEADERS=(
 ["Accept"]="*/*"
 ["Accept-Encoding"]="gzip, deflate"
 ["Connection"]="keep-alive")
 _REQUESTS_AUTH=()
 _REQUESTS_BASE_URL=""
-log.debug "requests module initialized: curl=$_REQUESTS_CURL, jq=$_REQUESTS_JQ"
+log.debug "requests module initialized: curl=$_REQUESTS_CURL"
 return 0
 }
 requests.curl.configure(){
@@ -735,7 +756,7 @@ local full_url="$url"
 cmd_ref+=("$full_url")
 }
 requests._headers_json(){
-"$_REQUESTS_JQ" -Rs '[splits("\r?\n\r?\n")] | map(select(length > 0)) | last // "" | split("\n") | map(select(length > 0 and test(":"))) | map(split(": ") | {(.[0]): .[1] | rtrimstr("\r")}) | add // {}' "$1"
+json.run -Rs '[splits("\r?\n\r?\n")] | map(select(length > 0)) | last // "" | split("\n") | map(select(length > 0 and test(":"))) | map(split(": ") | {(.[0]): .[1] | rtrimstr("\r")}) | add // {}' "$1"
 }
 requests.request(){
 local -r method="$1"
@@ -776,7 +797,7 @@ curl_cmd+=("-o" "$2")
 "${curl_cmd[@]}" "$1"
 }
 requests._urlencode(){
-"$_REQUESTS_JQ" -nr --arg str "$1" '$str | @uri'
+json.run -nr --arg str "$1" '$str | @uri'
 }
 requests.content_type.detect(){
 [[ $1 =~ ^\{.*\}$ ]]&&echo "application/json"&&return 0
@@ -824,15 +845,15 @@ requests.delete(){ requests.request "DELETE" "$1" "" "";}
 requests.patch(){ requests.request "PATCH" "$1" "$2" "${3:-}";}
 requests.head(){ requests.request "HEAD" "$1" "" "";}
 requests.options(){ requests.request "OPTIONS" "$1" "" "";}
-requests.status_code(){ "$_REQUESTS_JQ" -r '.status_code' <<<"$1";}
-requests.exit_code(){ "$_REQUESTS_JQ" -r '.curl_exit' <<<"$1";}
-requests.headers(){ [[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r --arg name "$2" '.headers[$name] // empty' <<<"$1"||"$_REQUESTS_JQ" -r '.headers' <<<"$1";}
-requests.text(){ "$_REQUESTS_JQ" -r '.body' <<<"$1"|string.base64.decode;}
+requests.status_code(){ json.run -r '.status_code' <<<"$1";}
+requests.exit_code(){ json.run -r '.curl_exit' <<<"$1";}
+requests.headers(){ [[ -n ${2:-} ]]&&json.run -r --arg name "$2" '.headers[$name] // empty' <<<"$1"||json.run -r '.headers' <<<"$1";}
+requests.text(){ json.run -r '.body' <<<"$1"|string.base64.decode;}
 requests.json(){
 local -r body_text="$(requests.text "$1")"
-[[ -n ${2:-} ]]&&"$_REQUESTS_JQ" -r "$2" <<<"$body_text"||echo "$body_text"
+[[ -n ${2:-} ]]&&json.get "$body_text" "$2"||echo "$body_text"
 }
-requests.success(){ "$_REQUESTS_JQ" -r '.success' <<<"$1";}
+requests.success(){ json.run -r '.success' <<<"$1";}
 requests.raise_for_status(){ [[ "$(requests.success "${1:-}")" == "true" ]]||{ log.error "HTTP error: status $(requests.status_code "${1:-}") curl_exit $(requests.exit_code "${1:-}")"&&return 1;};}
 requests.timeout(){ string.natural.check "$1"&&_REQUESTS_TIMEOUT="$1"||{ log.error "timeout must be a positive integer"&&return 1;};}
 requests.headers.append(){
@@ -849,7 +870,7 @@ done
 }
 requests.base_url(){ _REQUESTS_BASE_URL="$1";}
 requests.headers.clear(){ _REQUESTS_HEADERS=();}
-requests.auth(){ _REQUESTS_AUTH["Authorization"]="Basic $("$_REQUESTS_JQ" -nr --arg c "$1:$2" '$c | @base64')";}
+requests.auth(){ _REQUESTS_AUTH["Authorization"]="Basic $(json.run -nr --arg c "$1:$2" '$c | @base64')";}
 requests.auth_bearer(){ _REQUESTS_AUTH["Authorization"]="Bearer $1";}
 ansi.Powerline.IsAvailable(){
 [[ -n ${NO_UNICODE-} ]]&&return 1
@@ -1030,8 +1051,8 @@ local url="$1" cache
 cache=$(requests.cache.path "$url")||return 1
 requests.cache.fresh "$cache" "${2:-0}"&&return 0
 requests.cache.fetch "$url"&&return 0
-[[ -f $cache ]]&&log.warn "requests.cache: 回源失败，降级使用过期缓存 ($url)"&&return 0
-log.error "requests.cache: 无可用缓存且回源失败 ($url)"
+[[ -f $cache ]]&&log.warn "requests.cache: origin fetch failed, falling back to stale cache ($url)"&&return 0
+log.error "requests.cache: no usable cache and origin fetch failed ($url)"
 return 1
 }
 declare -g _GITHUB_API="https://api.github.com"
@@ -1053,7 +1074,7 @@ github.release.latest(){ github._json "$(github.api "repos/$1/releases/latest")"
 github.release.first(){ github._json "$(github.api "repos/$1/releases")" ".[0]";}
 github.release.version(){
 local tag
-tag=$("$_REQUESTS_JQ" -r '.tag_name // .name // ""' <<<"$1")
+tag=$(json.run -r '.tag_name // .name // ""' <<<"$1")
 [[ $tag =~ ([0-9]+\.[0-9]+(\.[0-9]+)?) ]]&&echo "${BASH_REMATCH[1]}"||echo "$tag"
 }
 github.release.pick(){
@@ -1088,7 +1109,7 @@ pattern="${pattern//\?/.}"
 }
 github.asset.url(){
 local url
-url=$("$_REQUESTS_JQ" -r --arg pat "$2" 'first(.assets[]? | select(.name | test($pat; "i")) | .browser_download_url) // ""' <<<"$1")
+url=$(json.run -r --arg pat "$2" 'first(.assets[]? | select(.name | test($pat; "i")) | .browser_download_url) // ""' <<<"$1")
 [[ -n $url && $url != "null" ]]&&echo "$url"
 }
 github.contents.list(){
@@ -1332,10 +1353,11 @@ args.init
 args.process "$@"
 ensure_download_dir
 github_token
-requests.init "-4" 2>/dev/null||{
-log.error "Failed to initialize requests module"
+requests.available||{
+log.error "缺少依赖：curl 或 jq"
 exit 1
 }
+requests.init "-4" 2>/dev/null
 console.layout.section "检查更新"
 local has_updates=false
 local -a registered_packages=()
@@ -1403,10 +1425,11 @@ args.init
 args.add_options "arg" "待更新的二进制包" "可选：指定需要更新的二进制包名，支持多个包名"
 args.process "$@"
 ensure_download_dir
-requests.init 2>/dev/null||{
-log.error "Failed to initialize requests module"
+requests.available||{
+log.error "缺少依赖：curl 或 jq"
 exit 1
 }
+requests.init 2>/dev/null
 local -n target_packages="$(args.args)"
 local -a packages_to_upgrade=()
 local package
@@ -1570,10 +1593,11 @@ args.add_options "arg" "搜索关键词，留空列出全部" "可选：多个�
 args.add_options "refresh" "r" "忽略缓存有效期，强制刷新包目录"
 args.process "$@"
 github_token
-requests.init 2>/dev/null||{
-log.error "Failed to initialize requests module"
+requests.available||{
+log.error "缺少依赖：curl 或 jq"
 exit 1
 }
+requests.init 2>/dev/null
 local -n keywords="$(args.args)"
 local url ttl
 url=$(registry_source)
@@ -1635,10 +1659,11 @@ args.add_options "arg" "待添加的包名" "必填：指定需要添加的包�
 args.add_options "force" "f" "覆盖已存在的本地配置"
 args.process "$@"
 github_token
-requests.init 2>/dev/null||{
-log.error "Failed to initialize requests module"
+requests.available||{
+log.error "缺少依赖：curl 或 jq"
 exit 1
 }
+requests.init 2>/dev/null
 local -n targets="$(args.args)"
 ((${#targets[@]}))||{
 log.error "请指定包名: $_USAGE_SCRIPT_FILENAME add <包名>"
