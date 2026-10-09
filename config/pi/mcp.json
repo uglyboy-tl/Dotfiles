@@ -9,11 +9,16 @@
         "MINIMAX_API_RESOURCE_MODE": "local",
         "MINIMAX_MCP_BASE_PATH": "~/Music/tts"
       },
-      "description": "MiniMax 多模态：文本转语音、音色克隆、音乐与图像生成",
+      "description": "MiniMax 文本转语音",
       "exposure": "hidden",
       "toolExposure": {
         "text_to_audio": "codemode"
       }
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "description": "Context7：查最新版本的库/框架官方文档与代码示例",
+      "exposure": "codemode"
     }
   }
 }
