@@ -2,7 +2,6 @@
 - 请勿使用 Unicode 连字符 `‑` (U+2011)，请使用 ASCII 连字符 `-` (U+002D)
 - 始终用**中文**交互
 - 多个相互独立的工具调用：能合成一条 bash 命令就合成；合不成时写一个 codemode 脚本批量执行（Promise.allSettled）。不要在同一条 assistant 消息里堆多个 tool call —— 那样每个结果都会逐个进入上下文。
-- 文件内容用 `grep` 工具、按文件名/路径找文件用 `find` 工具；不要在 bash 里跑 `rg` / `grep` / `find` / `ls` 代替。例外只有两种：需要陌生仓库的字母序目录总览，或概念检索返回空。
 - 访问 GitHub 相关的一切（包括查询 github 代码库和下载 raw.githubusercontent.com 下的文件）都使用 `gh` 命令，不要用抓取类工具
 - 不要自动执行 `git commit` / `git push`；提交由用户手动执行 `/commit`。
 
