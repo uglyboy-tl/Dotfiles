@@ -9,7 +9,6 @@
     "npm:pi-open-tui",
     "npm:@gotgenes/pi-subagents",
     "npm:@juicesharp/rpiv-ask-user-question",
-    "npm:@ff-labs/pi-fff",
     "npm:cc-safety-net"
   ],
   "defaultProvider": "opencode-go",
@@ -20,17 +19,23 @@
     "opencode-go/mimo-v2.6-flash"
   ],
   "defaultThinkingLevel": "low",
+  "treeFilterMode": "no-tools",
   "extensions": [
-    "-builtin:llama.cpp"
+    "-builtin:llama.cpp",
+    "-builtin:tool-search"
   ],
   "defaultTools": [
-    "+codemode"
+    "+codemode",
+    "+grep",
+    "+find"
   ],
   "fullscreenScrollbar": "hidden",
   "collapseChangelog": true,
+  "quietStartup": "header",
   "fullscreenExitOutput": "resume-hint",
-  "editorPaddingX": 1,
   "terminal": {
     "clearOnShrink": true
-  }
+  },
+  "enableInstallTelemetry": false,
+  "steeringMode": "all"
 }
