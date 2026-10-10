@@ -15,10 +15,10 @@ argument-hint: "[commit|branch|pr|路径]"
       subagent_type: "reviewer",
       description: "审核代码变更",
       inherit_context: false,
-      prompt: "用户指令:$ARGUMENTS(为空表示审核未提交的更改)。按你的 agent 定义完成范围判定、上下文获取、逐文件审核与报告输出,最后按其中的输出格式给出完整报告。",
+      prompt: "用户指令:$ARGUMENTS(为空表示审核未提交的更改)。按你的 agent 定义执行,并按其中的输出格式给出完整报告。",
     })
 
-`reviewer` 在后台运行,工具会立刻返回 `Agent started in background` 并结束本轮:此时只向用户回一句「已委派 reviewer 后台审核」,不要声称已审核完。等完成通知(`<task-notification>`)到达后,再如实转达已审核文件、结论与按级别排列的问题。
+`reviewer` 在后台运行:本轮只回一句「已委派 reviewer 后台审核」,不要声称已审核完;完成通知(`<task-notification>`)到达后再如实转达已审核文件、结论与按级别排列的问题。
 
 其余情况(不超过 2 个文件、改动一眼能看清)自己做:先 read `$PI_CODING_AGENT_DIR/agents/reviewer.md`,按其中的维度、定级与输出格式审核并汇报。
 

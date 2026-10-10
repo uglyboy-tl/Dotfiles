@@ -35,7 +35,7 @@ run_in_background: true
 | 核验一条关键断言 | 用能返回「支持 / 反对 + 原文片段」的机械核验工具,不靠印象;结论冲突时由它裁决 |
 | 回查已抓过的 | 先回查,不重复抓取 |
 
-点名一处(直觉会走错的地方)——GitHub 的一切走 `gh`,不要用抓取类工具:
+GitHub 的一切走 `gh`,不用抓取类工具:
 - 搜索:`gh search repos` / `gh search code` / `gh search issues`
 - 读仓库文件:`gh api repos/<owner>/<repo>/readme`、`gh api repos/<owner>/<repo>/contents/<path>`
 - PR / issue / gist:`gh pr view <n>`、`gh issue view <n>`、`gh gist view <id> --raw`
