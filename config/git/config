@@ -55,7 +55,9 @@
 	postBuffer = 524288000   # 大仓库推送缓冲区（500MB）
 	maxRequests = 10
 
-[url "https://xget.uglyboy.cn/gh/"]
+# GitHub 加速代理：实测 gh-proxy.com clone 37MB 约 3.5s，优于直连（时通时断）
+# 备选：ghfast.top（大文件稍快）、xget.uglyboy.cn/gh/（自建，LAX 节点，git 不稳定）
+[url "https://gh-proxy.com/https://github.com/"]
 	insteadOf = https://github.com/
 
 # ──────────────────────────────────────────────
