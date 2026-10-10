@@ -1797,7 +1797,7 @@ esac
 github.search_url(){
 local url="$1" kind o r n body parsed
 if [[ ${url,,} == *gist.github.com* ]];then
-log.error "gist 不在 dig 的 github 源里：取正文优先 gh gist view <id> --raw，失败时退到 fetch_content"
+log.error "gist 不在 dig 的 github 源里"
 return 1
 fi
 parsed="$(github.url.parse "$url")"||{
@@ -2589,7 +2589,7 @@ log.error "不是合法的 V2EX 主题 URL：$url（形如 www.v2ex.com/t/123456
 return 1
 }
 browser.creds.check||{
-log.error '本机直连 www.v2ex.com 不通，取主题需要 Cloudflare Browser Run 凭证（写进脚本同目录的 .env）'
+log.error '直连 www.v2ex.com 不通：取主题需要代理（DIG_PROXY）或 Cloudflare Browser Run 凭证（写进脚本同目录的 .env）'
 return 1
 }
 browser.page "https://www.v2ex.com/t/$id"|v2ex.map_topic "$id"|schema.pipe 0|schema.limit 1
@@ -3474,7 +3474,7 @@ esac
 doctor.hint(){
 local n="${1:-0}"
 ((n>0))||return 0
-log.info "$n 个源不可达；若属本机 DNS 污染站点，设置 DIG_PROXY 或 https_proxy 后重跑"
+log.info "$n 个源不可达；若属网络/DNS 不可达的站点，设置 DIG_PROXY 或 https_proxy 后重跑"
 }
 doctor.run(){
 doctor.row "源" "状态" "说明"
