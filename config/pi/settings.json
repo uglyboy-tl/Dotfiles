@@ -29,11 +29,6 @@
     "+grep",
     "+find"
   ],
-  "skills": [
-    "~/.config/pi/skills/grilling",
-    "~/.config/pi/skills/domain-modeling",
-    "~/.config/pi/skills/grill-with-docs"
-  ],
   "fullscreenScrollbar": "hidden",
   "collapseChangelog": true,
   "quietStartup": "header",
