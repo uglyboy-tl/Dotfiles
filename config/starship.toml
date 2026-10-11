@@ -41,7 +41,7 @@ untracked = "? "
 modified = " "
 
 # ──────────────────────────────────────────────
-# 命令执行时间
+# 命令执行时间（需加进顶部 format 才生效）
 # ──────────────────────────────────────────────
 [cmd_duration]
 min_time = 2000
@@ -51,7 +51,7 @@ format = "[$duration]($style) "
 # 语言版本（按需启用）
 # ──────────────────────────────────────────────
 [python]
-format = "[$symbol$pyenv_prefix($version)(\($virtualenv\))]($style) "
+format = "[$symbol$pyenv_prefix($version)($virtualenv)]($style) "
 
 [nodejs]
 format = "[$symbol($version)]($style) "
