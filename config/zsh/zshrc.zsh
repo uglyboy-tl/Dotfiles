@@ -44,6 +44,10 @@ export FZF_ALT_C_COMMAND="rg --sort-files --null --files 2> /dev/null | xargs -0
 # ──────────────────────────────────────────────
 [ -f "$ZLOCAL/zshrc.before" ] && source "$ZLOCAL/zshrc.before"
 
+# 自动建议默认每个 prompt 重绑 ~210 个 ZLE widget（实测约 18ms/次）。
+# 关掉后只在启动时绑一次；若日后新增会包装 ZLE widget 的插件，删掉这行。
+export ZSH_AUTOSUGGEST_MANUAL_REBIND=1
+
 # ──────────────────────────────────────────────
 # Zinit 插件管理
 # ──────────────────────────────────────────────
@@ -51,6 +55,10 @@ source "${ZDOTDIR:-$HOME/.config/zsh}/zinit/zinit.zsh"
 
 # 同步加载：补全系统（compinit 依赖）
 zi snippet OMZL::completion.zsh
+
+# 补全定义库：必须在 compinit（turbo 批里的 zicompinit）之前加载，
+# 否则新补全不会被 compinit 收录。插件自带文件只做 fpath+=src，不带 compinit。
+zi light zsh-users/zsh-completions
 
 # 本地插件列表
 [ -f "$ZLOCAL/zshrc.plugins" ] && source "$ZLOCAL/zshrc.plugins"
@@ -60,16 +68,10 @@ zi wait lucid for \
   OMZL::key-bindings.zsh \
   OMZL::directories.zsh \
   OMZL::history.zsh \
-  OMZL::correction.zsh \
-  OMZL::functions.zsh \
-  OMZL::termsupport.zsh \
-  OMZL::spectrum.zsh \
-  OMZL::theme-and-appearance.zsh \
   atinit'zicompinit; zicdreplay' \
     zdharma-continuum/fast-syntax-highlighting \
   atload'_zsh_autosuggest_start' \
     zsh-users/zsh-autosuggestions \
-  OMZP::git-auto-fetch \
   OMZP::extract \
   OMZP::zoxide \
   OMZP::fzf
@@ -100,7 +102,8 @@ zi ice depth=1; zi light romkatv/powerlevel10k
 # 工具初始化
 # ──────────────────────────────────────────────
 setopt no_nomatch
-eval "$(atuin init zsh --disable-up-arrow)"
+# Ctrl-r 让给 fzf（OMZP::fzf 后加载会覆盖 atuin，这里显式关掉 atuin 的绑定避免两套互抢）
+eval "$(atuin init zsh --disable-ctrl-r --disable-up-arrow)"
 
 # ──────────────────────────────────────────────
 # Powerlevel10k 配置
