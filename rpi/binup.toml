@@ -1,5 +1,4 @@
 download_dir = "/srv/Dev/Work/Tools/CMD"
-proxy_prefix = "https://xget.uglyboy.cn/gh/"
 
 [packages.bun]
 repo = "oven-sh/bun"

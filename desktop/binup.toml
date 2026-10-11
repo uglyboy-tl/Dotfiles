@@ -1,5 +1,4 @@
 download_dir = "/home/uglyboy/Downloads/BinaryArchives"
-proxy_prefix = "https://xget.uglyboy.cn/gh/"
 
 [packages.opencode]
 repo = "anomalyco/opencode"
