@@ -1,3 +1,6 @@
 #search_mode = "prefix"
 #style = "full"
 invert = true
+
+[logs]
+dir = "~/.local/state/atuin/logs"

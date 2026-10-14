@@ -12,6 +12,10 @@ export VISUAL=/usr/bin/vim
 # [ansible]
 export ANSIBLE_HOME="$XDG_DATA_HOME"/ansible
 
+# [cc-safety-net]
+export CC_SAFETY_NET_HOME="$XDG_DATA_HOME"/cc-safety-net
+export CC_SAFETY_NET_AUDIT_HOME="$XDG_DATA_HOME"
+
 # [docker]
 export DOCKER_CONFIG="$XDG_CONFIG_HOME"/docker
 
