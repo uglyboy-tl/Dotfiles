@@ -41,4 +41,25 @@
 | 命令 | 源文件 | 用途 |
 |------|--------|------|
 | `pg-back` | `rpi/scripts/pg-back` | 备份 PostgreSQL（docker）转储，保留最近 7 份；每天 0 点由 crontab 执行 |
-| `rpi-backup` | `rpi/scripts/rpi-backup` | SD 卡镜像备份并压缩（`dd` + pishrink） |
+| `rpi-backup` | `rpi/scripts/rpi-backup` | SD 卡镜像备份并压缩（`dd` + `pishrink`）；备份前清理可再生缓存/日志（约 400M），`--no-clean` 跳过，`--dry-run` 只看流程 |
+
+## 树莓派外部工具（不在 dotfiles 里）
+
+| 工具 | 位置 | 来源 | 当前版本 |
+|------|------|------|----------|
+| `pishrink.sh` | `/usr/local/bin/pishrink.sh` | [Drewsif/PiShrink](https://github.com/Drewsif/PiShrink)，手动安装（无 apt 归属，release 不带附件所以 `binup` 管不了） | v26.03.16，与最新 release 及 master 逐字节一致 |
+
+检查与更新：
+
+```bash
+# 本地版本
+sed -n 's/^version="\(.*\)"/\1/p' /usr/local/bin/pishrink.sh
+# 与上游 master 比对（两个哈希一致即无需更新）
+gh api repos/Drewsif/PiShrink/contents/pishrink.sh --jq .content | base64 -d | sha256sum
+sha256sum /usr/local/bin/pishrink.sh
+# 更新
+gh api repos/Drewsif/PiShrink/contents/pishrink.sh --jq .content | base64 -d | sudo tee /usr/local/bin/pishrink.sh >/dev/null
+sudo chmod 755 /usr/local/bin/pishrink.sh
+```
+
+`/usr/local/bin/` 下的脚本保持 `root:root 755`（它们由 `sudo` 执行，属主不能是普通用户）。

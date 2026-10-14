@@ -1,3 +1,33 @@
 #!/bin/bash
-sudo dd if=/dev/mmcblk0 of=/srv/Base/Data/rpibackup/rpi.$(date '+%Y%m%d').img bs=8M status=progress
-sudo pishrink.sh -Zvs /srv/Base/Data/rpibackup/rpi.$(date '+%Y%m%d').img
+# 备份整张 SD 卡，pishrink 压缩。备份前清掉可再生内容（缓存/日志/旧日志归档），单次约省 400M。
+# 用法: rpi-backup [--dry-run] [--no-clean]   （默认清理；--no-clean 保留原样镜像）
+set -euo pipefail
+
+DEST=/srv/Base/Data/rpibackup
+IMG="$DEST/rpi.$(date '+%Y%m%d').img" # 同日重跑会覆盖
+SRC=/dev/mmcblk0
+
+DRY=0; CLEAN=1
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run)  DRY=1 ;;
+    --no-clean) CLEAN=0 ;;
+    *) echo "用法: $0 [--dry-run] [--no-clean]" >&2; exit 2 ;;
+  esac
+done
+run() { (( DRY )) && { echo "[dry-run] $*"; return 0; }; sudo "$@"; }
+
+if (( CLEAN )); then
+  echo "== 备份前清理（全部可再生）"
+  run apt-get clean                              # APT 缓存 + pkgcache.bin/srcpkgcache.bin 约 136M
+  run rm -f /var/cache/apt/*.bin
+  run rm -rf /var/tmp/storage*                   # pip 构建残留
+  run rm -rf /root/.cache/restic                 # restic 索引缓存，下次备份自动重建
+  run rm -f /var/lib/smartmontools/attrlog.*.csv # SMART 属性历史 CSV
+  if [[ -d /opt/zram/oldlog ]]; then run find /opt/zram/oldlog -mindepth 1 -delete; fi # 历史 olddir 遗留（现改到 /srv/SSD/logrotate，不进镜像）
+  run truncate -s 0 /var/hdd.log/*.log /var/log/*.log # 当前活动日志只清空不删
+fi
+
+sudo mkdir -p "$DEST"
+run dd if="$SRC" of="$IMG" bs=8M status=progress
+run pishrink.sh -Zv "$IMG"
