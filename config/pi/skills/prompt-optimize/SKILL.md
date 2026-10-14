@@ -1,6 +1,6 @@
 ---
 name: prompt-optimize
-description: 审查并优化 prompt(AGENTS.md、SKILL.md、agent 定义、斜杠命令模板):要写新 prompt,或发现 prompt 变长、规则重复、规则被忽略、模型过度自检、模型不动手时使用。
+description: 写或改 agent 指令文件(SKILL.md、AGENTS.md、agent 定义、斜杠命令模板)时用,新建/扩写/精简都算;规则被忽略、规则重复、模型过度自检或不动手时也用。
 ---
 
 # Prompt 优化
