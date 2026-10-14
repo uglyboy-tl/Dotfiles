@@ -42,7 +42,7 @@
 | BSPWM + sxhkd | `desktop/bspwm/` |
 | Polybar | `desktop/polybar/` |
 | Rofi | `desktop/rofi/` |
-| Alacritty / Ghostty / URxvt | `desktop/alacritty/`、`desktop/ghostty/`、`desktop/X11/` |
+| Alacritty / Ghostty / URxvt | `desktop/alacritty/`、`desktop/ghostty/`、`desktop/X11/`；默认终端由 `x-terminal-emulator` 选择（`sudo update-alternatives --config x-terminal-emulator`） |
 | Dunst / Zathura / MPV | `desktop/dunst/dunstrc`、`desktop/zathura/`、`desktop/mpv/` |
 | Jellyfin MPV Shim | 仅纳管 `desktop/systemd/jellyfin-mpv-shim.service`；`conf.json` 有意不纳管（原因与关键设置见 [维护笔记](../maintenance.md#已知问题)），`cred.json`/`users.json` 属凭据留本地 |
 | Picom / Redshift / 字体 | `desktop/picom/picom.conf`、`desktop/redshift/redshift.conf`、`desktop/fontconfig/fonts.conf` |

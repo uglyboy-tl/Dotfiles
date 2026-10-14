@@ -3,7 +3,7 @@
 # === 通用应用 ===
 # 终端
 super + Return
-	ghostty
+	x-terminal-emulator
 
 # 应用启动器
 super + r
@@ -15,11 +15,11 @@ alt + Tab
 
 # 文件管理器
 super + e
-	ghostty --x11-instance-name=yazi -e yazi
+	x-terminal-emulator --x11-instance-name=yazi -e yazi
 
 # 终端应用 (音乐/系统监控/新闻)
 super + {m,h,n}
-	command -v {ncmpcpp,btop,newsboat} >/dev/null && ghostty -e {ncmpcpp,btop,newsboat}
+	command -v {ncmpcpp,btop,newsboat} >/dev/null && x-terminal-emulator -e {ncmpcpp,btop,newsboat}
 
 # 从剪贴板 URL 用 mpv 播放视频（需要 xclip）
 super + v

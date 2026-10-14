@@ -6,7 +6,7 @@
 
 | 快捷键 | 操作 |
 |--------|------|
-| `Super + Return` | 终端（Ghostty） |
+| `Super + Return` | 终端（x-terminal-emulator，默认 Ghostty） |
 | `Super + r` | 应用启动器（rofi drun） |
 | `Alt + Tab` | 窗口切换（rofi window） |
 | `Super + e` | 文件管理器（yazi） |
