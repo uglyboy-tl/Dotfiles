@@ -48,6 +48,33 @@ git update-index --no-skip-worktree desktop/fontconfig/fonts.conf
 - **屏保不依赖 X screensaver 扩展**：该扩展常被应用挂起，导致 `xset s` 超时与 `xss-lock` 都不可靠。故屏保改用 `xprintidle` 轮询空闲时间实现（`xset s off` 只负责关掉 X 自带黑屏）。
 - **看视频会弹屏保（已修）**：`xprintidle` 只看键鼠输入，而浏览器抑制屏保走两条路——D-Bus `org.freedesktop.ScreenSaver`（bspwm 裸装没有该服务，请求落空）或 X11 `XScreenSaverSuspend`（只暂停 X 自带屏保，`xprintidle` 照涨）。故新增 `desktop/idle-screensaver/idle-screensaver-dbus.py` 补上这个 D-Bus 服务（心跳文件每秒刷新，服务死掉 5 秒后抑制自动失效），并在 `idle-screensaver.sh` 里按「D-Bus 抑制 / 全屏窗口 / 有音频输出流」三者任一成立就暂不出屏保、同时 `xset -dpms` 关熄屏。（该服务现由 systemd user unit `desktop/systemd/idle-screensaver-dbus.service` 常驻。）
 
+## 上游生态观察
+
+### tmux（查于 2026-10，数据源 `gh api`，可复现）
+
+**结论**：tmux 本体正处最活跃期（3.6 → 3.8 连发八个版本），但官方插件组织 `tmux-plugins` 与几个历史名插件已实质停摆。**当前 3.5a，暂不升级**。
+
+- **版本路径**：本机 3.5a；trixie-backports 有 3.6b（`apt -t trixie-backports install tmux`，5 分钟）；3.7/3.8 **无 backport，需源码编译**。
+- **3.8（2026-09-09）值得升的理由**：内置明暗主题 + `themeblack`/`themedarkgrey` 等主题色名 + 颜色可作 format 展开 → **可删掉 `nord-tmux`**（该官方端口 2023-05 已停更，且硬编码不跟随终端切换）；`set-hook -B` 监视器与 `wait-for -E` 事件可用于通知联动；`switch-mode`（Tab 模糊切换）；浮动 pane 补完。
+- **3.9 计划**：浮层完全取代 popup，`display-popup` 保留但语义变为模态浮动 pane——会影响 `config/tmux/tmux.conf` 里的 `bind-key p display-popup -E -w 80% -h 80%`。
+
+本仓库用到的 tmux 依赖的最后提交：
+
+| 依赖 | 最后提交 | 状态 |
+|------|----------|------|
+| `tmux-plugins/tpm` | 2023-02（代码） | 101 issue / 44 PR 积压 |
+| `nordtheme/tmux` | 2023-05-03 | 停滞 |
+| `tmux-plugins/tmux-sensible` | 2022-08-14 | 停滞 |
+| `tmux-plugins/tmux-pain-control` | 2021-08-09 | 停滞 |
+| `MunifTanjim/tmux-suspend` | 2023-01-15 | 非 tmux-plugins 组织，停滞 |
+| `tmux-plugins/tmux-prefix-highlight` | 2025-03-01 | 组内唯一仍活跃 |
+
+均为「停滞但稳定」，暂无替代压力。替代品 `tmuxpack/tpack` 目录布局与 TPM 不兼容、文档自认 AI 生成，**不建议迁移**。
+
+**决策**：暂不升级。复查触发条件：① 需要 OSC 133 事件 / 监视器做通知联动；② 终端明暗切换需要 tmux 跟随（当前 nord-tmux 硬编码）；③ 3.9 发布后 popup 语义变更波及现有绑定。
+
+**其他生态观察**（仅记录，不引入）：主题渲染器类工具（matugen / wpgtk / hellwal / pywal）与仓库 `themes/` 完全同构，属反向重复造轮子；若要新增会话管理优先看 `joshmedeski/sesh`；copy/hint 类优先看 `laktak/extrakto`（Python + fzf，复用已有组件）。
+
 ## 待办
 
 - vscode - 参考 Omarchy 的 `vscode-theme.json.tpl`
