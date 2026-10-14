@@ -22,6 +22,7 @@
 ## 查阅
 
 - [软件与配置路径](reference/software.md) - 每个软件的配置放在哪
+- [系统软件包与消费者](reference/packages.md) - apt 包分组、谁在依赖它们、能不能 autoremove
 - [术语表](CONTEXT.md) - 易混词速查（config/conf.d、主题/colors、源/镜像源…）
 - [脚本](reference/scripts.md) - 工具清单与源文件位置
 - [与 Omarchy 的对比](reference/omarchy.md) - 软件选型对照、取舍、v4 借鉴清单

@@ -60,6 +60,7 @@
 | UV / Bun / Python（包管理器镜像源） | `config/sources/` |
 | Pi | `config/pi/` |
 | Herdr | `config/herdr/`（`config.toml` + `herdr-server.service`；常驻 server 由 systemd 管，default session；远程连接也走 default session） |
+| Herdr：远程 NAS | 用 SSH 机器档案 `NAS`：`herdr --machine NAS agent list` / `agent prompt <pane_id> '<任务>'`，细节见 WorkSpace 仓 `AGENTS.md` 的「NAS 远程操作」。禁忌：对远端执行 `ethtool -s`、路由/防火墙/ssh 变更这类「失败即失联」的命令（Pi 4B 无带外通道，只能断电） |
 
 ## 其他随仓库分发
 
