@@ -54,6 +54,11 @@ _c split_ratio 0.52        # 分割比例
 _c borderless_monocle true # 单窗口模式下无边框
 _c gapless_monocle true    # 单窗口模式下无间距
 
+# 显示器自动清理：拔插显示器时自动处理桌面归属
+_c remove_disabled_monitors true    # 移除已禁用的显示器
+_c remove_unplugged_monitors true   # 移除已拔出的显示器
+_c merge_overlapping_monitors true  # 合并重叠的显示器
+
 # 鼠标行为配置
 _c pointer_modifier mod1         # 鼠标修改键 (通常是 Alt)
 _c pointer_action1 resize_side   # 鼠标动作1：调整窗口边缘大小
