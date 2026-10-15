@@ -60,3 +60,8 @@ file_extension = "zip"
 repo = "yt-dlp/yt-dlp"
 file_pattern = "yt-dlp_{os}_{arch}"
 binary_name = "yt-dlp"
+
+[packages.fastfetch]
+repo = "fastfetch-cli/fastfetch"
+file_pattern = "fastfetch-{os}-{arch}"
+file_extension = "tar.gz"
