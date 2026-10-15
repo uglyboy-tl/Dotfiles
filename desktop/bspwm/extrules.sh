@@ -60,7 +60,10 @@ esac
 # 按标题匹配：画中画窗口
 case "$title" in
     *"Picture-in-Picture"*|*"Picture in picture"*|*"画中画"*)
-        result "state=floating sticky=on layer=above center=on rectangle=640x360+1280+80"
+        # 注意：这条不能加 center=on —— bspwm 先套 rectangle、后执行 center，
+        # 而 window_center() 会直接改写 x/y（宽高保留），结果 +X+Y 被居中覆盖。
+        # 右下角，右侧/底部各留 10px（与 window_gap 一致）。
+        result "state=floating sticky=on layer=above rectangle=640x360+2790+1070"
         ;;
 esac
 
