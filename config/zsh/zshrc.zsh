@@ -8,7 +8,11 @@ fi
 # ──────────────────────────────────────────────
 # 基础环境变量
 # ──────────────────────────────────────────────
-export PATH="$HOME/.local/bin:$PATH"
+# path 是 PATH 的关联数组：-U 开启去重，赋值时自动丢掉重复项。
+# 必须用数组式赋值才生效（字符串式 PATH=... 不去重），目的是不让嵌套 shell
+# 反复前置同一目录把 PATH 越堆越长。
+typeset -U path
+path=($HOME/.local/bin $path)
 export ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 export ZLOCAL="${XDG_CONFIG_HOME:-$HOME/.config}/local"
 export DOTFILES="$XDG_DATA_HOME/dotfiles"
