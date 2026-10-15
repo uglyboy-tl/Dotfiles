@@ -1563,6 +1563,16 @@ binary_files=("$decompressed")
 fi
 fi
 binary_count=${#binary_files[@]}
+if ((binary_count>1))&&[[ -n $binary_name ]];then
+local -a picked=()
+for binary_file in "${binary_files[@]}";do
+[[ $(basename "$binary_file") == "$binary_name" ]]&&picked+=("$binary_file")
+done
+if ((${#picked[@]}>0));then
+binary_files=("${picked[@]}")
+binary_count=${#picked[@]}
+fi
+fi
 ((binary_count==0))&&{
 log.warn "$package: 未找到可执行文件"
 return 1
@@ -1574,9 +1584,10 @@ else
 target_file="$install_dir/$(basename "$binary_file")"
 fi
 console.layout.item.item "[安装] 到 $target_file"
-if cp "$binary_file" "$target_file" 2>/dev/null;then
+if cp "$binary_file" "$target_file.tmp" 2>/dev/null&&mv -f "$target_file.tmp" "$target_file" 2>/dev/null;then
 ((installed_count++))||true
 else
+rm -f "$target_file.tmp"
 name="$(basename "$binary_file")"
 log.warn "$name: 复制失败"
 failed_packages+=("$name")
@@ -1849,6 +1860,9 @@ args.add_subcommand "search" "搜索远端包目录" "cmd_search"
 args.add_subcommand "add" "从包目录添加包到本地配置" "cmd_add"
 args.add_subcommand "edit" "编辑配置文件" "cmd_edit"
 init_settings
+if [[ $(system.os) != linux ]];then
+log.warn "BinUp 目前只支持 Linux（当前系统：$(system.os)），资产匹配与安装可能失败"
+fi
 args.process "$@"
 args.has "-v" "--version"&&usage.version&&exit 0
 }
