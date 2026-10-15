@@ -1,13 +1,8 @@
 download_dir = "/home/uglyboy/Downloads/BinaryArchives"
 
-[packages.opencode]
-repo = "anomalyco/opencode"
-file_pattern = "opencode-{os}-{arch}"
-file_extension = "tar.gz"
-
 [packages.uv]
 repo = "astral-sh/uv"
-file_pattern = "uv-{arch}-unknown-{os}-gnu"
+file_pattern = "uv-{arch}-unknown-{os}{libc}"
 file_extension = "tar.gz"
 
 [packages.bun]
@@ -17,26 +12,66 @@ file_extension = "zip"
 
 [packages.rtk]
 repo = "rtk-ai/rtk"
-file_pattern = "rtk-{arch}-unknown-{os}-musl"
+file_pattern = "rtk-{arch}-unknown-{os}{libc}"
 file_extension = "tar.gz"
 
-[back.lf]
-repo = "gokcehan/lf"
-file_pattern = "lf-{os}-{arch}"
+[packages.atuin]
+repo = "atuinsh/atuin"
+file_pattern = "atuin-{arch}-unknown-{os}{libc}"
 file_extension = "tar.gz"
 
-[back.yq]
+[packages.fastfetch]
+repo = "fastfetch-cli/fastfetch"
+file_pattern = "fastfetch-{os}-{arch}"
+file_extension = "tar.gz"
+
+[packages.fd]
+repo = "sharkdp/fd"
+file_pattern = "fd-v*-{arch}-unknown-{os}{libc}"
+file_extension = "tar.gz"
+
+[packages.fzf]
+repo = "junegunn/fzf"
+file_pattern = "fzf-*-{os}_{arch}"
+file_extension = "tar.gz"
+
+[packages.gh]
+repo = "cli/cli"
+file_pattern = "gh_*_{os}_{arch}"
+file_extension = "tar.gz"
+
+[packages.hugo-extended]
+repo = "gohugoio/hugo"
+file_pattern = "hugo_extended_*_{os}-{arch}"
+file_extension = "tar.gz"
+
+[packages.rclone]
+repo = "rclone/rclone"
+file_pattern = "rclone-v*-{os}-{arch}"
+file_extension = "zip"
+
+[packages.ripgrep]
+repo = "BurntSushi/ripgrep"
+file_pattern = "ripgrep-*-{arch}-unknown-{os}{libc}"
+file_extension = "tar.gz"
+
+[packages.shfmt]
+repo = "mvdan/sh"
+file_pattern = "shfmt_v*_{os}_{arch}"
+binary_name = "shfmt"
+
+[packages.yazi]
+repo = "sxyazi/yazi"
+file_pattern = "yazi-{arch}-unknown-{os}{libc}"
+file_extension = "zip"
+
+[packages.yq]
 repo = "mikefarah/yq"
 file_pattern = "yq_{os}_{arch}"
 file_extension = "tar.gz"
 binary_name = "yq"
 
-[back.chsrc]
-repo = "RubyMetric/chsrc"
-file_pattern = "chsrc-{arch}-{os}"
-binary_name = "chsrc"
-
-[back.sonar]
-repo = "raskrebs/sonar"
-file_pattern = "sonar_{os}_{arch}"
+[packages.zoxide]
+repo = "ajeetdsouza/zoxide"
+file_pattern = "zoxide-*-{arch}-unknown-{os}{libc}"
 file_extension = "tar.gz"

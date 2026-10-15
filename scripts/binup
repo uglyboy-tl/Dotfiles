@@ -150,7 +150,7 @@ while ((i<len));do
 local num=$((0x${hex_bytes:i:2}))
 i=$((i+2))
 ((flag))&&{
-(((num>=0x41&&num<=0x5A)||(num>=0x61&&num<=0x7A)))&&flag=0
+(((num >= 0x41 && num <= 0x5A)||(num >= 0x61 && num <= 0x7A)))&&flag=0
 continue
 }
 ((num==0x1b))&&{
@@ -788,13 +788,48 @@ local success="false"
 rm -f "$temp_body" "$temp_headers"
 echo "{\"status_code\":$status_code,\"curl_exit\":$curl_exit,\"headers\":$headers_json,\"body\":\"$body_base64\",\"success\":$success}"
 }
+requests._download_expected_size(){
+local headers="$1" total
+total=$(grep -i '^content-range:' "$headers" 2>/dev/null|tail -1|sed -E 's#.*/([0-9]+).*#\1#')
+if [[ ! $total =~ ^[0-9]+$ ]];then
+total=$(grep -i '^content-length:' "$headers" 2>/dev/null|tail -1|sed -E 's#.*: *([0-9]+).*#\1#')
+fi
+[[ $total =~ ^[0-9]+$ ]]&&echo "$total"
+return 0
+}
 requests.download(){
-local curl_cmd=("$_REQUESTS_CURL" "-L" "--globoff" "--fail")
+local url="$1" target="$2" show_progress="${3:-true}" allow_resume="${4:-true}"
+local part="$target.part" headers="$target.headers"
+local curl_cmd=("$_REQUESTS_CURL" "-L" "--globoff" "--fail" "-D" "$headers" "-o" "$part")
 requests.curl.configure curl_cmd "" false
-curl_cmd+=("-o" "$2")
-[[ ${3:-true} == "true" ]]&&curl_cmd+=("--progress-bar")
-[[ ${4:-true} == "true" ]]&&curl_cmd+=("-C" "-")
-"${curl_cmd[@]}" "$1"
+[[ $show_progress == "true" ]]&&curl_cmd+=("--progress-bar")
+[[ $allow_resume == "true" ]]&&curl_cmd+=("-C" "-")
+rm -f "$headers"
+"${curl_cmd[@]}" "$url"||{
+local failed_expected failed_actual
+failed_expected=$(requests._download_expected_size "$headers")
+rm -f "$headers"
+if [[ -n $failed_expected ]];then
+failed_actual=$(stat -c%s "$part" 2>/dev/null)||failed_actual=0
+if ((failed_actual>failed_expected));then
+rm -f "$part"
+log.warn "残留分片($failed_actual) 大于资源($failed_expected)，已丢弃：$target"
+fi
+fi
+return 1
+}
+local expected actual
+expected=$(requests._download_expected_size "$headers")
+rm -f "$headers"
+actual=$(stat -c%s "$part" 2>/dev/null)||return 1
+if [[ -n $expected && $actual != "$expected" ]];then
+if ((actual>expected));then
+rm -f "$part"
+fi
+log.error "下载大小不符：实际 $actual，预期 $expected（$url）"
+return 1
+fi
+mv -f "$part" "$target"
 }
 requests._urlencode(){
 json.run -nr --arg str "$1" '$str | @uri'
@@ -1102,16 +1137,20 @@ i386)echo "(i686|i386|i586)";;
 *)echo "$arch"
 esac
 }
+github.asset.libc_regex(){
+echo "(-gnueabihf|-musleabihf|-musleabi|-softfloat|-glibc|-gnu|-musl)?"
+}
 github.asset.pattern(){
 local pattern="${1//\{os\}/$(system.os)}"
 pattern="${pattern//\{arch\}/$(github.asset.arch_regex "$(system.arch)")}"
 pattern="${pattern//\*/.*}"
 pattern="${pattern//\?/.}"
+pattern="${pattern//\{libc\}/$(github.asset.libc_regex)}"
 [[ -n ${2:-} ]]&&echo "$pattern[.][^.]*$2$"||echo "$pattern$"
 }
 github.asset.url(){
 local url
-url=$(json.run -r --arg pat "$2" 'first(.assets[]? | select(.name | test($pat; "i")) | .browser_download_url) // ""' <<<"$1")
+url=$(json.run -r --arg pat "$2" '[.assets[]? | select(.name | test($pat; "i"))] | sort_by([(.name | length), .name]) | first | .browser_download_url // ""' <<<"$1")
 [[ -n $url && $url != "null" ]]&&echo "$url"
 }
 github.contents.list(){
@@ -1196,7 +1235,8 @@ done|sort -u
 }
 registry_get(){
 registry_load "$1"
-[[ -v "_REGISTRY_ENTRIES[packages.$2.$3]" ]]&&printf '%s\n' "${_REGISTRY_ENTRIES[packages.$2.$3]}"
+local key="packages.$2.$3"
+[[ -v "_REGISTRY_ENTRIES[$key]" ]]&&printf '%s\n' "${_REGISTRY_ENTRIES[$key]}"
 return 0
 }
 registry_safe_value(){
@@ -1515,6 +1555,13 @@ fi
 mapfile -t no_ext_files < <(find "$work_dir" -maxdepth 1 -type f ! -name "*.*" 2>/dev/null)
 [[ ${#no_ext_files[@]} -eq 1 ]]&&chmod +x "${no_ext_files[0]}"
 mapfile -d '' -t binary_files < <(find "$work_dir" -type f -executable ! -name "*.*" -print0 2>/dev/null)
+if ((${#binary_files[@]}==0))&&[[ $filename =~ \.(gz|bz2|xz)$ ]];then
+local decompressed="$work_dir/${filename%.*}"
+if [[ -f $decompressed ]];then
+chmod +x "$decompressed"
+binary_files=("$decompressed")
+fi
+fi
 binary_count=${#binary_files[@]}
 ((binary_count==0))&&{
 log.warn "$package: 未找到可执行文件"
@@ -1567,6 +1614,10 @@ mkdir -p "$install_dir"
 _install_archive "$package" "$archive_file" "$filename" "$binary_name" "$install_dir" "$work_dir"
 rc=$?
 rm -rf "$work_dir"
+if ((rc!=0));then
+config.persist.update "packages" "$package" "current_version" "" "$VERSIONS_FILE"
+console.layout.item.title 1 "$package: 已清除版本记录，重跑 \`$_USAGE_SCRIPT_FILENAME upgrade\` 会重新下载"
+fi
 return $rc
 }
 cmd_install(){
@@ -1749,7 +1800,7 @@ cat >"$path" <<'EOF'
 # 每个包声明在 [packages.<名称>] 段中:
 #   repo           = "owner/repo"           # GitHub 仓库
 #   version_type   = "release"              # release(默认) | 其他(取 releases 列表首个)
-#   file_pattern   = "<名称>-{os}-{arch}*"  # 占位符 {os}/{arch};支持 * 与 ?
+#   file_pattern   = "<名称>-{os}-{arch}*"  # 占位符 {os}/{arch}/{libc};支持 * 与 ?
 #   file_extension = "tar.gz"               # 归档扩展名(可省略)
 #   binary_name    = "<名称>"               # 归档内可执行文件名(单文件时可省略)
 download_dir = "downloads"
