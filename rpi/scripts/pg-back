@@ -1,21 +1,49 @@
 #!/bin/bash
-#保留文件数
+# Postgres 逻辑备份：pg_dumpall -> tar.gz，保留 7 份
+# 2026-10-14 加固：失败即中止且不轮转；校验 dump 大小与结束标记
+#   可调环境变量：PG_BACK_DIR / PG_BACK_CONTAINER / PG_BACK_USER / PG_BACK_MIN_BYTES
+#   告警：不做（用户 2026-10-14 决定不引入 Gotify 告警，失败只写日志并以非 0 退出码表示）
+set -euo pipefail
+
 ReservedNum=7
-DATE=`date +%y%m%d-%H%M`
-BACK_DIR=/srv/Base/Data/PG
-cd ${BACK_DIR}
-BACK_DATA=${DATE}.out  # 这里设置备份文件的名字, 加入日期是为了防止重复
-BACK_ARCHIVE=${DATE}.tar.gz  # 这里设置备份文件的名字, 加入日期是为了防止重复
-docker exec vchord-postgres pg_dumpall -U uglyboy > ${BACK_DATA} # pg-db 是数据库的 docker 名称 
-tar -zcvf ${BACK_ARCHIVE} ${BACK_DATA}
-rm ${BACK_DATA}
+DATE=$(date +%y%m%d-%H%M)
+BACK_DIR="${PG_BACK_DIR:-/srv/Base/Data/PG}"
+BACK_DATA="${DATE}.out"
+BACK_ARCHIVE="${DATE}.tar.gz"
+MIN_BYTES="${PG_BACK_MIN_BYTES:-1048576}"   # 1MiB 下限，明显偏小即视为异常
+PG_CONTAINER="${PG_BACK_CONTAINER:-vchord-postgres}"
+PG_USER="${PG_BACK_USER:-uglyboy}"
 
-FileNum=$(ls -l $BACK_DIR/*.tar.gz |grep ^- |wc -l)
+fail() {
+    echo "FAIL: $1"
+    rm -f "${BACK_DIR}/${BACK_DATA}" "${BACK_DIR}/${BACK_DATA}.tmp" "${BACK_DIR}/${BACK_ARCHIVE}"
+    exit 1
+}
 
-while [ $FileNum -gt $ReservedNum ]
-do
-    OldFile=$(ls -rt  $BACK_DIR/*.tar.gz| head -1)
-    echo  "Delete File:" $OldFile
-    rm -f $OldFile
-    FileNum=$(expr $FileNum - 1)
+mkdir -p "$BACK_DIR"
+cd "$BACK_DIR"
+
+# 1) 先写临时文件
+if ! docker exec "$PG_CONTAINER" pg_dumpall -U "$PG_USER" > "${BACK_DATA}.tmp"; then
+    fail "pg_dumpall 退出码非 0"
+fi
+
+# 2) 校验大小与结束标记，任一不过即中止（不打包、不轮转）
+size=$(stat -c %s "${BACK_DATA}.tmp" 2>/dev/null || echo 0)
+[ "$size" -ge "$MIN_BYTES" ] || fail "dump 仅 ${size} 字节，低于下限 ${MIN_BYTES}"
+grep -aq 'PostgreSQL database dump complete' "${BACK_DATA}.tmp" || fail "dump 缺少结束标记，疑似截断"
+
+# 3) 校验通过才落名、打包、删中间文件
+mv "${BACK_DATA}.tmp" "$BACK_DATA"
+tar -zcf "$BACK_ARCHIVE" "$BACK_DATA" || fail "tar 打包失败"
+rm -f "$BACK_DATA"
+
+# 4) 只在校验通过后轮转（按修改时间删最旧的）
+FileNum=$(ls -1 "$BACK_DIR"/*.tar.gz 2>/dev/null | wc -l)
+while [ "$FileNum" -gt "$ReservedNum" ]; do
+    OldFile=$(ls -1t "$BACK_DIR"/*.tar.gz | tail -1)
+    echo "Delete File: $OldFile"
+    rm -f "$OldFile"
+    FileNum=$((FileNum - 1))
 done
+echo "OK: ${BACK_DIR}/${BACK_ARCHIVE} (${size} bytes)"
