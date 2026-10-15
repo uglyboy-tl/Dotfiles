@@ -685,13 +685,48 @@ local success="false"
 rm -f "$temp_body" "$temp_headers"
 echo "{\"status_code\":$status_code,\"curl_exit\":$curl_exit,\"headers\":$headers_json,\"body\":\"$body_base64\",\"success\":$success}"
 }
+requests._download_expected_size(){
+local headers="$1" total
+total=$(grep -i '^content-range:' "$headers" 2>/dev/null|tail -1|sed -E 's#.*/([0-9]+).*#\1#')
+if [[ ! $total =~ ^[0-9]+$ ]];then
+total=$(grep -i '^content-length:' "$headers" 2>/dev/null|tail -1|sed -E 's#.*: *([0-9]+).*#\1#')
+fi
+[[ $total =~ ^[0-9]+$ ]]&&echo "$total"
+return 0
+}
 requests.download(){
-local curl_cmd=("$_REQUESTS_CURL" "-L" "--globoff" "--fail")
+local url="$1" target="$2" show_progress="${3:-true}" allow_resume="${4:-true}"
+local part="$target.part" headers="$target.headers"
+local curl_cmd=("$_REQUESTS_CURL" "-L" "--globoff" "--fail" "-D" "$headers" "-o" "$part")
 requests.curl.configure curl_cmd "" false
-curl_cmd+=("-o" "$2")
-[[ ${3:-true} == "true" ]]&&curl_cmd+=("--progress-bar")
-[[ ${4:-true} == "true" ]]&&curl_cmd+=("-C" "-")
-"${curl_cmd[@]}" "$1"
+[[ $show_progress == "true" ]]&&curl_cmd+=("--progress-bar")
+[[ $allow_resume == "true" ]]&&curl_cmd+=("-C" "-")
+rm -f "$headers"
+"${curl_cmd[@]}" "$url"||{
+local failed_expected failed_actual
+failed_expected=$(requests._download_expected_size "$headers")
+rm -f "$headers"
+if [[ -n $failed_expected ]];then
+failed_actual=$(stat -c%s "$part" 2>/dev/null)||failed_actual=0
+if ((failed_actual>failed_expected));then
+rm -f "$part"
+log.warn "残留分片($failed_actual) 大于资源($failed_expected)，已丢弃：$target"
+fi
+fi
+return 1
+}
+local expected actual
+expected=$(requests._download_expected_size "$headers")
+rm -f "$headers"
+actual=$(stat -c%s "$part" 2>/dev/null)||return 1
+if [[ -n $expected && $actual != "$expected" ]];then
+if ((actual>expected));then
+rm -f "$part"
+fi
+log.error "下载大小不符：实际 $actual，预期 $expected（$url）"
+return 1
+fi
+mv -f "$part" "$target"
 }
 requests._urlencode(){
 json.run -nr --arg str "$1" '$str | @uri'
