@@ -201,7 +201,7 @@ while ((i<len));do
 local num=$((0x${hex_bytes:i:2}))
 i=$((i+2))
 ((flag))&&{
-(((num>=0x41&&num<=0x5A)||(num>=0x61&&num<=0x7A)))&&flag=0
+(((num >= 0x41 && num <= 0x5A)||(num >= 0x61 && num <= 0x7A)))&&flag=0
 continue
 }
 ((num==0x1b))&&{
@@ -1385,7 +1385,7 @@ return 0
 printf '0'
 return 0
 }
-local wait=$((_BROWSER_MIN_INTERVAL-(now-last)))
+local wait=$((_BROWSER_MIN_INTERVAL-(now - last)))
 ((wait>0))&&printf '%s' "$wait"||printf '0'
 }
 browser.throttle(){

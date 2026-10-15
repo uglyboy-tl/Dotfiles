@@ -150,7 +150,7 @@ while ((i<len));do
 local num=$((0x${hex_bytes:i:2}))
 i=$((i+2))
 ((flag))&&{
-(((num>=0x41&&num<=0x5A)||(num>=0x61&&num<=0x7A)))&&flag=0
+(((num >= 0x41 && num <= 0x5A)||(num >= 0x61 && num <= 0x7A)))&&flag=0
 continue
 }
 ((num==0x1b))&&{
