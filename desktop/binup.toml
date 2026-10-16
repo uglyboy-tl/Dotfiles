@@ -24,6 +24,7 @@ file_extension = "tar.gz"
 repo = "fastfetch-cli/fastfetch"
 file_pattern = "fastfetch-{os}-{arch}"
 file_extension = "tar.gz"
+binary_name = "fastfetch"
 
 [packages.fd]
 repo = "sharkdp/fd"
