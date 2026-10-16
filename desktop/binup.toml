@@ -65,12 +65,6 @@ repo = "sxyazi/yazi"
 file_pattern = "yazi-{arch}-unknown-{os}{libc}"
 file_extension = "zip"
 
-[packages.yq]
-repo = "mikefarah/yq"
-file_pattern = "yq_{os}_{arch}"
-file_extension = "tar.gz"
-binary_name = "yq"
-
 [packages.zoxide]
 repo = "ajeetdsouza/zoxide"
 file_pattern = "zoxide-*-{arch}-unknown-{os}{libc}"
