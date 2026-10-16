@@ -188,21 +188,26 @@ string.has_ansi "$1"&&console.ansi_width "$1"||echo "${#1}"
 }
 _CONSOLE_LAYOUT_UNDERLINE=$(console.repeat "=" 20)
 _CONSOLE_LAYOUT_DEPTH=0
+_CONSOLE_LAYOUT_ITEM_SEEN=1
 console.layout.section(){
 console.stdout "$1:"
 console.stdout "=${_CONSOLE_LAYOUT_UNDERLINE:0:$(console.display_width "$1")}"
+_CONSOLE_LAYOUT_ITEM_SEEN=0
 }
 console.layout.footer(){
-console.stdout "========="
+((_CONSOLE_LAYOUT_ITEM_SEEN))&&console.stdout "========="
 console.stdout "$*"
 }
 console.layout.item.title(){
 console.indent "$1" "${*:2}"
 _CONSOLE_LAYOUT_DEPTH=$(($1+1))
+_CONSOLE_LAYOUT_ITEM_SEEN=1
 }
 console.layout.item.item(){
 console.indent "$_CONSOLE_LAYOUT_DEPTH" "$*"
+_CONSOLE_LAYOUT_ITEM_SEEN=1
 }
+console.layout.item.raw(){ _CONSOLE_LAYOUT_ITEM_SEEN=1;}
 console.layout.item.mid(){
 console.layout.item.item "├─" "$*"
 }

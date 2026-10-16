@@ -102,21 +102,26 @@ string.has_ansi "$1"&&console.ansi_width "$1"||echo "${#1}"
 }
 _CONSOLE_LAYOUT_UNDERLINE=$(console.repeat "=" 20)
 _CONSOLE_LAYOUT_DEPTH=0
+_CONSOLE_LAYOUT_ITEM_SEEN=1
 console.layout.section(){
 console.stdout "$1:"
 console.stdout "=${_CONSOLE_LAYOUT_UNDERLINE:0:$(console.display_width "$1")}"
+_CONSOLE_LAYOUT_ITEM_SEEN=0
 }
 console.layout.footer(){
-console.stdout "========="
+((_CONSOLE_LAYOUT_ITEM_SEEN))&&console.stdout "========="
 console.stdout "$*"
 }
 console.layout.item.title(){
 console.indent "$1" "${*:2}"
 _CONSOLE_LAYOUT_DEPTH=$(($1+1))
+_CONSOLE_LAYOUT_ITEM_SEEN=1
 }
 console.layout.item.item(){
 console.indent "$_CONSOLE_LAYOUT_DEPTH" "$*"
+_CONSOLE_LAYOUT_ITEM_SEEN=1
 }
+console.layout.item.raw(){ _CONSOLE_LAYOUT_ITEM_SEEN=1;}
 console.layout.item.mid(){
 console.layout.item.item "├─" "$*"
 }
@@ -2279,6 +2284,7 @@ pad=$((w-$(console.display_width "$s")))
 printf '%s%*s' "$s" "$pad" ""
 }
 _providers_caps(){
+console.layout.item.raw
 printf '  %s%s%s%s\n' "$(_providers_pad 14 "PROVIDER")" "$(_providers_pad 10 "SIZE")" \
 "$(_providers_pad 8 "REF")" "N"
 printf '  %s\n' "$(console.repeat "-" 33)"
@@ -2336,6 +2342,7 @@ while IFS= read -r name;do
 if [[ ${status[$name]:-} == ok ]];then usable+=("$name");else blocked+=("$name");fi
 done < <(provider.list)
 console.layout.section "Providers"
+console.layout.item.raw
 printf '\n可用\n'
 if ((${#usable[@]}==0));then
 printf '  （没有可用的 provider）\n'
