@@ -1,5 +1,5 @@
 #!/bin/bash
-# 备份整张 SD 卡，pishrink 压缩。备份前清掉可再生内容（缓存/日志/旧日志归档），单次约省 400M。
+# 备份整张 SD 卡，pishrink 收缩后再压缩（-Z = xz，内部 `xz -T0` 吃满多核）。备份前清掉可再生内容（缓存/日志/旧日志归档），单次约省 400M。
 # 用法: rpi-backup [--dry-run] [--no-clean]   （默认清理；--no-clean 保留原样镜像）
 set -euo pipefail
 
@@ -30,4 +30,5 @@ fi
 
 sudo mkdir -p "$DEST"
 run dd if="$SRC" of="$IMG" bs=8M status=progress
+# 注意 -Z 是 xz 分支，不是 gzip：pigz 只在 -z（小写）时才会被调用，别按 pigz 去装依赖
 run pishrink.sh -Zv "$IMG"

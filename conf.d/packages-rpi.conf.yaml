@@ -3,5 +3,3 @@
 - apt:
     # 数据库备份（pg-back 用 docker exec 跑容器内 pg_dumpall）
     - docker-ce
-    # 镜像压缩（rpi-backup 的 pishrink -Z 优先用 pigz）
-    - pigz
