@@ -88,6 +88,7 @@
     $XDG_CONFIG_HOME/pi/agents: config/pi/agents # 专用 subagent
     $XDG_CONFIG_HOME/pi/prompts: config/pi/prompts # 提示词模板
     $XDG_CONFIG_HOME/pi/skills: config/pi/skills # 自定义技能
+    $XDG_CONFIG_HOME/pi/themes: config/pi/themes # 自定义主题
     $XDG_CONFIG_HOME/pi/AGENTS.md: config/pi/AGENTS.md # 全局指令
     $XDG_CONFIG_HOME/pi/settings.json: config/pi/settings.json # Pi 主配置(含 powerline 等插件配置,运行时会自动写入)
     $XDG_CONFIG_HOME/pi/mcp.json: config/pi/mcp.json # MCP 服务(密钥由 mcp.json 内的 !cat ~/.config/local/ 下的 .key 文件读取)
