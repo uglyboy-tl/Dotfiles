@@ -1,0 +1,29 @@
+# 主题色定义。只写「事实」——16 个 ANSI 槽 + background/foreground/selection_*，
+# 全部取自上游官方配置：
+#   dracula/alacritty/dracula.toml
+# UI 派生色（dark_background / dark_foreground / light_foreground / muted /
+# accent / orange / selection）由 settings/lib/render.sh 计算，不要手填。
+mode = "dark"
+
+background           = "#282a36"
+foreground           = "#f8f8f2"
+selection_background = "#44475a"
+selection_foreground = "#f8f8f2"
+
+# ANSI 16 色（顺序固定：0-7 normal，8-15 bright）
+black                = "#21222c"   # 0 black
+red                  = "#ff5555"   # 1 red
+green                = "#50fa7b"   # 2 green
+yellow               = "#f1fa8c"   # 3 yellow
+blue                 = "#bd93f9"   # 4 blue
+magenta              = "#ff79c6"   # 5 magenta
+cyan                 = "#8be9fd"   # 6 cyan
+white                = "#f8f8f2"   # 7 white
+bright_black         = "#6272a4"   # 8 bright black
+bright_red           = "#ff6e6e"   # 9 bright red
+bright_green         = "#69ff94"   # 10 bright green
+bright_yellow        = "#ffffa5"   # 11 bright yellow
+bright_blue          = "#d6acff"   # 12 bright blue
+bright_magenta       = "#ff92df"   # 13 bright magenta
+bright_cyan          = "#a4ffff"   # 14 bright cyan
+bright_white         = "#ffffff"   # 15 bright white

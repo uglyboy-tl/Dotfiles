@@ -1,0 +1,29 @@
+# 主题色定义。只写「事实」——16 个 ANSI 槽 + background/foreground/selection_*，
+# 全部取自上游官方配置：
+#   raunofreiberg/vesper (调色板) + iTerm2-Color-Schemes Vesper (ANSI 槽)
+# UI 派生色（dark_background / dark_foreground / light_foreground / muted /
+# accent / orange / selection）由 settings/lib/render.sh 计算，不要手填。
+mode = "dark"
+
+background           = "#101010"
+foreground           = "#ffffff"
+selection_background = "#282828"
+selection_foreground = "#ffffff"
+
+# ANSI 16 色（顺序固定：0-7 normal，8-15 bright）
+black                = "#1c1c1c"   # 0 black
+red                  = "#f5a191"   # 1 red
+green                = "#90b99f"   # 2 green
+yellow               = "#e6b99d"   # 3 yellow
+blue                 = "#aca1cf"   # 4 blue
+magenta              = "#e29eca"   # 5 magenta
+cyan                 = "#ea83a5"   # 6 cyan
+white                = "#a0a0a0"   # 7 white
+bright_black         = "#7e7e7e"   # 8 bright black
+bright_red           = "#ff8080"   # 9 bright red
+bright_green         = "#99ffe4"   # 10 bright green
+bright_yellow        = "#ffc799"   # 11 bright yellow
+bright_blue          = "#b9aeda"   # 12 bright blue
+bright_magenta       = "#ecaad6"   # 13 bright magenta
+bright_cyan          = "#f591b2"   # 14 bright cyan
+bright_white         = "#ffffff"   # 15 bright white

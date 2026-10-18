@@ -1,31 +1,29 @@
+# 主题色定义。只写「事实」——16 个 ANSI 槽 + background/foreground/selection_*，
+# 全部取自上游官方配置：
+#   sainnhe/gruvbox-material (dark medium) + iTerm2-Color-Schemes Gruvbox Material Dark
+# UI 派生色（dark_background / dark_foreground / light_foreground / muted /
+# accent / orange / selection）由 settings/lib/render.sh 计算，不要手填。
 mode = "dark"
 
-background = "#282828"
-dark_background = "#1e1e1e"
-darker_background = "#161616"
-lighter_background = "#3c3836"
+background           = "#282828"
+foreground           = "#d4be98"
+selection_background = "#45403d"
+selection_foreground = "#d4be98"
 
-foreground = "#d4be98"
-dark_foreground = "#7c6f64"
-light_foreground = "#bdae93"
-bright_foreground = "#d4be98"
-
-accent = "#7daea3"
-selection = "#504945"
-muted = "#665c54"
-
-red = "#ea6962"
-green = "#a9b665"
-yellow = "#d8a657"
-blue = "#7daea3"
-magenta = "#d3869b"
-cyan = "#89b482"
-orange = "#e1875c"
-brown = "#70432e"
-
-bright_red = "#ea6962"
-bright_green = "#a9b665"
-bright_yellow = "#d8a657"
-bright_blue = "#7daea3"
-bright_magenta = "#d3869b"
-bright_cyan = "#89b482"
+# ANSI 16 色（顺序固定：0-7 normal，8-15 bright）
+black                = "#1b1b1b"   # 0 black
+red                  = "#ea6962"   # 1 red
+green                = "#a9b665"   # 2 green
+yellow               = "#d8a657"   # 3 yellow
+blue                 = "#7daea3"   # 4 blue
+magenta              = "#d3869b"   # 5 magenta
+cyan                 = "#89b482"   # 6 cyan
+white                = "#ddc7a1"   # 7 white
+bright_black         = "#928374"   # 8 bright black
+bright_red           = "#ea6962"   # 9 bright red
+bright_green         = "#a9b665"   # 10 bright green
+bright_yellow        = "#d8a657"   # 11 bright yellow
+bright_blue          = "#7daea3"   # 12 bright blue
+bright_magenta       = "#d3869b"   # 13 bright magenta
+bright_cyan          = "#89b482"   # 14 bright cyan
+bright_white         = "#ddc7a1"   # 15 bright white

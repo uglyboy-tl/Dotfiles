@@ -1,0 +1,29 @@
+# 主题色定义。只写「事实」——16 个 ANSI 槽 + background/foreground/selection_*，
+# 全部取自上游官方配置：
+#   nyoom-engineering/oxocarbon-alacritty/oxocarbon-dark.toml
+# UI 派生色（dark_background / dark_foreground / light_foreground / muted /
+# accent / orange / selection）由 settings/lib/render.sh 计算，不要手填。
+mode = "dark"
+
+background           = "#161616"
+foreground           = "#ffffff"
+selection_background = "#393939"
+selection_foreground = "#ffffff"
+
+# ANSI 16 色（顺序固定：0-7 normal，8-15 bright）
+black                = "#262626"   # 0 black
+red                  = "#ee5396"   # 1 red
+green                = "#42be65"   # 2 green
+yellow               = "#ffe97b"   # 3 yellow
+blue                 = "#33b1ff"   # 4 blue
+magenta              = "#ff7eb6"   # 5 magenta
+cyan                 = "#3ddbd9"   # 6 cyan
+white                = "#dde1e6"   # 7 white
+bright_black         = "#393939"   # 8 bright black
+bright_red           = "#ee5396"   # 9 bright red
+bright_green         = "#42be65"   # 10 bright green
+bright_yellow        = "#ffe97b"   # 11 bright yellow
+bright_blue          = "#33b1ff"   # 12 bright blue
+bright_magenta       = "#ff7eb6"   # 13 bright magenta
+bright_cyan          = "#3ddbd9"   # 14 bright cyan
+bright_white         = "#ffffff"   # 15 bright white

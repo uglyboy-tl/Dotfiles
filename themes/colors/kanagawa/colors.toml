@@ -1,31 +1,29 @@
+# 主题色定义。只写「事实」——16 个 ANSI 槽 + background/foreground/selection_*，
+# 全部取自上游官方配置：
+#   rebelot/kanagawa.nvim/extras/xresources/kanagawa.Xresources + lua/kanagawa/colors.lua
+# UI 派生色（dark_background / dark_foreground / light_foreground / muted /
+# accent / orange / selection）由 settings/lib/render.sh 计算，不要手填。
 mode = "dark"
 
-background = "#1f1f28"
-dark_background = "#17171e"
-darker_background = "#111116"
-lighter_background = "#223249"
+background           = "#1f1f28"
+foreground           = "#dcd7ba"
+selection_background = "#223249"
+selection_foreground = "#dcd7ba"
 
-foreground = "#dcd7ba"
-dark_foreground = "#727169"
-light_foreground = "#c8c093"
-bright_foreground = "#dcd7ba"
-
-accent = "#dcd7ba"
-selection = "#363646"
-muted = "#54546d"
-
-red = "#c34043"
-green = "#76946a"
-yellow = "#c0a36e"
-blue = "#7e9cd8"
-magenta = "#957fb8"
-cyan = "#6a9589"
-orange = "#c17158"
-brown = "#60382c"
-
-bright_red = "#e82424"
-bright_green = "#98bb6c"
-bright_yellow = "#e6c384"
-bright_blue = "#7fb4ca"
-bright_magenta = "#938aa9"
-bright_cyan = "#7aa89f"
+# ANSI 16 色（顺序固定：0-7 normal，8-15 bright）
+black                = "#090618"   # 0 black
+red                  = "#c34043"   # 1 red
+green                = "#76946a"   # 2 green
+yellow               = "#c0a36e"   # 3 yellow
+blue                 = "#7e9cd8"   # 4 blue
+magenta              = "#957fb8"   # 5 magenta
+cyan                 = "#6a9589"   # 6 cyan
+white                = "#c8c093"   # 7 white
+bright_black         = "#727169"   # 8 bright black
+bright_red           = "#e82424"   # 9 bright red
+bright_green         = "#98bb6c"   # 10 bright green
+bright_yellow        = "#e6c384"   # 11 bright yellow
+bright_blue          = "#7fb4ca"   # 12 bright blue
+bright_magenta       = "#938aa9"   # 13 bright magenta
+bright_cyan          = "#7aa89f"   # 14 bright cyan
+bright_white         = "#dcd7ba"   # 15 bright white

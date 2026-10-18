@@ -1,32 +1,29 @@
+# 主题色定义。只写「事实」——16 个 ANSI 槽 + background/foreground/selection_*，
+# 全部取自上游官方配置：
+#   nordtheme/alacritty/src/nord.yaml
+# UI 派生色（dark_background / dark_foreground / light_foreground / muted /
+# accent / orange / selection）由 settings/lib/render.sh 计算，不要手填。
 mode = "dark"
 
-background = "#2e3440"
-dark_background = "#3b4252"
-darker_background = "#434c5e"
-lighter_background = "#4c566a"
+background           = "#2e3440"
+foreground           = "#d8dee9"
+selection_background = "#4c566a"
+selection_foreground = "#d8dee9"
 
-foreground = "#8fbcbb"
-dark_foreground = "#88c0d0"
-light_foreground = "#81a1c1"
-bright_foreground = "#eceff4"
-
-accent = "#8fbcbb"
-selection = "#5e81ac"
-muted = "#4c566a"
-
-red = "#bf616a"
-green = "#a3be8c"
-yellow = "#ebcb8b"
-blue = "#5e81ac"
-magenta = "#b48ead"
-cyan = "#88c0d0"
-orange = "#d08770"
-brown = "#6a4b3d"
-
-; Bright variant colors
-bright_red = "#bf616a"
-bright_green = "#a3be8c"
-bright_yellow = "#ebcb8b"
-bright_blue = "#81a1c1"
-bright_magenta = "#b48ead"
-bright_cyan = "#8fbcbb"
+# ANSI 16 色（顺序固定：0-7 normal，8-15 bright）
+black                = "#3b4252"   # 0 black
+red                  = "#bf616a"   # 1 red
+green                = "#a3be8c"   # 2 green
+yellow               = "#ebcb8b"   # 3 yellow
+blue                 = "#81a1c1"   # 4 blue
+magenta              = "#b48ead"   # 5 magenta
+cyan                 = "#88c0d0"   # 6 cyan
+white                = "#e5e9f0"   # 7 white
+bright_black         = "#4c566a"   # 8 bright black
+bright_red           = "#bf616a"   # 9 bright red
+bright_green         = "#a3be8c"   # 10 bright green
+bright_yellow        = "#ebcb8b"   # 11 bright yellow
+bright_blue          = "#81a1c1"   # 12 bright blue
+bright_magenta       = "#b48ead"   # 13 bright magenta
+bright_cyan          = "#8fbcbb"   # 14 bright cyan
+bright_white         = "#eceff4"   # 15 bright white
