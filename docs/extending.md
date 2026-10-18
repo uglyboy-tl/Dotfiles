@@ -103,7 +103,19 @@ mkdir -p themes/colors/my-theme
 ~/.local/share/dotfiles/settings/setting-theme.sh my-theme
 ```
 
-可选：加一张 `preview.jpg` 供菜单预览。主题由扫描 `themes/colors/` 自动发现。
+可选：加一张 `preview.jpg` 供菜单预览。`capture.sh` 默认**不换主题**，单个主题要先套用再截；
+批量补图用 `--all`（自己遍历 `themes/colors/`，只跑缺图的，结束恢复原主题）：
+
+```bash
+cd ~/.local/share/dotfiles/themes
+./capture.sh --all                       # 缺图才截
+./capture.sh --all --force               # 全部重截
+./capture.sh --all --only dracula,vesper # 只跑指定主题
+```
+
+截图场景是固定 tmux 布局（fetch / vim / yazi / neomutt 四宫格），依赖 ghostty + maim + magick
+和一个运行中的 X 会话；批量为每个主题各改一次分辨率，约 10 秒/个。主题由扫描 `themes/colors/`
+自动发现，没有 preview.jpg 也只是菜单里预览窗格为空，不影响切换。
 
 > ⚠️ `.gitignore` 用 `desktop/*/colors.*` 忽略产物（不能用 `**/colors.*`，那会连主题源文件一起误伤）。只要产物落在 `desktop/<app>/` 下就自动覆盖；落到别处才需补规则。见 [ADR-0001](adr/0001-gitignore-colors-artifacts.md)。
 

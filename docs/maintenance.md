@@ -46,6 +46,11 @@ git update-index --no-skip-worktree desktop/fontconfig/fonts.conf
 - **bspwm 重载不再重启 dunst**：dunst 配色由 `themes/render.conf` 里的 `dunstctl reload` 应用，bspwmrc 只用 `_o dunst`（已在跑就不动），所以 `bspc wm -r` 不会吞掉刚发的通知（旧实现 `_s dunst` + `wait_dunst_ready` 已删；前提：dunst 支持 `dunstrc.d` drop-in，`dunstctl reload` 会连同它一起重读）。
 - **feh 不能播 GIF 动画**：实测只显示第一帧。所以 `desktop/idle-screensaver/idle-screensaver.sh` 目前仅轮播静态图；动态屏保需改用 `mpv`（见待办）。
 - **屏保不依赖 X screensaver 扩展**：该扩展常被应用挂起，导致 `xset s` 超时与 `xss-lock` 都不可靠。故屏保改用 `xprintidle` 轮询空闲时间实现（`xset s off` 只负责关掉 X 自带黑屏）。
+- **`themes/capture.sh` 有两个坑（都是踩过才修的）**：
+  1. **`bspwmrc:28-36` 写死了 `DP-0` 的原生分辨率**，而换主题会触发 `bspc wm -r` → bspwmrc 重跑 → 把截图用的 2560x1440 顶回 3440x1440。所以批量模式**每轮套用主题后都要重新 `set_capture_mode`**（否则截出来是 1280x536 而不是 1280x720，静默出错）。`shoot()` 里另有一句尺寸断言把这类错现出来。
+  2. **恢复分辨率时必须同时给 `--rate 120`**。只给 `--mode 3440x1440` 的话 xrandr 会选它的 preferred（60Hz），跑完一次批量截图显示器就降频了。
+- **`desktop/{bspwm/colors.sh, zathura/colors.conf}` 是陈旧残留**（2026-09），不是产物：`~/.config/bspwm` 现已是真实目录、`zathura` 未安装，产物不再落在这里。已被 `desktop/*/colors.*` 忽略所以不影响 git，但**比对这些文件的 mtime 会得出错误结论**（曾据此误判 bspwm 没被渲染）。`zathura` / `urxvt` 未安装 → 不渲染属预期行为。
+- **`~/.config/{alacritty,ghostty,polybar,rofi,zathura}` 是软链到 `desktop/`，其余不是**：`dunst` / `bspwm` / `gtk-3.0` / `gtk-4.0` / `X11` / `fcitx5` 都已是真实目录，产物就地生成（不带进仓库）。所以判断「产物在不在仓库里」不能一概而论。
 - **看视频会弹屏保（已修）**：`xprintidle` 只看键鼠输入，而浏览器抑制屏保走两条路——D-Bus `org.freedesktop.ScreenSaver`（bspwm 裸装没有该服务，请求落空）或 X11 `XScreenSaverSuspend`（只暂停 X 自带屏保，`xprintidle` 照涨）。故新增 `desktop/idle-screensaver/idle-screensaver-dbus.py` 补上这个 D-Bus 服务（心跳文件每秒刷新，服务死掉 5 秒后抑制自动失效），并在 `idle-screensaver.sh` 里按「D-Bus 抑制 / 全屏窗口 / 有音频输出流」三者任一成立就暂不出屏保、同时 `xset -dpms` 关熄屏。（该服务现由 systemd user unit `desktop/systemd/idle-screensaver-dbus.service` 常驻。）
 
 ## 上游生态观察
