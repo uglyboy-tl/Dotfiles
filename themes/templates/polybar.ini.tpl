@@ -9,7 +9,7 @@ lighter-background = {{ lighter_background }}
 foreground = {{ foreground }}
 dark-foreground = {{ dark_foreground }}
 light-foreground = {{ light_foreground }}
-bright-foreground = {{ bright_foreground }}
+bright-foreground = {{ bright_white }}
 
 ; Semantic colors
 accent = {{ accent }}
@@ -17,6 +17,7 @@ selection = {{ selection }}
 muted = {{ muted }}
 
 ; ANSI colors
+black = {{ black }}
 red = {{ red }}
 green = {{ green }}
 yellow = {{ yellow }}
@@ -24,6 +25,9 @@ blue = {{ blue }}
 purple = {{ magenta }}
 cyan = {{ cyan }}
 orange = {{ orange }}
+white = {{ white }}
+bright-black = {{ bright_black }}
+bright-white = {{ bright_white }}
 magenta = {{ magenta }}
 
 ; Transparency

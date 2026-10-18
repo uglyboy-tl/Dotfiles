@@ -4,11 +4,11 @@ foreground = "{{ foreground }}"
 
 [colors.cursor]
 text = "{{ background }}"
-cursor = "{{ bright_foreground }}"
+cursor = "{{ foreground }}"
 
 [colors.vi_mode_cursor]
 text = "{{ background }}"
-cursor = "{{ bright_foreground }}"
+cursor = "{{ foreground }}"
 
 [colors.search.matches]
 foreground = "{{ background }}"
@@ -27,21 +27,21 @@ text = "{{ selection_foreground }}"
 background = "{{ selection_background }}"
 
 [colors.normal]
-black = "{{ background }}"
+black = "{{ black }}"
 red = "{{ red }}"
 green = "{{ green }}"
 yellow = "{{ yellow }}"
 blue = "{{ blue }}"
 magenta = "{{ magenta }}"
 cyan = "{{ cyan }}"
-white = "{{ foreground }}"
+white = "{{ white }}"
 
 [colors.bright]
-black = "{{ muted }}"
+black = "{{ bright_black }}"
 red = "{{ bright_red }}"
 green = "{{ bright_green }}"
 yellow = "{{ bright_yellow }}"
 blue = "{{ bright_blue }}"
 magenta = "{{ bright_magenta }}"
 cyan = "{{ bright_cyan }}"
-white = "{{ bright_foreground }}"
+white = "{{ bright_white }}"

@@ -14,7 +14,7 @@
   foreground: {{ foreground }};
   dark-foreground: {{ dark_foreground }};
   light-foreground: {{ light_foreground }};
-  bright-foreground: {{ bright_foreground }};
+  bright-foreground: {{ bright_white }};
 
   /* Semantic colors */
   accent: {{ accent }};
@@ -22,6 +22,7 @@
   muted: {{ muted }};
 
   /* ANSI colors */
+  black: {{ black }};
   red: {{ red }};
   green: {{ green }};
   yellow: {{ yellow }};
@@ -29,6 +30,9 @@
   purple: {{ magenta }};
   cyan: {{ cyan }};
   orange: {{ orange }};
+  white: {{ white }};
+  bright-black: {{ bright_black }};
+  bright-white: {{ bright_white }};
 
   background-color: @background;
 }
