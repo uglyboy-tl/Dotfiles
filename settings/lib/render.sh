@@ -162,7 +162,8 @@ render() {
   undefined="$(grep -o '{{ [a-z_]* }}' "$output_file" 2>/dev/null | sort -u || true)"
   if [ -n "$undefined" ]; then
     echo "错误: 模板 $template_file 引用了未定义的变量:" >&2
-    printf '  %s\n' $undefined >&2
+    # 变量名里含空格，不能直接印 $undefined（会被 IFS 切碎成 `{{ / foo / }}` 六行）
+    while IFS= read -r v; do printf '  %s\n' "$v" >&2; done <<< "$undefined"
     return 1
   fi
 }
