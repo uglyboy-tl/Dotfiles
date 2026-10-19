@@ -589,58 +589,6 @@ def normalize_image_id(image_id: int | None) -> int:
     return image_id
 
 
-def render_parts(
-    png: str | os.PathLike[str] | bytes,
-    *,
-    cols: int | None = None,
-    rows: int | None = None,
-    image_id: int | None = None,
-    passthrough: str = "auto",
-    cell_width_px: int | None = None,
-    cell_height_px: int | None = None,
-    chunk_size: int = DEFAULT_CHUNK_SIZE,
-    fileno: int | None = None,
-) -> tuple[bytes, str]:
-    """The kitty transmit bytes and the placeholder-grid text, separately.
-
-    For apps that route control bytes and printable text differently (e.g. a
-    compositor that writes the transmit raw but treats the placeholder grid as
-    ordinary repaintable text). With explicit ``cols`` and ``rows`` no terminal
-    is consulted, so this also works fully headless."""
-    if chunk_size <= 0:
-        raise ValueError("chunk_size must be positive")
-    png_data, image_width_px, image_height_px = _read_png(png)
-    image_id = normalize_image_id(image_id)
-    passthrough = _resolve_passthrough(passthrough)
-    if cols is None or rows is None:
-        geometry = get_terminal_geometry(
-            sys.stdout.buffer.fileno() if fileno is None else fileno,
-            cell_width_px=cell_width_px,
-            cell_height_px=cell_height_px,
-        )
-        cols, rows = _fit_cells(image_width_px, image_height_px, geometry, cols=cols, rows=rows, newline=False)
-    pieces = _iter_transmit_chunks(
-        png_data, cols=cols, rows=rows, image_id=image_id, chunk_size=chunk_size, passthrough=passthrough)
-    return b"".join(pieces), _placeholder_grid(cols, rows, image_id)
-
-
-KITTY_PROBE_ID = 4242
-
-
-def kitty_probe(passthrough: str = "auto") -> bytes:
-    """Bytes probing kitty-graphics support: a tiny ``a=q`` query (answered only by
-    supporting terminals) followed by DA1 (answered by every terminal, fencing the
-    probe: once the DA1 reply arrives, a silent query means no support)."""
-    passthrough = _resolve_passthrough(passthrough)
-    q = _graphics_apc(f"i={KITTY_PROBE_ID},s=1,v=1,a=q,t=d,f=24", b"AAAA", passthrough=passthrough)
-    return q + b"\x1b[c"
-
-
-def kitty_supported(response: bytes) -> bool:
-    "True when `response` (bytes read after `kitty_probe` until the DA1 reply) contains the graphics reply."
-    return f"\x1b_Gi={KITTY_PROBE_ID}".encode("ascii") in response
-
-
 def _tmux_client_term(env) -> str:
     "The attached tmux client's terminal name (e.g. 'xterm-ghostty'), '' outside tmux or on any failure."
     if not env.get("TMUX"): return ""
