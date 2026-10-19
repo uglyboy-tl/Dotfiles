@@ -21,6 +21,7 @@
 
 set -euo pipefail
 
+: "${XDG_CONFIG_HOME:=$HOME/.config}"   # _self_check 要用；不默认的话 set -u 下收尾会直接终止
 : "${XDG_DATA_HOME:=$HOME/.local/share}"
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
 
@@ -51,12 +52,14 @@ while [ $# -gt 0 ]; do
 done
 [ "$ALL" = 1 ] || [ -n "$OUT" ] || usage
 
-XOUT="DP-0"
-MODE_CAPTURE="2560x1440"   # 截图用的 16:9 分辨率
-MODE_NATIVE="3440x1440"    # 用完恢复
-RATE_NATIVE="120"          # 必须显式给：只给 --mode 的话 xrandr 会选它的 preferred（60Hz），
+XOUT="${XOUT:-DP-0}"
+MODE_CAPTURE="${MODE_CAPTURE:-2560x1440}"  # 截图用的 16:9 分辨率
+RATE_CAPTURE="${RATE_CAPTURE:-120}"        # 同 RATE_NATIVE：不给 --rate 的话 xrandr 会选 preferred
+                           # （2560x1440 的 preferred 是 100Hz，截出来的 fastfetch 会写 100 Hz）
+MODE_NATIVE="${MODE_NATIVE:-3440x1440}"    # 用完恢复
+RATE_NATIVE="${RATE_NATIVE:-120}"          # 必须显式给：只给 --mode 的话 xrandr 会选它的 preferred（60Hz），
                            # 而 bspwmrc 要求的是 120Hz，跑完一次就降频了
-DESKTOP="III"
+DESKTOP="${DESKTOP:-III}"
 SESSION="theme-shot"
 GHOSTTY_CLASS="com.mitchellh.ghostty"
 
@@ -90,16 +93,24 @@ for ch in os.environ["LAYOUT"].encode():
 print("%04x"%c)'
 }
 
-# 关掉桌面 III 上已有的 ghostty，保证舞台干净
-close_stale_ghostty() {
-  local id cls pid
+# 桌面 III 上的 ghostty 窗口 id。两处（清残留 / 截图前找窗口）都要扫一遍，
+# 抽出来避免抄两遍 + 每处都要装一遍 jq
+_ghostty_windows() {
+  local id cls
   for id in $(bspc query -N -d "$DESKTOP" 2>/dev/null || true); do
     cls="$(bspc query -T -n "$id" | jq -r '.client.className // empty')"
-    if [ "$cls" = "$GHOSTTY_CLASS" ]; then
-      pid="$(bspc query -T -n "$id" | jq -r '.client.pid // empty')"
-      [ -n "$pid" ] && kill "$pid" 2>/dev/null || true
-    fi
+    [ "$cls" = "$GHOSTTY_CLASS" ] && printf '%s\n' "$id"
   done
+}
+
+# 关掉桌面 III 上已有的 ghostty，保证舞台干净
+close_stale_ghostty() {
+  local id pid
+  while IFS= read -r id; do
+    [ -n "$id" ] || continue
+    pid="$(bspc query -T -n "$id" | jq -r '.client.pid // empty')"
+    [ -n "$pid" ] && kill "$pid" 2>/dev/null || true
+  done < <(_ghostty_windows)
 }
 
 # 分辨率恢复后 bspwm 不一定跟着重排：曾出现「屏幕已是 3440、窗口还是 2560 宽」，
@@ -134,13 +145,26 @@ _screen_size() {
 
 # 切到截图分辨率。注意 bspwmrc 里写死了原生分辨率，而换主题会触发 `bspc wm -r`
 # -> bspwmrc 重跑 -> 分辨率被改回去，所以每轮套用主题后都要再按一次。
-set_capture_mode() { xrandr --output "$XOUT" --mode "$MODE_CAPTURE"; }
+set_capture_mode() { xrandr --output "$XOUT" --mode "$MODE_CAPTURE" --rate "$RATE_CAPTURE"; }
 
 # 分辨率不对时截出来就是原生尺寸（1280x536 而不是 1280x720），静默出错很难发现
 _warn_if_wrong_size() {
   local cur
   cur="$(_screen_size)"
   [ "$cur" = "$MODE_CAPTURE" ] || echo "警告: 屏幕当前是 $cur，不是 $MODE_CAPTURE，截图尺寸会不对" >&2
+}
+
+# 截图前确认分辨率。换主题会触发 `bspc wm -r`，而 bspwmrc 是**异步**跑的、会把分辨率改回原生，
+# 没有可靠的「它跑完了」信号——所以不先固定等两秒，而是到该截图时再按回来
+# （改了模式会触发重排重绘，交给下一句 _wait_stable_panes 等稳定）。
+_ensure_capture_mode() {
+  local i
+  for ((i = 0; i < 20; i++)); do
+    [ "$(_screen_size)" = "$MODE_CAPTURE" ] && return 0
+    set_capture_mode
+    sleep 0.2
+  done
+  return 0
 }
 
 # 建 tmux 会话与 4 个 pane
@@ -166,26 +190,50 @@ start_tmux() {
   tmux select-pane -t "%${ids[0]}"
 }
 
-# 打开 ghostty -> 等渲染 -> 截图压缩写出
-shoot() {
-  local out="$1" id cls
-  ghostty -e tmux attach -t "$SESSION" >/dev/null 2>&1 &
-  sleep 3
-  for id in $(bspc query -N -d "$DESKTOP" 2>/dev/null || true); do
-    cls="$(bspc query -T -n "$id" | jq -r '.client.className // empty')"
-    if [ "$cls" = "$GHOSTTY_CLASS" ]; then
-      win="$id"
-      bspc node "$id" -t tiled 2>/dev/null || true
+# 等 4 个 pane 都画出内容、且连续两次抓屏一致（TUI 画完了）。
+# 原来是固定 sleep 6：快机器白等，慢机器还可能不够；10 个主题就是 60 秒纯等。
+_wait_stable_panes() {
+  local w="$SESSION:shot" prev="" text sum p i
+  sleep 0.5 # 保底：等 attach 的首次重绘落盘（实测 pane 内容 0.7 秒内就稳定）
+  for ((i = 0; i < 60; i++)); do # 之后最多再轮询 15 秒
+    text=""
+    for p in $(tmux list-panes -t "$w" -F '#{pane_id}' 2>/dev/null); do
+      text+="$(tmux capture-pane -p -t "$p" 2>/dev/null)"$'\n'
+    done
+    # 全空白 = TUI 还没画，继续等（否则会把空 pane 当成“稳定”）
+    if [ -n "${text//[[:space:]]/}" ]; then
+      sum="$(printf '%s' "$text" | md5sum)"
+      [ "$sum" = "$prev" ] && return 0
+      prev="$sum"
     fi
+    sleep 0.25
   done
+  echo "警告: pane 内容 15 秒内没稳定，照常截图" >&2
+}
 
-  sleep 6
+# 打开 ghostty -> 等窗口出现 -> 等 pane 画完 -> 截图压缩写出
+shoot() {
+  local out="$1" i
+  ghostty -e tmux attach -t "$SESSION" >/dev/null 2>&1 &
+
+  # 轮询窗口出现（原来是固定 sleep 3）
+  win=""
+  for ((i = 0; i < 40; i++)); do
+    win="$(_ghostty_windows | head -1)"
+    [ -n "$win" ] && break
+    sleep 0.25
+  done
+  if [ -n "$win" ]; then
+    bspc node "$win" -t tiled 2>/dev/null || true
+  else
+    echo "警告: 10 秒内没等到 ghostty 窗口，截图里可能没有终端" >&2
+  fi
+
+  _ensure_capture_mode
+  _wait_stable_panes
   _warn_if_wrong_size
-  tmp="$(mktemp --suffix=.png)"
-  maim -u "$tmp"
-  magick "$tmp" -resize "1280x1280>" -strip -quality 85 "$out"
-  rm -f "$tmp"
-  tmp=""
+  # 直接管道进 magick：少一个 2560x1440 的临时 PNG（写盘 + 再读回）
+  maim -u | magick - -resize "1280x1280>" -strip -quality 85 "$out"
   echo "已保存: $out ($(du -h "$out" | cut -f1))"
 }
 
@@ -217,7 +265,11 @@ fi
 close_stale_ghostty
 set_capture_mode
 bspc desktop -f "$DESKTOP"
-sleep 1
+# 等桌面真切过去：ghostty 会开在当前聚焦的桌面上，没切完就开出去就截不到
+for ((i = 0; i < 20; i++)); do
+  [ "$(bspc query -D -d focused --names 2>/dev/null)" = "$DESKTOP" ] && break
+  sleep 0.1
+done
 
 if [ "$ALL" = 0 ]; then
   start_tmux
@@ -249,9 +301,12 @@ for name in "${themes[@]}"; do
   echo "[$i/${#themes[@]}] $name: 套用主题..."
   apply_theme_quiet "$name"
   last_applied="$name"
-  # 换主题触发的 bspc wm -r 会让 bspwmrc 把分辨率改回原生，等它跑完再按回来
-  sleep 2
-  set_capture_mode
+  # 换主题触发 bspc wm -r，而 bspwmrc 是异步跑的、会把分辨率改回原生。
+  # 这里只等一个短的窗口让它的 xrandr 落地，然后确定模式：**必须在 start_tmux 前**，
+  # 否则 pane 里的命令（fastfetch 会打印 Display 那行）是在原生分辨率下启动的。
+  # 截图前还会再确认一次，所以这里差一点也不会截错尺寸。
+  sleep 0.5
+  _ensure_capture_mode
 
   start_tmux
   shoot "$out"
