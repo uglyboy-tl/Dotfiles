@@ -55,6 +55,50 @@ kitty_graphics_supported() {
   return 1
 }
 
+# 两个选择器共有的选项解析（fzf 另用 -h/-H/-W，也一并收下，rofi 收到不用而已）。
+# 结果写进 SELECTOR_* 全局变量：函数里 local -n 传 7 个值反而更绕，
+# 而这两个选择器都是短命的一次性调用。
+_selector_parse_args() {
+  SELECTOR_PROMPT="选择" SELECTOR_HEADER="" SELECTOR_DATA="" SELECTOR_SELECTED=""
+  SELECTOR_HEIGHT="40%" SELECTOR_IMAGE_CMD="" SELECTOR_PREVIEW_WINDOW="right:60%"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -p | --prompt) SELECTOR_PROMPT="$2"; shift 2 ;;
+      -h | --header) SELECTOR_HEADER="$2"; shift 2 ;;
+      -d | --data) SELECTOR_DATA="$2"; shift 2 ;;
+      -s | --selected) SELECTOR_SELECTED="$2"; shift 2 ;;
+      -H | --height) SELECTOR_HEIGHT="$2"; shift 2 ;;
+      -i | --image-cmd) SELECTOR_IMAGE_CMD="$2"; shift 2 ;;
+      -W | --preview-window) SELECTOR_PREVIEW_WINDOW="$2"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+}
+
+# 在换行分隔的列表里定位内容所在行号（0 基，找不到为 -1），结果写进变量 $1。
+# 用 nameref 而非子 shell：菜单每次重绘都要调它。
+_list_index_of() { # <输出变量> <列表> <内容>
+  local -n _idx_out="$1"
+  local list="$2" want="$3" line i=0
+  _idx_out=-1
+  while IFS= read -r line; do
+    if [ "$line" = "$want" ]; then _idx_out="$i"; return 0; fi
+    i=$((i + 1))
+  done <<< "$list"
+}
+
+# _list_index_of 的逆操作：取第 <索引> 行（0 基，越界为空）。
+# menu_loop 用它做「按位置回填高亮项」。
+_list_line_at() { # <输出变量> <列表> <索引>
+  local -n _line_out="$1"
+  local list="$2" want="$3" line i=0
+  _line_out=""
+  while IFS= read -r line; do
+    if [ "$i" -eq "$want" ]; then _line_out="$line"; return 0; fi
+    i=$((i + 1))
+  done <<< "$list"
+}
+
 # fzf 选择器
 # 用法: fzf_selector [选项]
 #   -p, --prompt <提示>    选择提示（默认"选择"）
@@ -69,38 +113,15 @@ kitty_graphics_supported() {
 # 返回: 用户选择的内容（通过 stdout）
 # 返回码: 0=成功, 1=取消
 fzf_selector() {
-  local prompt="选择"
-  local header=""
-  local data=""
-  local selected=""
-  local height="40%"
-  local image_cmd=""
-  local preview_window="right:60%"
-
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      -p|--prompt)  prompt="$2"; shift 2 ;;
-      -h|--header)  header="$2"; shift 2 ;;
-      -d|--data)    data="$2"; shift 2 ;;
-      -s|--selected) selected="$2"; shift 2 ;;
-      -H|--height)  height="$2"; shift 2 ;;
-      -i|--image-cmd) image_cmd="$2"; shift 2 ;;
-      -W|--preview-window) preview_window="$2"; shift 2 ;;
-      *) shift ;;
-    esac
-  done
+  _selector_parse_args "$@"
+  local prompt="$SELECTOR_PROMPT" header="$SELECTOR_HEADER" data="$SELECTOR_DATA"
+  local selected="$SELECTOR_SELECTED" height="$SELECTOR_HEIGHT"
+  local image_cmd="$SELECTOR_IMAGE_CMD" preview_window="$SELECTOR_PREVIEW_WINDOW"
 
   # 计算选中行号
   local selected_row=0
   if [[ -n "$selected" && -n "$data" ]]; then
-    local i=0
-    while IFS= read -r line; do
-      if [[ "$line" == "$selected" ]]; then
-        selected_row=$i
-        break
-      fi
-      i=$((i + 1))
-    done <<< "$data"
+    _list_index_of selected_row "$data" "$selected"
   fi
 
   # 构建 fzf 参数
@@ -156,10 +177,9 @@ export -f _rofi_icon_worker
 # 返回: 用户选择的内容（通过 stdout）
 # 返回码: 0=成功, 1=取消
 rofi_selector() {
-  local prompt="选择"
-  local data=""
-  local selected=""
-  local image_cmd=""
+  _selector_parse_args "$@"
+  local prompt="$SELECTOR_PROMPT" data="$SELECTOR_DATA" selected="$SELECTOR_SELECTED"
+  local image_cmd="$SELECTOR_IMAGE_CMD"
 
   # 左右方向键：→ 等于回车(接受)，← 等于 Esc(取消)。
   # rofi 默认把 Left/Right 绑定给 kb-move-char-back/forward，需先腾出这两个键。
@@ -168,27 +188,10 @@ rofi_selector() {
   local accept_keys="Control+j,Control+m,Return,KP_Enter,Right"
   local cancel_keys="Escape,Control+g,Control+bracketleft,Left"
 
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      -p|--prompt)   prompt="$2"; shift 2 ;;
-      -d|--data)     data="$2"; shift 2 ;;
-      -s|--selected) selected="$2"; shift 2 ;;
-      -i|--image-cmd) image_cmd="$2"; shift 2 ;;
-      *) shift ;;
-    esac
-  done
-
   # 计算选中行号
   local selected_row=0
   if [[ -n "$selected" && -n "$data" ]]; then
-    local i=0
-    while IFS= read -r line; do
-      if [[ "$line" == "$selected" ]]; then
-        selected_row=$i
-        break
-      fi
-      i=$((i + 1))
-    done <<< "$data"
+    _list_index_of selected_row "$data" "$selected"
   fi
 
   # 执行 rofi

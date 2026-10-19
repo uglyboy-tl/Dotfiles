@@ -27,32 +27,17 @@ menu_loop() {
 
   while true; do
     # 每轮重新生成选项：菜单项可能随状态变化
-    local items choice sel="" rc=0 i=0 line
+    local items choice sel="" rc=0
     items="$("$items_cmd")"
 
     # 用上次记录的位置在新列表中取回当前内容作为高亮项
-    if [ "$last_idx" -ge 0 ]; then
-      while IFS= read -r line; do
-        if [ "$i" -eq "$last_idx" ]; then
-          sel="$line"
-          break
-        fi
-        i=$((i + 1))
-      done <<< "$items"
-    fi
+    [ "$last_idx" -ge 0 ] && _list_line_at sel "$items" "$last_idx"
 
     choice=$(select_ui -p "$prompt" -d "$items" -s "$sel") || return 0
     [ -n "$choice" ] || return 0
 
     # 记录选中项位置
-    i=0
-    while IFS= read -r line; do
-      if [ "$line" = "$choice" ]; then
-        last_idx=$i
-        break
-      fi
-      i=$((i + 1))
-    done <<< "$items"
+    _list_index_of last_idx "$items" "$choice"
 
     "$handler" "$choice" || rc=$?
     if [ "$rc" -eq "$MENU_EXIT_ALL" ]; then

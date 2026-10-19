@@ -25,12 +25,16 @@ epipe_init
 # 取间距=100 的标准等宽 + 名称含等宽特征(mono/ete/maple 等)的字体,
 # 仅排除明显非终端的噪音(emoji/符号/点阵/屏幕阅读版)。
 get_fonts() {
-  {
-    fc-list :spacing=100 -f "%{family[0]}\n" 2>/dev/null
-    fc-list -f "%{family[0]}\n" 2>/dev/null | grep -iE "mono|maple|iosevka|jetbrains|firacode|cascadia|monaco"
-    fc-list -f "%{family[0]}\n" 2>/dev/null | grep -E "等宽|等距"
-    fc-list -f "%{family[0]}\n" 2>/dev/null | grep "Noto Sans Mono"
-  } | grep -viE "emoji|signwriting|CJK|IPAGothic|Unifont|点阵|屏幕读|Sample|Standard Symbol|文泉驿点阵" | sort -u
+  # 一次 fc-list（它要枚举全部字体，最贵）+ 一趟 awk 挑出四类候选。
+  # 原来是 4 次 fc-list 各扫一遍，同样的全量枚举做 4 遍。
+  fc-list -f "%{family[0]}\t%{spacing}\n" 2>/dev/null |
+    awk -F'\t' '
+      $2 == 100 { print $1; next }
+      tolower($1) ~ /mono|maple|iosevka|jetbrains|firacode|cascadia|monaco/ { print $1; next }
+      $1 ~ /等宽/ || $1 ~ /等距/ { print $1; next }
+      $1 ~ /Noto Sans Mono/ { print $1 }
+    ' |
+    grep -viE "emoji|signwriting|CJK|IPAGothic|Unifont|点阵|屏幕读|Sample|Standard Symbol|文泉驿点阵" | sort -u
 }
 
 # 读取当前 monospace 字体（fontconfig 权威源）

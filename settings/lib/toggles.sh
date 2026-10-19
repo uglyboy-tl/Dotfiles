@@ -30,19 +30,72 @@ toggles_keys() {
 
 toggle_script() { printf '%s/%s.sh\n' "$TOGGLES_DIR" "$1"; }
 
-toggle_label() { "$(toggle_script "$1")" label 2>/dev/null; }
+# 标签与默认状态是开关脚本的静态属性，缓存起来：菜单每次重绘都要它们，
+# 不缓存的话每个开关每帧都要 fork 一次脚本（原先一帧 = 2-3 次 spawn/开关）。
+# 状态文件不存在时才会读默认值，所以默认值也值得缓存。
+declare -A _TOGGLE_LABEL_CACHE=() _TOGGLE_DEFAULT_CACHE=()
+
+toggle_label() {
+  local key="$1"
+  [[ -n "${_TOGGLE_LABEL_CACHE[$key]:-}" ]] ||
+    _TOGGLE_LABEL_CACHE["$key"]="$("$(toggle_script "$key")" label 2>/dev/null)"
+  printf '%s\n' "${_TOGGLE_LABEL_CACHE[$key]}"
+}
 
 # 默认状态：取自开关脚本的 `default` 子命令，缺省/非法时视为 1
 toggles_default() {
-  local d
-  d="$("$(toggle_script "$1")" default 2>/dev/null)" || true
-  case "$d" in 0 | 1) printf '%s\n' "$d" ;; *) echo 1 ;; esac
+  local key="$1" d
+  if [[ -z "${_TOGGLE_DEFAULT_CACHE[$key]+x}" ]]; then
+    d="$("$(toggle_script "$key")" default 2>/dev/null)" || true
+    case "$d" in 0 | 1) _TOGGLE_DEFAULT_CACHE["$key"]="$d" ;; *) _TOGGLE_DEFAULT_CACHE["$key"]=1 ;; esac
+  fi
+  printf '%s\n' "${_TOGGLE_DEFAULT_CACHE[$key]}"
+}
+
+# 预热标签/默认值缓存。必须在**父 shell** 里调用：菜单里常见的 `x="$(toggle_label k)"`
+# 会把缓存写进子 shell，父 shell 拿不到，逐帧重绘等于每帧重新 fork 一遍开关脚本。
+toggles_warm_cache() {
+  local key label d
+  while IFS= read -r key; do
+    if [[ -z "${_TOGGLE_LABEL_CACHE[$key]:-}" ]]; then
+      label="$("$(toggle_script "$key")" label 2>/dev/null)" || true
+      _TOGGLE_LABEL_CACHE["$key"]="$label"
+    fi
+    if [[ -z "${_TOGGLE_DEFAULT_CACHE[$key]+x}" ]]; then
+      d="$("$(toggle_script "$key")" default 2>/dev/null)" || true
+      case "$d" in 0 | 1) _TOGGLE_DEFAULT_CACHE["$key"]="$d" ;; *) _TOGGLE_DEFAULT_CACHE["$key"]=1 ;; esac
+    fi
+  done < <(toggles_keys)
+}
+
+# 菜单快照：每个开关一行 `<key>\t<标签>\t<状态>`（制表符分隔——标签是人写的，可能含空格/冒号）。
+# 这是菜单每帧要的全部信息，一次给全；标签走缓存、状态是文件读取，所以除了调用方那一次
+# `$(toggles_lines)` 不再有子 shell。冷缓存时逐个回退到脚本，不会给出空标签。
+toggles_lines() {
+  local key label st state_file
+  while IFS= read -r key; do
+    label="${_TOGGLE_LABEL_CACHE[$key]:-}"
+    [ -n "$label" ] || label="$("$(toggle_script "$key")" label 2>/dev/null)"
+    state_file="$TOGGLE_STATE_DIR/$key"
+    if [ -f "$state_file" ]; then
+      read -r st < "$state_file" || true
+    else
+      st="${_TOGGLE_DEFAULT_CACHE[$key]:-1}"
+    fi
+    printf '%s\t%s\t%s\n' "$key" "$label" "$st"
+  done < <(toggles_keys)
 }
 
 # 当前状态（1=开 0=关），无状态文件时用默认
+# 用 read 而不是 $(cat)：菜单每次重绘都逐项问一次，cat 是外部命令（多一次 fork）
 toggle_state() {
-  local f="$TOGGLE_STATE_DIR/$1"
-  if [ -f "$f" ]; then cat "$f"; else toggles_default "$1"; fi
+  local f="$TOGGLE_STATE_DIR/$1" st
+  if [ -f "$f" ]; then
+    read -r st < "$f" || true
+    printf '%s\n' "$st"
+  else
+    toggles_default "$1"
+  fi
 }
 
 # 套用（不写状态）：<key> <0|1> [settle]；失败静默（如 polybar 未运行，下次再套）

@@ -27,32 +27,27 @@ fi
 export SELECTOR_UI
 epipe_init
 
-# 菜单条目：标签 + 当前状态
+# 菜单条目：标签 + 当前状态。
+# 元数据来自引擎的 toggles_lines（标签走缓存、状态是文件读取），本文件不再逐个 fork。
 get_items() {
-  local key mark
-  local -a keys=()
-  mapfile -t keys < <(toggles_keys)
-  for key in "${keys[@]}"; do
-    [ "$(toggle_state "$key")" = "1" ] && mark="开" || mark="关"
-    printf '%s：%s\n' "$(toggle_label "$key")" "$mark"
-  done
+  local key label st mark
+  while IFS=$'\t' read -r key label st; do
+    if [ "$st" = "1" ]; then mark="开"; else mark="关"; fi
+    printf '%s：%s\n' "$label" "$mark"
+  done < <(toggles_lines)
 }
 
-# 选中即翻转
+# 选中即翻转。条目形如「<标签>：<开|关>」，去掉尾部状态后按标签找 key——
+# 不再按标签前缀逐个 case 试（那依赖标签不含全角冒号，且每次选中要 n 次子进程）
 handle() {
-  local choice="$1" key label new
-  local -a keys=()
-  mapfile -t keys < <(toggles_keys)
-  for key in "${keys[@]}"; do
-    label="$(toggle_label "$key")"
-    case "$choice" in
-      "$label"：*)
-        new="$(toggle_flip "$key")"
-        if [ "$new" = "1" ]; then notify "已开启：$label"; else notify "已关闭：$label"; fi
-        return 0
-        ;;
-    esac
-  done
+  local choice="$1" label key="" k l new
+  label="${choice%：*}"
+  while IFS=$'\t' read -r k l _; do
+    if [ "$l" = "$label" ]; then key="$k"; fi
+  done < <(toggles_lines)
+  [ -n "$key" ] || return 0
+  new="$(toggle_flip "$key")"
+  if [ "$new" = "1" ]; then notify "已开启：$label"; else notify "已关闭：$label"; fi
 }
 
 menu_loop "开关" get_items handle
