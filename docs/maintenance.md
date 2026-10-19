@@ -42,6 +42,8 @@ git update-index --no-skip-worktree desktop/fontconfig/fonts.conf
 ## 已知问题
 
 - **jellyfin-mpv-shim 的 `conf.json` 有意不纳管**：`conf.py:load()` 只要文件字段数少于 schema 就立刻写回全量（实测 10 项 262 B 一次加载后变 196 项 5858 B），所以无法精简；`save()` 用 `os.replace`，会把软链替换成普通文件，导致仓库副本过期、再跑 `./install` 时被 `force` 覆盖而丢设置。故只纳管 `desktop/systemd/jellyfin-mpv-shim.service`。本机有意的偏离项（其余取默认）：`mpv_ext=true`、`mpv_ext_no_ovr=true`、`osc_style="custom"`、`enable_gui=false`、`fullscreen=true`、`hwdec="no"`、`direct_paths=true`、`thumbnail_enable=false`、`check_updates=false`、`segment_intro="always"`。
+- **rofi 主题的 `border-radius` 要与 picom 的 `corner-radius` 保持一致**：不一致时 picom 的圆角遮罩会切掉 rofi 自己的圆角边缘，四角留一圈半透明白边（`sysinfo.rasi` 曾用 14px 而 picom 是 10px）。当前 picom `corner-radius = 10.0`，rofi 主题统一 `10px`。
+- **polybar `internal/*` 模块的 `click-left` 不触发（3.7.2 实测）**：给 `internal/cpu`、`internal/network` 配 `click-left` 点了没反应，而同一条 bar 上 `custom/script`（`date`）、`custom/text`（`powermenu`）的 `click-left` 正常。绕法是用 `%{A}` 标记把整个模块包起来：`format = %{A1:命令:}<label>%{A}`（写法见 `desktop/polybar/modules/cpu.ini` 中注释掉的 `format` 行）。两个约束：`%{A1:...:}` 的命令里**不能含冒号**；命令由 shell 执行，所以 `$HOME` 能正常展开。
 - **sxhkd 启动 EPIPE**：快捷键启动时 stdout 是 socket，`echo` 会触发 SIGPIPE 中断脚本（`set -e` 下直接退出）。`epipe_init()` 忽略 SIGPIPE，且非 tty 时把输出重定向到 `~/.local/state/settings/logs/<脚本名>.log`。
 - **bspwm 重载不再重启 dunst**：dunst 配色由 `themes/render.conf` 里的 `dunstctl reload` 应用，bspwmrc 只用 `_o dunst`（已在跑就不动），所以 `bspc wm -r` 不会吞掉刚发的通知（旧实现 `_s dunst` + `wait_dunst_ready` 已删；前提：dunst 支持 `dunstrc.d` drop-in，`dunstctl reload` 会连同它一起重读）。
 - **feh 不能播 GIF 动画**：实测只显示第一帧。所以 `desktop/idle-screensaver/idle-screensaver.sh` 目前仅轮播静态图；动态屏保需改用 `mpv`（见待办）。
