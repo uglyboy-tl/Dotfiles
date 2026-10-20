@@ -55,6 +55,17 @@ git update-index --no-skip-worktree desktop/fontconfig/fonts.conf
 - **`~/.config/{alacritty,ghostty,polybar,rofi,zathura}` 是软链到 `desktop/`，其余不是**：`dunst` / `bspwm` / `gtk-3.0` / `gtk-4.0` / `X11` / `fcitx5` 都已是真实目录，产物就地生成（不带进仓库）。所以判断「产物在不在仓库里」不能一概而论。
 - **看视频会弹屏保（已修）**：`xprintidle` 只看键鼠输入，而浏览器抑制屏保走两条路——D-Bus `org.freedesktop.ScreenSaver`（bspwm 裸装没有该服务，请求落空）或 X11 `XScreenSaverSuspend`（只暂停 X 自带屏保，`xprintidle` 照涨）。故新增 `desktop/idle-screensaver/idle-screensaver-dbus.py` 补上这个 D-Bus 服务（心跳文件每秒刷新，服务死掉 5 秒后抑制自动失效），并在 `idle-screensaver.sh` 里按「D-Bus 抑制 / 全屏窗口 / 有音频输出流」三者任一成立就暂不出屏保、同时 `xset -dpms` 关熄屏。（该服务现由 systemd user unit `desktop/systemd/idle-screensaver-dbus.service` 常驻。）
 
+- **picom 的 rules 是"全有或全无"**：一旦定义 `rules`，`rounded-corners-exclude` / `shadow-exclude` / `blur-background-exclude` / `active-opacity` / `inactive-opacity` / `inactive-dim` / `wintypes` / `opacity-rule` / `mark-wmwin-focused` / `mark-ovredir-focused` 全部失效并逐条告警，行为只能搬进 rules。规则按书写顺序匹配，**同一选项以最后命中者为准**（默认值放前、特例放后）。rules 模式下全屏窗口不再自动去圆角，必须显式 `{ match = "fullscreen"; corner-radius = 0; }`。另外 `_COMPTON_SHADOW` 只在"没有 rules"的老路径里被读取，所以 polybar 的阴影开关改用自定义属性 `_POLYBAR_FLAT`（见 [设置菜单](settings.md)）。
+- **polybar 图标字形的名字与形状对不上**：`md-memory` 画出来是方形芯片（当 CPU 用）、`fa-microchip` 是竖条（当内存用），`cpu.ini` / `memory.ini` 里的两个字不可对调。
+- **`idle-screensaver.sh -h` 从脚本自身的注释段读取用法**（grep `# 用法:` 到下一个空注释行），头部那段注释是功能的一部分，格式不能随手改。
+- **`brightness` 受 DDC/I2C 约 300ms 的硬件下限约束**：所以本机状态立刻反馈通知，`setvcp` 丢后台并用 `flock` 串行，避免连按时排队卡住。
+- **壁纸的 crontab 行必须写全 `DISPLAY` / `XAUTHORITY` / `DBUS_SESSION_BUS_ADDRESS` / `PATH`**：cron 环境里没有这些。
+- **zsh 的几处顺序约束**：`path` 关联数组开了 `-U` 去重后必须用数组式赋值（`PATH=...` 字符串式不去重）；`zsh-users/zsh-completions` 必须在 `zicompinit` 之前加载，否则新补全不进 compinit；`ZSH_AUTOSUGGEST_MANUAL_REBIND=1` 靠"不再每个 prompt 重绑 ZLE widget"提速，一旦新增包装 ZLE 的插件就要删掉这行；atuin 必须 `--disable-ctrl-r --disable-up-arrow`，否则后加载的 `OMZP::fzf` 会抢走绑定。
+- **starship 的 `[cmd_duration]` 必须把 `$cmd_duration` 写进顶部 `format`**，否则整段配置不生效。
+- **fontconfig 的 monospace 回退链是固定的**（Hack → Sarasa → Noto CJK → Maple）：设置菜单的字体项会重写该块并移除其他字体，手工往里加字体会破坏回退顺序。
+- **GitHub 加速走 `gh-proxy.com`**：实测 clone 37MB 约 3.5s，直连时通时断。备选：`ghfast.top`（大文件稍快）、自建 `xget.uglyboy.cn/gh/`（LAX 节点，git 不稳定）。配置在 `config/git/config` 的 `url.insteadOf`。
+- **Edge 企业策略只保留 Linux 实测生效的条目**：微软政策文档列的是全平台策略，Windows 专属项（`MetricsReportingEnabled`、`DiagnosticData`、`StartupBoostEnabled` 等）在 Linux 上报「未知策略」并被静默忽略。改策略后必须完全退出 Edge 再启动；校验看 `edge://policy`（或该页「导出到 JSON」）里每条有无 `error` 字段。
+
 ## 上游生态观察
 
 ### tmux（查于 2026-10，数据源 `gh api`，可复现）

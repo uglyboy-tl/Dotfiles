@@ -149,6 +149,13 @@ GTK `insensitive_fg_color` 等 GUI 禁用态，所以向 `foreground` 提了 25%
 - `vesper` 上游只有 3 个彩色（橙 `#ffc799` / 薄荷 `#99ffe4` / 红 `#ff8080`），16 个 ANSI 槽
   取自 iTerm2-Color-Schemes 的移植，其中 cyan 槽实际是粉色——上游没有青绿色。
 
+## 模板里的硬约束
+
+- **dunst 模板的颜色值必须加引号**（`foreground = "#ffffff"`）：裸 `#` 会被 dunst 当注释，整行失效。
+- **fcitx5 的主题名固定为 `dotfiles`**：`classicui.conf` 里 `Theme=dotfiles` 只需一次性设置，模板不负责改它。
+- **yazi 的 `[mode]` / `[tabs]` 必须同时给 fg 和 bg**：只给 bg 时终端默认前景会压在饱和底色上（实测对比度掉到 1.06-2.40）。当前取 `darkgray` 与 `color0 on color4` 是为了在 8 个主题下都过线；改这两个槽位前先按主题重测。
+- **终端类应用的配色按对比度选槽位**（正文 WCAG 4.5:1 为线）：`muttrc` 就是拿 8 个主题逐一实测选的——ANSI 8 当正文不达标，故 `index_number` / `signature` / `tilde` 改用 color6 / color4。改主题时要重新对照，别按"看着顺眼"改。
+
 ## 支持的应用
 
 声明见 `themes/render.conf`（每行 `应用|模板|输出|重载|标记`）：
