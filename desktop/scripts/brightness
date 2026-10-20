@@ -1,24 +1,17 @@
 #!/usr/bin/env bash
-# 外接显示器亮度控制（DDC/CI，经 ddcutil）+ 通知指示
-# 用法: brightness up|down|get
-#
-# 台式机无内部背光，走 ddcutil 控制外接显示器；访问 /dev/i2c-* 需要 i2c 组权限，
-# 未加入组时回退免密 sudo。
-#
-# DDC/I2C 单次往返有 ~300ms 硬件下限，故：通知按本地状态立即反馈，真正的 setvcp
-# 丢到后台串行执行，避免按键卡顿。状态存于 ~/.local/state/brightness/current，
-# 首次使用时从显示器读一次同步。
+# 外接显示器亮度控制（DDC/CI，经 ddcutil）+ 通知指示；用法: brightness up|down|get
+# DDC/I2C 单次往返 ~300ms，故 setvcp 丢后台串行执行，状态存 ~/.local/state/brightness/current
 
 set -euo pipefail
 
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
 
 VCP=10      # MCCS 亮度代码
-STEP=5      # 每次增减
+STEP=5
 STATE="$XDG_STATE_HOME/brightness/current"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/brightness.lock"
 
-# 访问 /dev/i2c-*：已在 i2c 组则直接调用，否则免密 sudo
+# 访问 /dev/i2c-* 需 i2c 组权限，否则免密 sudo
 _ddc() {
 	if id -nG 2>/dev/null | grep -qw i2c; then
 		ddcutil "$@"
@@ -34,7 +27,7 @@ write_state() {
 	printf '%s' "$1" > "$STATE"
 }
 
-# 当前亮度：优先本地状态，缺失时从显示器读一次并落盘
+# 优先本地状态，缺失时从显示器读一次并落盘
 current_value() {
 	local v
 	v="$(read_state)"
@@ -46,7 +39,7 @@ current_value() {
 	printf '%s' "$v"
 }
 
-# 后台串行执行真正的调节（flock 防止连按并发访问 I2C）
+# flock 防止连按并发访问 I2C
 set_async() {
 	(
 		flock -x 9
@@ -79,7 +72,7 @@ case "${1:-}" in
 			sign=-
 		fi
 		write_state "$new"
-		notify_brightness "$new"   # 立即反馈
+		notify_brightness "$new"
 		[ "$new" -ne "$cur" ] && set_async "$sign"
 		;;
 	get)

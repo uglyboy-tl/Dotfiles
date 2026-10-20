@@ -10,8 +10,7 @@ URxvt.scrollTtyOutput:false
 URxvt.scrollWithBuffer:true
 URxvt.scrollTtyKeypress:true
 
-! 一定要写全名及大写的C/V,否则无效
-! Shift/Control 顺序无关
+! 键名必须写全名且大写 C/V，否则无效；Shift/Control 顺序无关
 URxvt.keysym.Shift-Control-V: eval:paste_clipboard
 URxvt.keysym.Shift-Control-C: eval:selection_to_clipboard
 URxvt.iso14755: false

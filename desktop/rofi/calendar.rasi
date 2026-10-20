@@ -1,6 +1,5 @@
 /*
- * ROFI theme - 月历弹出（由 desktop/polybar/scripts/rofi-calendar.py 调用）
- * 颜色通过 colors.rasi 导入
+ * ROFI theme - 月历弹出（由 rofi-calendar.py 调用）
  */
 
 @import "colors"

@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
-"""rofi 系统信息面板（点击 polybar 的 CPU 模块弹出）。
-
-     CPU 12%  RAM 26%  TEMP 42°C  NET 2.1M/s  SWAP 3%  UP 19h
-      -       VOL 60%      +         -       BRI 50%      +
-
-走 rofi 脚本模式：点击 `-`/`+` 后 rofi 重新执行本脚本，窗口不关闭、原地刷新数值。
-CPU 与网络速率复用上次 /proc 读数做区间平均，因此连点按钮不会有采样延迟。
-Esc 或点击自身以外的区域关闭。
-"""
+"""rofi 系统信息面板（点击 polybar 的 CPU 模块弹出，rofi 脚本模式原地刷新）。"""
 
 import json
 import os
@@ -32,11 +24,8 @@ CACHE_MAX_AGE = 10  # 复用上次计数器的最大间隔（秒）
 CACHE_MIN_AGE = 0.15  # 间隔太短会放大误差
 
 
-# ---------------------------------------------------------------- 主题色
-
-
 def theme_color(name: str, fallback: str) -> str:
-    """颜色取自主题渲染出的 colors.rasi，换主题时自动跟随。"""
+    """颜色取自主题渲染出的 colors.rasi，跟随主题。"""
     try:
         for line in COLORS.read_text().splitlines():
             if line.strip().startswith(f"{name}:"):
@@ -53,9 +42,6 @@ def label(text: str) -> str:
 def button(symbol: str, action: str) -> str:
     color = theme_color("accent", "#33b1ff")
     return f"<span color='{color}'>{symbol}</span>\0info\x1f{action}"
-
-
-# ---------------------------------------------------------------- 采集
 
 
 def read_cpu_times() -> list[int]:
@@ -96,11 +82,7 @@ def cpu_percent(before: list[int], after: list[int]) -> float:
 
 
 def sample_usage() -> tuple[float, float, str | None]:
-    """返回 (CPU%, 网络 B/s, 网卡)。
-
-    优先与缓存里的上次读数做区间平均（连点按钮时零延迟）；
-    间隔过短或过久则退化为实时双采样。
-    """
+    """返回 (CPU%, 网络 B/s, 网卡)；优先与缓存的上次读数做区间平均，否则实时双采样。"""
     iface = default_iface()
     now = time.time()
     cpu_before, net_before = read_cpu_times(), read_net_bytes(iface)
@@ -222,12 +204,8 @@ def human_rate(bytes_per_sec: float) -> str:
     return f"{bytes_per_sec:.1f}T/s"
 
 
-# ---------------------------------------------------------------- 交互
-
-
 def handle(action: str) -> None:
-    # 音量走 barify 而非直接 wpctl：它会一并弹 dunst 指示条，与多媒体键行为一致，
-    # 并在调音量时自动取消静音。
+    # 音量走 barify 而非直接 wpctl：一并弹 dunst 指示条并自动取消静音。
     commands = {
         "vol-down": [str(BARIFY_BIN), "v", "d"],
         "vol-up": [str(BARIFY_BIN), "v", "i"],
@@ -255,7 +233,7 @@ def render() -> str:
     up = uptime_text()
 
     cells = [
-        [  # 信息行
+        [
             f"{label('CPU')} {cpu:.0f}%",
             f"{label('RAM')} {mem:.0f}%",
             f"{label('TEMP')} {f'{temp}°C' if temp is not None else '--'}",
@@ -263,7 +241,7 @@ def render() -> str:
             f"{label('SWAP')} {f'{swap:.0f}%' if swap is not None else '--'}",
             f"{label('UP')} {up}",
         ],
-        [  # 控制行
+        [
             button("−", "vol-down"),
             f"{label('VOL')} {vol or '--'}",
             button("+", "vol-up"),
@@ -276,14 +254,10 @@ def render() -> str:
     lines = [
         "\0markup-rows\x1ftrue",
         "\0no-custom\x1ftrue",
-        "\0keep-selection",  # 原地刷新，选中不跳回第一格
+        "\0keep-selection",
     ]
-    # rofi 的 listview 按列优先填充
     lines += [cells[row][col] for col in range(COLS) for row in range(ROWS)]
     return "\n".join(lines) + "\n"
-
-
-# ---------------------------------------------------------------- 入口
 
 
 def emit() -> None:

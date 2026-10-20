@@ -1,6 +1,5 @@
 /*
  * ROFI theme - 自定义主题
- * 布局定义，颜色通过 color.rasi 导入
  */
 
 @import "colors"

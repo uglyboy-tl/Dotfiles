@@ -1,18 +1,6 @@
 #!/usr/bin/env python3
-# idle-screensaver-dbus.py - 为自研屏保提供 org.freedesktop.ScreenSaver 抑制接口。
-#
-# 背景：Chromium/Firefox/mpv 播放音视频时会向会话总线申请「别让屏幕睡」（桌面环境
-# 通常由 GNOME/KDE 提供该服务）。bspwm 裸装没有这个服务，请求落空后退回 X11
-# XScreenSaverSuspend；而自研屏保（desktop/idle-screensaver/idle-screensaver.sh）按 xprintidle 判定
-# 空闲，既看不到 D-Bus 请求也不受 XScreenSaverSuspend 影响，于是看视频照样弹屏保。
-#
-# 本服务不锁屏、不做 UI，只把「谁在申请抑制」写成心跳文件
-#   $XDG_RUNTIME_DIR/idle-screensaver/dbus-inhibit
-# 内容为 cookie/应用名/原因，每秒刷新一次 mtime；idle-screensaver.sh 认为文件
-# 新鲜（<5 秒）时就不出屏保、不熄屏。心跳的好处：本服务被 kill 后抑制最多 5 秒
-# 自动失效，不会留下永久的僵死抑制。
-#
-# 用法: idle-screensaver-dbus.py    （常驻；总线名已被占用时直接退出，不抢）
+# idle-screensaver-dbus.py - 提供 org.freedesktop.ScreenSaver 抑制接口，写心跳文件
+# $XDG_RUNTIME_DIR/idle-screensaver/dbus-inhibit 供 idle-screensaver.sh 读取。
 import os
 import subprocess
 import sys
@@ -29,11 +17,11 @@ except ImportError as e:
     sys.exit(0)
 
 IFACE = "org.freedesktop.ScreenSaver"
-# 历史路径与 freedesktop 规范路径都注册：Chromium 用前者，部分老程序仍用后者
+# 历史路径与规范路径都注册：Chromium 用前者，老程序仍用后者
 PATHS = ("/org/freedesktop/ScreenSaver", "/ScreenSaver")
 STATE_DIR = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "idle-screensaver"
 HEARTBEAT = STATE_DIR / "dbus-inhibit"
-HEARTBEAT_MS = 1000  # 心跳间隔；idle-screensaver.sh 侧的阈值是它的 5 倍
+HEARTBEAT_MS = 1000  # idle-screensaver.sh 侧的阈值是它的 5 倍
 
 
 class State:
@@ -102,8 +90,7 @@ class ScreenSaver(dbus.service.Object):
 
     @dbus.service.method(IFACE, in_signature="", out_signature="")
     def SimulateUserActivity(self):
-        # xdg-screensaver reset 走这里。没有 API 能把 xprintidle 归零，
-        # 就沿用它原本的 X11 手段（XResetScreenSaver）；1 秒节流防高频刷进程。
+        # xdg-screensaver reset 走这里：没有 API 能把 xprintidle 归零，只能 xset s reset；1 秒节流
         st = self.state
         now = time.monotonic()
         if now - st.last_reset < 1.0:
@@ -118,7 +105,7 @@ class ScreenSaver(dbus.service.Object):
     def drop_sender(self, name, old_owner, new_owner):
         """客户端从总线消失（如浏览器崩溃）时清掉它遗留的 cookie。"""
         if new_owner or not old_owner:
-            return  # 只关心「唯一名消失」，不管新名字出现
+            return  # 只关心唯一名消失
         owner = old_owner
         gone = [c for c, (_, _, s) in self.state.inhibitors.items() if s == owner]
         if not gone:

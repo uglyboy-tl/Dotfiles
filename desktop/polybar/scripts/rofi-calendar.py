@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""rofi 月历弹出。
-
-点击 polybar 的 date 模块时调用；Esc 或点窗口外关闭。
-顶部按钮：« 上一年，‹ 上一月，󰃭 今天，› 下一月，» 下一年（可点击）。
-键盘：←/→ 翻月，[ / ] 翻年，Ctrl+t 回到今天，回车选中日期。
-"""
+"""rofi 月历弹出：点击 polybar 的 date 模块时调用，Esc 关闭。"""
 
 import calendar
 import datetime
@@ -20,19 +15,13 @@ OUT_MARK = "·"
 BLANK = " "
 
 PREV_YEAR, PREV_MONTH, TODAY, NEXT_MONTH, NEXT_YEAR = "«", "‹", "󰃭", "›", "»"
-# 与 7 个星期列对齐的顶部按钮行
 TOOLBAR = [PREV_YEAR, PREV_MONTH, BLANK, TODAY, BLANK, NEXT_MONTH, NEXT_YEAR]
 
 BUTTONS = {PREV_YEAR, PREV_MONTH, NEXT_MONTH, NEXT_YEAR, TODAY}
 
 
 def month_grid(year, month):
-    """构造月历网格。
-
-    rofi 的 listview 按“列优先”填充，所以这里按列生成：
-    每列依次是 按钮行、星期名、该列各周的日号（非本月为占位符）。
-    返回 (entries, rows, today_index)。
-    """
+    """构造月历网格，返回 (entries, rows, today_index)；rofi listview 按列优先填充故按列生成。"""
     weeks = calendar.Calendar(firstweekday=0).monthdatescalendar(year, month)
     rows = len(weeks) + 2
 
@@ -44,7 +33,6 @@ def month_grid(year, month):
             d = week[col]
             entries.append(str(d.day) if d.month == month else OUT_MARK)
 
-    # 选中停留在“今天那个日号”（其它月份若没有该日号，则取当月最后一天）
     today = datetime.date.today()
     target = min(today.day, calendar.monthrange(year, month)[1])
     selected_index = None
@@ -62,9 +50,7 @@ def run_rofi(prompt, entries, rows, selected_row):
         "-theme-str", f"listview {{ lines: {rows}; }}",
         "-p", prompt,
         "-selected-row", str(selected_row or 0),
-        # 按钮行中的按钮格（排除空白）标记为 active，主题里单独上色
         "-a", ",".join(str(c * rows) for c in range(7) if TOOLBAR[c] != BLANK),
-        # 屏蔽默认键位，只保留下面 5 个自定义键 + Esc，避免误触
         "-kb-cancel", "Escape",
         "-kb-primary-paste", "",
         "-kb-secondary-paste", "",

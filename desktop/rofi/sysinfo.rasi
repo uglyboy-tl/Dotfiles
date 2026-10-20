@@ -1,6 +1,5 @@
 /*
- * ROFI theme - 系统信息面板（由 desktop/scripts/rofi-sysinfo.py 调用）
- * 6 列 2 行：上排信息，下排控制。颜色通过 colors.rasi 导入
+ * ROFI theme - 系统信息面板（由 rofi-sysinfo.py 调用），6 列 2 行：上排信息，下排控制
  */
 
 @import "colors"

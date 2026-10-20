@@ -1,13 +1,12 @@
 #!/bin/sh
-# 外部窗口规则：按 class/instance/title 匹配窗口属性
-# bspwm 通过 external_rules_command 调用此脚本
+# 外部窗口规则：按 class/instance/title 匹配窗口属性，由 bspwm 的 external_rules_command 调用
 
 wid=$1
 class=$2
 instance=$3
 consequences=$4
 
-# 获取窗口标题（优先 _NET_WM_NAME，回退到 WM_NAME）
+# 优先 _NET_WM_NAME，回退到 WM_NAME
 title=$(xprop -id "$wid" _NET_WM_NAME 2>/dev/null | sed 's/.*= "\(.*\)"/\1/')
 [ -n "$title" ] || title=$(xprop -id "$wid" WM_NAME 2>/dev/null | sed 's/.*= "\(.*\)"/\1/')
 
@@ -60,9 +59,7 @@ esac
 # 按标题匹配：画中画窗口
 case "$title" in
     *"Picture-in-Picture"*|*"Picture in picture"*|*"画中画"*)
-        # 注意：这条不能加 center=on —— bspwm 先套 rectangle、后执行 center，
-        # 而 window_center() 会直接改写 x/y（宽高保留），结果 +X+Y 被居中覆盖。
-        # 右下角，右侧/底部各留 10px（与 window_gap 一致）。
+        # 不能加 center=on：bspwm 先套 rectangle 后 center，会覆盖 x/y；右侧/底部各留 10px
         result "state=floating sticky=on layer=above rectangle=640x360+2790+1070"
         ;;
 esac

@@ -1,7 +1,5 @@
 # vim: ft=cfg
-#
-# Dunst 通知管理器配置文件 - 优化精简版
-# 颜色部分由 dunstrc.d/ 下的 drop-in 文件提供（主题脚本统一管理）
+# Dunst 通知管理器配置；颜色由 dunstrc.d/ 下的 drop-in 文件提供（主题脚本管理）
 
 [global]
 	# 显示设置
@@ -25,7 +23,7 @@
 	line_height = 4
 	format = "%s\n%b"
 
-	# 图标设置 - 使用 Adwaita symbolic 图标
+	# 图标设置（Adwaita symbolic 图标）
 	icon_path = /usr/share/icons/Adwaita/symbolic/status/:/usr/share/icons/Adwaita/scalable/status/:/usr/share/icons/Adwaita/symbolic/devices/
 	max_icon_size = 64
 
