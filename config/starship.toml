@@ -1,19 +1,13 @@
-# ──────────────────────────────────────────────
 # Starship 提示符配置
-# ──────────────────────────────────────────────
 command_timeout = 3600
 format = "[$directory$git_branch$git_status$character]($style)"
 
-# ──────────────────────────────────────────────
 # 提示符字符
-# ──────────────────────────────────────────────
 [character]
 error_symbol = "[✗](bold cyan)"
 success_symbol = "[❯](bold cyan)"
 
-# ──────────────────────────────────────────────
 # 目录
-# ──────────────────────────────────────────────
 [directory]
 truncation_length = 4
 truncation_symbol = "…/"
@@ -23,9 +17,7 @@ repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($r
 [directory.substitutions]
 "~" = "🏠 ~"
 
-# ──────────────────────────────────────────────
 # Git
-# ──────────────────────────────────────────────
 [git_branch]
 format = "[$symbol$branch]($style) "
 style = "italic cyan"
@@ -40,16 +32,12 @@ conflicted = " "
 untracked = "? "
 modified = " "
 
-# ──────────────────────────────────────────────
 # 命令执行时间（需加进顶部 format 才生效）
-# ──────────────────────────────────────────────
 [cmd_duration]
 min_time = 2000
 format = "[$duration]($style) "
 
-# ──────────────────────────────────────────────
 # 语言版本（按需启用）
-# ──────────────────────────────────────────────
 [python]
 format = "[$symbol$pyenv_prefix($version)($virtualenv)]($style) "
 

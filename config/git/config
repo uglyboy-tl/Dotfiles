@@ -1,6 +1,4 @@
-# ──────────────────────────────────────────────
 # 用户信息
-# ──────────────────────────────────────────────
 [user]
 	email = 25730357+uglyboy-tl@users.noreply.github.com
 	name = Uglyboy
@@ -9,9 +7,7 @@
 [credential]
 	helper = store
 
-# ──────────────────────────────────────────────
 # 仓库默认设置
-# ──────────────────────────────────────────────
 [init]
 	defaultBranch = main
 
@@ -22,9 +18,7 @@
 	autoSetupRemote = true
 	useForceIfIncludes = true   # --force-with-lease 时额外校验，避免覆盖未看到的远端提交
 
-# ──────────────────────────────────────────────
 # 差异比较与冲突
-# ──────────────────────────────────────────────
 [diff]
 	algorithm = histogram    # 更清晰的 diff
 	colorMoved = plain       # 移动代码高亮
@@ -36,9 +30,7 @@
 [rerere]
 	enabled = true           # 记录冲突解决方案，重复冲突自动应用
 
-# ──────────────────────────────────────────────
 # 日志与输出
-# ──────────────────────────────────────────────
 [log]
 	date = iso               # 日志使用 ISO 格式时间
 
@@ -48,29 +40,21 @@
 [column]
 	ui = auto                # 列式输出（git branch 更整齐）
 
-# ──────────────────────────────────────────────
 # 网络与加速
-# ──────────────────────────────────────────────
 [http]
 	postBuffer = 524288000   # 大仓库推送缓冲区（500MB）
 	maxRequests = 10
 
-# GitHub 加速代理：实测 gh-proxy.com clone 37MB 约 3.5s，优于直连（时通时断）
-# 备选：ghfast.top（大文件稍快）、xget.uglyboy.cn/gh/（自建，LAX 节点，git 不稳定）
 [url "https://gh-proxy.com/https://github.com/"]
 	insteadOf = https://github.com/
 
-# ──────────────────────────────────────────────
 # 快捷别名
-# ──────────────────────────────────────────────
 [alias]
 	st = status -sb
 	lg = log --oneline --graph --decorate --all
 	dfs = diff --stat
 	df = diff
 
-# ──────────────────────────────────────────────
 # 本地覆盖（不纳入版本控制）
-# ──────────────────────────────────────────────
 [include]
 	path = ~/.config/git/local

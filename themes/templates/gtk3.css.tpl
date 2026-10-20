@@ -1,7 +1,5 @@
 /* GTK3 主题 - Auto-generated from colors.toml - do not edit manually
- * GTK3 不因 @define-color 改变 Adwaita 的窗口配色，故除命名色外，
- * 还显式覆盖控件颜色与状态（hover/active/selected/disabled）。
- * 末尾禁用 GTK CSD 自绘阴影/圆角（配合 bspwm + picom）。 */
+ * @define-color 不足以改变 Adwaita 窗口配色，故显式覆盖控件颜色与状态。 */
 
 /* --- 命名色（部分程序会用到） --- */
 @define-color theme_bg_color {{ background }};

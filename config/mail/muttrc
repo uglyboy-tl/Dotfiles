@@ -1,11 +1,6 @@
-# =============================================================================
-# NeoMutt 配置 - 配色跟随终端 16 色
-# 分类: 基础功能 → UI → 颜色 → 快捷键 → 插件
-# =============================================================================
+# NeoMutt 配置（配色跟随终端 16 色）
 
-# =============================================================================
 # 1. 基础功能设置
-# =============================================================================
 set charset = "utf-8"
 set timeout = 3
 set mail_check = 60
@@ -39,9 +34,8 @@ set envelope_from = yes
 
 # 邮箱配置
 source ~/.config/mutt/mailboxes
-# =============================================================================
+
 # 2. UI 界面设置
-# =============================================================================
 # 基础 UI
 unset help
 unset wait_key
@@ -90,21 +84,13 @@ set weed = yes
 unhdr_order *
 hdr_order from: to: cc: date: subject: reply-to:
 
-# =============================================================================
 # 3. 颜色主题 (使用终端 16 色索引, 跟随终端主题)
-#
-# 槽位选择依据：拿 themes/colors/ 里 8 个主题实测对比度（WCAG 正文线 4.5:1）。
-# ANSI 8 在各主题上是 1.57（oxocarbon）到 4.69（vesper）的暗灰，当正文色用不达标，
-# 所以 index_number / signature / tilde 从 color8 换成 color6/color4。
-# ANSI 1（红）在 nord 3.05、kanagawa 3.22，只当强调不当文字。
-# =============================================================================
+# 16 色槽位按 themes/colors 下 8 个主题实测对比度（WCAG 正文线 4.5:1）选定
 color normal          default default
 color error           color1  default
 color message         color4  default
-# indicator: color0 压 color6，实测 5.03-11.41；原 color0/color4 在 nord 只有 3.74
 color indicator       color0  color6
 color tree            color15 default
-# status: color7 压 color0，实测 5.15-14.81；原 color15/color8 在 gruvbox 只有 2.23
 color status          color7  color0
 color index           color15 default
 color index_number    color6  default
@@ -122,7 +108,6 @@ color header          color3  default "^Date:"
 color quoted0         color2  default
 color quoted1         color6  default
 color signature       color4  default
-# search: 原 `default color3` 是终端默认前景（浅）压黄底，实测 1.05-1.78，完全看不清
 color search          color0  color3
 color tilde           color4  default
 color attachment      color5  default
@@ -130,9 +115,7 @@ color sidebar_flagged color1  default
 color sidebar_new     color10 default
 color sidebar_indicator color0 color6
 
-# =============================================================================
 # 4. 快捷键
-# =============================================================================
 bind index G last-entry
 bind index g noop
 bind index gg first-entry
@@ -144,9 +127,8 @@ bind index,pager \Cb sidebar-toggle-visible
 
 # 搜索
 macro index,pager / "<limit>" "搜索邮件..."
-# =============================================================================
+
 # 5. 插件/扩展配置
-# =============================================================================
 # Notmuch 配置
 set nm_default_uri = "notmuch:///home/uglyboy/.local/share/Mail"
 set virtual_spoolfile = yes

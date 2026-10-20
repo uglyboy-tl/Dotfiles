@@ -33,7 +33,6 @@ if [ -n "$BASH_VERSION" ]; then
     export HISTCONTROL=ignoredups:erasedups  # 忽略重复命令
 fi
 
-
 # 快捷键绑定
 # 输入部分命令后，按上箭头匹配历史记录
 bind '"\e[A": history-search-backward'

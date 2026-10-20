@@ -1,5 +1,3 @@
-# 原先由 OMZL::theme-and-appearance.zsh 提供，已移除该片段
-# （该片段剩下的只是 spawn dircolors 设 LS_COLORS + 把 diff 包成函数，用 p10k 时无收益）
 alias ls='ls --color=tty'
 alias ll='ls -lh'
 alias la='ls -lAh'

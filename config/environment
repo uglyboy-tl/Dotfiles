@@ -5,8 +5,7 @@ export XDG_CONFIG_HOME=$HOME/.config
 export XDG_STATE_HOME=$HOME/.local/state
 export XDG_CACHE_HOME=$HOME/.cache
 
-# 可执行文件路径: scripts/ 整个目录链接到 ~/.local/bin, GUI 会话(xsessionrc)
-# 与交互 shell 都要能找到,否则 setting-about.sh 里的 fastfetch 之类会缺失
+# GUI 会话(xsessionrc)与交互 shell 都要能找到 ~/.local/bin,否则 setting-about.sh 里的 fastfetch 之类会缺失
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
   *) export PATH="$HOME/.local/bin:$PATH" ;;

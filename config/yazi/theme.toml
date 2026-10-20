@@ -21,8 +21,6 @@ border_symbol = "│"
 border_style  = { fg = "darkgray" }
 
 [tabs]
-# 与 [mode] 同类的问题，先前的修复漏了这一块：只给 bg 会让终端默认前景压在上面（1.37），
-# 而 darkgray(ANSI 8) 当底在 gruvbox 只有 1.48。
 active   = { fg = "black", bg = "cyan", bold = true }
 inactive = { fg = "cyan",  bg = "black" }
 
@@ -30,10 +28,6 @@ sep_inner = { open = "", close = "" }
 sep_outer = { open = "", close = "" }
 
 [mode]
-# 这三行只给了 bg 不给 fg，yazi 就用终端默认前景压在饱和底色上，
-# 实测 1.06-2.40（catppuccin 的 unset_main 只有 1.06），完全看不出字。
-# 而 16 色里没有一个前景色能压在 blue/red/lightmagenta 上达到 4.5:1
-# （color0 压 color4 在 nord 只有 3.74），所以底色一并换成能承载深色字的槽。
 normal_main = { fg = "black", bg = "cyan",   bold = true }
 normal_alt  = { fg = "cyan",   bg = "black" }
 
@@ -61,10 +55,7 @@ perm_sep   = { fg = "darkgray" }
 
 progress_label  = { bold = true }
 progress_normal = { fg = "green", bg = "black" }
-# 原 `yellow on lightred` 实测 1.13-2.72 —— 亮黄压在亮红上，填充部分看不见。
-# 改成与 progress_normal 同形状（填充色 / 暗底轨）。注意这仍是 2.46-7.99：
-# 红系在任何主题上都达不到 4.5（nord 的 ANSI 1/9 就是 3.05），这是那两个调色板自身的下限，
-# 保留红色语义优先于凑数字。
+# 必须成对给 fg/bg，只给 bg 会让终端默认前景压在饱和底色上，实测对比度不足
 progress_error  = { fg = "lightred", bg = "black" }
 
 [input]

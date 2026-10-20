@@ -1,6 +1,6 @@
 # NeoMutt 邮箱配置
 
-# 虚拟邮箱（放在最前面，默认打开）
+# 虚拟邮箱须放在最前（默认打开）
 virtual-mailboxes \
   "📩 收件箱"   "notmuch://?query=tag:inbox" \
   "📅 今日邮件"   "notmuch://?query=date:today..now and not tag:junk" \

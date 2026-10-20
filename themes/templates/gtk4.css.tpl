@@ -1,5 +1,4 @@
 /* GTK4 / libadwaita 主题 - Auto-generated from colors.toml - do not edit manually
- * 覆盖 Adwaita/libadwaita 的命名色（libadwaita 读取这些 @define-color）。
  * 取值与 gtk3.css 保持一致（headerbar/sidebar 用 dark_background）。 */
 
 /* --- 强调色 --- */

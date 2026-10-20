@@ -8,24 +8,20 @@ DOTFILES_PEON="$HOME/.local/share/dotfiles/scripts/peon"
 
 echo "=== update-peon ==="
 
-# Step 1: Download upstream peon.sh, insert CLAUDE_PEON_DIR hardcode
+# 下载上游 peon.sh 并插入 CLAUDE_PEON_DIR 硬编码
 echo "-> peon.sh"
 curl -fsSL "$REPO/peon.sh" -o /tmp/peon-new.sh
 sed -i '/^CLAUDE_PEON_DIR=/d; /^# --- Platform detection ---/a\CLAUDE_PEON_DIR="${CLAUDE_PEON_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/openpeon}"' /tmp/peon-new.sh
-# Patch 2: run the embedded Python with PYTHONSAFEPATH=1. The script is written to
-# $TMPDIR, and Python prepends the script's dir to sys.path[0]; stray modules there
-# (e.g. a leftover /tmp/http.py) shadow the stdlib and crash the embedded block.
+# 内嵌 Python 必须以 PYTHONSAFEPATH=1 运行：脚本写在 $TMPDIR 下，Python 会把该目录
+# 塞进 sys.path[0]，残留模块（如 /tmp/http.py）会遮蔽标准库。
 sed -i 's|_PEON_PYOUT=$(python3 "$_PEON_PY_TMP"|_PEON_PYOUT=$(PYTHONSAFEPATH=1 python3 "$_PEON_PY_TMP"|' /tmp/peon-new.sh
 cp /tmp/peon-new.sh "$DOTFILES_PEON"
 chmod +x "$DOTFILES_PEON"
 
-# Step 2: VERSION
 echo "-> VERSION"
 curl -fsSL "$REPO/VERSION" -o "$PEON_DIR/VERSION"
 
-# Step 3: Supporting scripts, filter by rule:
-#   - extension .sh only (skip .ps1 .swift .js)
-#   - skip cmux-* hook-handle-* lint-* (cmux, Claude hooks, dev tools)
+# 附属脚本只取 .sh，跳过 cmux-* / hook-handle-* / lint-*
 echo "-> scripts"
 mkdir -p "$PEON_DIR/scripts"
 UPSTREAM_SCRIPTS=$(gh api repos/PeonPing/peon-ping/contents/scripts --paginate -q '.[].name' | grep '\.sh$' | grep -vE '^(cmux-|hook-handle-|lint-)')
@@ -35,7 +31,7 @@ while IFS= read -r s; do
     chmod +x "$PEON_DIR/scripts/$s"
     echo "   $s"
 done <<< "$UPSTREAM_SCRIPTS"
-# relay.sh lives at top level
+# relay.sh 在仓库根目录
 curl -fsSL "$REPO/relay.sh" -o "$PEON_DIR/relay.sh"
 chmod +x "$PEON_DIR/relay.sh"
 echo "   relay.sh"

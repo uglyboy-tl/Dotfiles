@@ -1,15 +1,11 @@
-" ──────────────────────────────────────────────
 " XDG 路径设置
-" ──────────────────────────────────────────────
 set runtimepath^=$XDG_CONFIG_HOME/vim
 set runtimepath+=$XDG_DATA_HOME/vim
 set runtimepath+=$XDG_CONFIG_HOME/vim/after
 set packpath^=$XDG_DATA_HOME/vim,$XDG_CONFIG_HOME/vim
 set packpath+=$XDG_CONFIG_HOME/vim/after,$XDG_DATA_HOME/vim/after
 
-" ──────────────────────────────────────────────
 " 目录初始化
-" ──────────────────────────────────────────────
 let g:netrw_home = $XDG_DATA_HOME."/vim"
 call mkdir($XDG_DATA_HOME."/vim/spell", 'p')
 set backupdir=$XDG_STATE_HOME/vim/backup | call mkdir(&backupdir, 'p')
@@ -18,17 +14,13 @@ set undodir=$XDG_STATE_HOME/vim/undo     | call mkdir(&undodir, 'p')
 set viewdir=$XDG_STATE_HOME/vim/view     | call mkdir(&viewdir, 'p')
 if !has('nvim') | set viminfofile=$XDG_STATE_HOME/vim/viminfo | endif
 
-" ──────────────────────────────────────────────
 " 本地配置加载
-" ──────────────────────────────────────────────
 let $LOCALFILE=expand("~/.config/local/vimrc")
 if filereadable($LOCALFILE)
   source $LOCALFILE
 endif
 
-" ──────────────────────────────────────────────
 " 插件管理 (vim-plug)
-" ──────────────────────────────────────────────
 if filereadable(expand('~/.config/vim/plug.vim'))
   source ~/.config/vim/plug.vim
 endif
@@ -41,9 +33,7 @@ endif
 
 call plug#end()
 
-" ──────────────────────────────────────────────
 " 外观设置
-" ──────────────────────────────────────────────
 " nord.vim 在 `colorscheme` 执行时就读取这两个变量，必须先 let 再切换配色
 let g:nord_cursor_line_number_background = 1
 let g:nord_italic_comments = 1
@@ -51,9 +41,7 @@ colorscheme nord
 let g:lightline = {'colorscheme': '16color'}
 set noshowmode
 
-" ──────────────────────────────────────────────
 " 编辑器设置
-" ──────────────────────────────────────────────
 set mouse=a
 if has("mouse_sgr")
     set ttymouse=sgr
@@ -61,9 +49,7 @@ else
     set ttymouse=xterm2
 endif
 
-" ──────────────────────────────────────────────
 " 快捷键
-" ──────────────────────────────────────────────
 let mapleader = ','
 map <space> /
 map ; :Files<CR>
