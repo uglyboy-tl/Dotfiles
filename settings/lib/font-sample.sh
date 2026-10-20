@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# 输出字体预览样张的缓存路径（按需用 ImageMagick 渲染）
-# 用法: font-sample.sh <字体家族名>
-# 字体无法解析或缺 ImageMagick 时无输出（调用方据此跳过预览）
+# font-sample.sh - 输出字体预览样张的缓存路径（按需用 ImageMagick 渲染）；失败时无输出。
 set -euo pipefail
 
 : "${XDG_CACHE_HOME:=$HOME/.cache}"
@@ -31,7 +29,7 @@ if [ -f "$cache" ] && [ -f "$src" ]; then
 fi
 
 # 未命中：解析字体文件，并确认请求的家族在命中字体的家族别名列表里
-# （避免 fc-match 对不存在的字体回退到 Noto 之类）
+# （否则 fc-match 会对不存在的字体回退到 Noto 之类）
 font_file="$(fc-match -f '%{file}' -- "$family" 2>/dev/null || true)"
 font_families="$(fc-match -f '%{family}' -- "$family" 2>/dev/null || true)"
 [ -n "$font_file" ] && [ -f "$font_file" ] || exit 0

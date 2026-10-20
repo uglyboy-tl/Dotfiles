@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# 输出某个壁纸风格用于预览的图片路径（固定取 12 点图）
-# 用法: wallpaper-image.sh <风格名>
-# 找不到时无输出（调用方可据此跳过预览）
+# wallpaper-image.sh - 输出某个壁纸风格用于预览的图片路径（固定取 12 点图）；找不到时无输出。
 set -euo pipefail
 
 : "${XDG_DATA_HOME:=$HOME/.local/share}"

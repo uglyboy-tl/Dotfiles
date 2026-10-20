@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-# 开关设置：布尔型设置的统一子菜单（纯菜单 UI）
-# 用法:
-#   setting-toggles.sh            交互式（界面由 SELECTOR_UI 决定: gui=rofi, tui=fzf）
-#
+# setting-toggles.sh - 开关设置子菜单（纯菜单 UI，只负责列出/选择/翻转）
 # 具体开关见 settings/toggles/，引擎见 settings/lib/toggles.sh。
-# 本脚本只负责"列出 / 选择 / 翻转"，不含任何具体功能；新增开关无需改动本文件。
 
 set -euo pipefail
 
@@ -27,8 +23,7 @@ fi
 export SELECTOR_UI
 epipe_init
 
-# 菜单条目：标签 + 当前状态。
-# 元数据来自引擎的 toggles_lines（标签走缓存、状态是文件读取），本文件不再逐个 fork。
+# 菜单条目：标签 + 当前状态（元数据全部来自 toggles_lines）
 get_items() {
   local key label st mark
   while IFS=$'\t' read -r key label st; do
@@ -37,8 +32,7 @@ get_items() {
   done < <(toggles_lines)
 }
 
-# 选中即翻转。条目形如「<标签>：<开|关>」，去掉尾部状态后按标签找 key——
-# 不再按标签前缀逐个 case 试（那依赖标签不含全角冒号，且每次选中要 n 次子进程）
+# 选中即翻转：条目形如「<标签>：<开|关>」，去掉尾部状态后按标签找 key
 handle() {
   local choice="$1" label key="" k l new
   label="${choice%：*}"

@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
-# 壁纸切换（菜单 UI：选择 → 校验 → 应用）
-# 用法:
-#   setting-wallpaper.sh <风格名>   直接切换（单次）
-#   setting-wallpaper.sh            交互式选择/循环切换（界面由 SELECTOR_UI 决定: gui=rofi, tui=fzf）
-#
-# 套用逻辑在 settings/lib/wallpaper.sh（bspwmrc 启动套用也用它）。
+# setting-wallpaper.sh - 壁纸切换：选择 → 校验 → 应用（套用逻辑在 lib/wallpaper.sh）
 
 set -euo pipefail
 

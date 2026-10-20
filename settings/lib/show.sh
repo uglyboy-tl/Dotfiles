@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# 内容展示层: 把带 ANSI 颜色的命令输出统一展示
-#   TUI: fzf 预览窗格 (ansi-to-ansi.py 保留颜色/对齐)
-#   GUI: rofi 只读窗 (viewer.rasi + ansi-to-pango.py 转 Pango)
-# 作为函数库被其他脚本 source
+# show.sh - 内容展示层：把带 ANSI 颜色的命令输出统一展示（TUI=fzf 预览窗，GUI=rofi 只读窗）
 
 [[ -n "${_SHOW_LOADED:-}" ]] && return 0
 _SHOW_LOADED=1
@@ -30,7 +27,6 @@ _show_parse_args() {
 }
 
 # TUI: fzf 预览窗格展示命令输出(保留 ANSI 颜色)
-# 用法: show_terminal <完整命令> [--prompt <提示>]
 show_terminal() {
   _show_parse_args "$@"
   [ -n "$_SHOW_CMD" ] || { echo "show_terminal: 缺少命令" >&2; return 1; }
@@ -52,7 +48,6 @@ show_terminal() {
 }
 
 # GUI: rofi 只读窗展示命令输出(转 Pango)
-# 用法: show_gui <完整命令> [--prompt <提示>]
 show_gui() {
   _show_parse_args "$@"
   [ -n "$_SHOW_CMD" ] || { echo "show_gui: 缺少命令" >&2; return 1; }
@@ -69,7 +64,7 @@ show_gui() {
 }
 
 # 按 SELECTOR_UI 分派: gui -> rofi, 其他 -> fzf
-# 用法: show_content <完整命令> [--prompt <提示>]
+# show_content <完整命令> [--prompt <提示>]
 show_content() {
   case "${SELECTOR_UI:-tui}" in
     gui) show_gui "$@" ;;

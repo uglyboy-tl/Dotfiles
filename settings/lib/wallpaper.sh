@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
-# wallpaper.sh - 壁纸引擎（无 UI）
-# 作为函数库被 source：菜单 setting-wallpaper.sh、以及 bspwmrc 的启动套用。
-# 不含交互/提示逻辑（那是菜单的事）。
+# wallpaper.sh - 壁纸引擎（无 UI，不含交互/提示逻辑）
 
-# 防止重复加载
 [[ -n "${_WALLPAPER_LOADED:-}" ]] && return 0
 _WALLPAPER_LOADED=1
 
@@ -14,7 +11,6 @@ _WALLPAPER_LOADED=1
 WALLPAPER_DIR="${WALLPAPER_DIR:-$XDG_DATA_HOME/dynamic-wallpaper/images}"
 WALLPAPER_STATE_FILE="${WALLPAPER_STATE_FILE:-$XDG_STATE_HOME/wallpaper/current}"
 
-# 可用风格列表
 wallpaper_list() {
   [ -d "$WALLPAPER_DIR" ] || return 0
   find "$WALLPAPER_DIR" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort
@@ -38,10 +34,9 @@ wallpaper_save() {
   printf '%s\n' "$1" > "$WALLPAPER_STATE_FILE"
 }
 
-# 校验风格
 wallpaper_validate() { [ -d "$WALLPAPER_DIR/$1" ]; }
 
-# 更新 crontab（每小时轮换当前风格）
+# 更新 crontab（每小时轮换当前风格）。cron 环境缺少 DISPLAY/DBUS/PATH，必须显式写全。
 _wallpaper_crontab_update() {
   local style="$1" cron_line new_cron
   local display="${DISPLAY:-:0}"

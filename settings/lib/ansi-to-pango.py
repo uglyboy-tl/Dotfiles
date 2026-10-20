@@ -3,9 +3,6 @@
 
 将含 ANSI 转义码（SGR 颜色 + 光标左右移动）的终端输出转为 rofi 的 Pango markup。
 供 lib/show.sh 的 show_gui 在只读窗中展示带颜色的命令输出。
-
-用法:
-  fastfetch --pipe false | ansi-to-pango.py --colors colors.toml
 """
 
 from ansi_parse import cell_width, strip_trailing_blank, iter_runs, run_cli

@@ -1,8 +1,4 @@
-/*
- * ROFI theme - 只读内容查看窗
- * 无 inputbar，纯 listview；内容自带 Pango 着色。
- * 供 lib/show.sh 的 show_gui 复用：高度按内容条目数自适应。
- */
+/* ROFI theme - 只读内容查看窗（无 inputbar，内容自带 Pango 着色） */
 
 @import "colors"
 

@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
-# 主题切换（设置项：选择 → 校验 → 应用）
-# 用法:
-#   setting-theme.sh <主题名>   直接切换到指定主题（单次）
-#   setting-theme.sh            交互式选择/循环切换（界面由 SELECTOR_UI 决定: gui=rofi, tui=fzf）
-#
-# 渲染声明与数据在 themes/（render.conf 声明「应用 ← 模板 → 输出/重载」，templates/、colors/）。
-# 本脚本只在菜单里被调用，没有非 UI 复用方，故套用逻辑就近放在此处（不单独抽库）。
+# setting-theme.sh - 主题切换：选择 → 校验 → 渲染 → 重载（themes/render.conf 声明渲染目标）
 
 set -euo pipefail
 
@@ -24,10 +18,6 @@ COLORS_DIR="$DOTFILES_DIR/themes/colors"
 TEMPLATES_DIR="$DOTFILES_DIR/themes/templates"
 RENDER_CONF="$DOTFILES_DIR/themes/render.conf"
 STATE_FILE="$XDG_STATE_HOME/theme/current"
-
-# ============================================================
-# 主题数据
-# ============================================================
 
 get_themes() {
   [ -d "$COLORS_DIR" ] || return 0
@@ -54,10 +44,6 @@ validate_theme() {
   fi
   return 0
 }
-
-# ============================================================
-# 渲染 / 重载（读 themes/render.conf）
-# ============================================================
 
 # 遍历 render.conf 数据行，回调: <回调> <应用> <模板> <输出> <重载> <标记> [追加参数...]
 _for_each_target() {
@@ -93,7 +79,6 @@ render_templates() {
   [ "$RENDERED" -gt 0 ]
 }
 
-# 重载一行
 _reload_one() {
   local app="$1" tmpl="$2" out="$3" reload="$4" flags="$5"
   [ -n "$reload" ] || return 0
@@ -112,10 +97,6 @@ apply_theme() {
   reload_apps
   notify "已切换到主题: $theme"
 }
-
-# ============================================================
-# 菜单
-# ============================================================
 
 select_theme() {
   local current

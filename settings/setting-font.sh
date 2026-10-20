@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-# 字体切换脚本
-# 用法:
-#   setting-font.sh <字体名>    直接切换到指定字体（单次）
-#   setting-font.sh             交互式选择/循环切换（界面由 SELECTOR_UI 决定: gui=rofi, tui=fzf）
-#
-# 通过修改 fontconfig 的 monospace 字体族，让 ghostty/alacritty 等
-# 使用 monospace 的软件统一换字体（无需改各软件配置）。
+# setting-font.sh - 字体切换：改写 fontconfig 的 monospace 字体族，
+# 让 ghostty/alacritty 等用 monospace 的软件统一换字体（无需改各软件配置）。
 
 set -euo pipefail
 
@@ -16,17 +11,14 @@ set -euo pipefail
 DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
 FONTS_CONF="${FONTS_CONF:-$XDG_CONFIG_HOME/fontconfig/fonts.conf}"
 
-# 加载公共函数(含 epipe_init)并初始化 stdout 安全
+# 公共函数与 stdout 安全
 source "$DOTFILES_DIR/settings/lib/selectors.sh"
 source "$DOTFILES_DIR/settings/lib/notify.sh"
 epipe_init
 
-# 列出可用等宽字体（去重，取 family[0]）
-# 取间距=100 的标准等宽 + 名称含等宽特征(mono/ete/maple 等)的字体,
-# 仅排除明显非终端的噪音(emoji/符号/点阵/屏幕阅读版)。
+# 列出可用等宽字体（去重，取 family[0]）：spacing=100 或名称含等宽特征，排除非终端噪音
 get_fonts() {
-  # 一次 fc-list（它要枚举全部字体，最贵）+ 一趟 awk 挑出四类候选。
-  # 原来是 4 次 fc-list 各扫一遍，同样的全量枚举做 4 遍。
+  # 一次 fc-list + 一趟 awk：fc-list 要枚举全部字体，多跑几次代价高
   fc-list -f "%{family[0]}\t%{spacing}\n" 2>/dev/null |
     awk -F'\t' '
       $2 == 100 { print $1; next }
@@ -42,10 +34,8 @@ get_current_font() {
   fc-match monospace -f '%{family}\n' 2>/dev/null | head -n1 | tr ',' '\n' | head -n1
 }
 
-# 把所选字体设为 monospace 第一位，并保持固定的回退链字体
-# 回退链: Hack(拉丁+图标) → Sarasa(中文) → Noto(CJK补充) → Maple(其他)
-# 其他任何字体要么成为第一位主字体，要么被移除，以防止破坏字体回退。
-# 用 awk 改写 fonts.conf 的 monospace 块，避免依赖 python。
+# 把所选字体设为 monospace 第一位，并保持固定回退链：
+# Hack(拉丁+图标) → Sarasa(中文) → Noto(CJK补充) → Maple(其他)；其他字体一律移除。
 apply_font() {
   local font="$1" rc=0
   local conf="$FONTS_CONF"
@@ -98,7 +88,6 @@ select_font() {
     -i "$DOTFILES_DIR/settings/lib/font-sample.sh {}") || exit 0
 }
 
-# 校验所选字体
 validate_font() {
   if ! fc-list -f "%{family[0]}\n" 2>/dev/null | grep -Fxq "$1"; then
     notify_error "字体 '$1' 未安装，已忽略"
@@ -107,9 +96,7 @@ validate_font() {
   return 0
 }
 
-# 应用指定字体（单次）
-# 设置写进 fonts.conf 即算切换完成（新开窗口即刻生效），随后立即提示并返回；
-# 耗时的收尾（fc-cache 重建缓存、让 ghostty 重新解析字体）全部丢后台，不阻塞菜单。
+# 应用指定字体：写入 fonts.conf 即生效；耗时的收尾（fc-cache/ghostty 重解析）丢后台不阻塞
 apply_font_run() {
   local font="$1"
   validate_font "$font" || return 1
@@ -118,8 +105,7 @@ apply_font_run() {
   ( fc-cache -f >/dev/null 2>&1; pkill -USR2 -x ghostty >/dev/null 2>&1 ) &
 }
 
-# 循环模式：选择 → 应用 → 回到选择界面
-# 非法输入(validate 失败)时返回非零，此处不退出，继续回到选择界面
+# 循环模式：选择 → 应用 → 回到选择界面（校验失败不退出）
 loop_mode() {
   while true; do
     select_font
@@ -127,13 +113,10 @@ loop_mode() {
   done
 }
 
-# 主流程
 main() {
   if [ "$#" -ge 1 ]; then
-    # 指定字体名，单次应用
     apply_font_run "$1"
   else
-    # 交互式循环
     loop_mode
   fi
 }

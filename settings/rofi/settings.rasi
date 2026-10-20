@@ -1,12 +1,7 @@
-/*
- * ROFI theme - 设置菜单专用主题 settings.rasi（复制自 desktop/rofi/custom.rasi）
- * 与全局默认主题解耦，避免被别处的改动影响一致性。
- * 高度与 settings/rofi/preview.rasi 对齐（480px）。
- */
+/* ROFI theme - 设置菜单专用，高度与 preview.rasi 对齐（480px） */
 
 @import "colors"
 
-/* 等宽字体：中文恰好是英文 2 倍宽，便于列对齐 */
 * {
   font: "Maple Mono Normal CN 12";
 }

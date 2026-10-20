@@ -3,9 +3,6 @@
 
 解析 ANSI 转义序列（SGR 颜色 + 光标左右移动），输出 (char, fg_hex, bold) cells。
 两个转换器（ansi-to-ansi / ansi-to-pango）共享此模块。
-
-用法:
-    from ansi_parse import load_palette, parse_ansi_stream
 """
 
 import argparse

@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-# 快捷键界面：列出精选快捷键，选中即执行对应命令（仿 Omarchy 的 keybindings 菜单）
-# 用法:
-#   setting-keybindings.sh            交互式（界面由 SELECTOR_UI 决定: gui=rofi, tui=fzf）
-#   setting-keybindings.sh --gui      强制用 rofi（桌面快捷键直启时用）
-#
-# 只维护 SHORTCUTS 关联数组（[键位]=描述），命令从 sxhkdrc 自动查得并展开花括号。
-# 展示顺序沿用 sxhkdrc 里的顺序。
+# setting-keybindings.sh - 快捷键界面：列出精选快捷键，选中即执行对应命令
+# 只维护 SHORTCUTS 关联数组（[键位]=描述），命令从 sxhkdrc 自动查出并展开花括号。
 
 set -euo pipefail
 
@@ -18,11 +13,11 @@ SXHKD_CMD="$DOTFILES_DIR/settings/lib/sxhkd-shortcuts.py"
 # 记录入口是否已指定 UI（从 settings 子菜单进入时会继承 SELECTOR_UI）
 _inherited_ui="${SELECTOR_UI:-}"
 
-# 加载公共函数(含 epipe_init/select_ui/selector_gui_supported/MENU_EXIT_ALL)并初始化 stdout 安全
+# 公共函数
 source "$DOTFILES_DIR/settings/lib/selectors.sh"
 source "$DOTFILES_DIR/settings/lib/menu.sh"
 
-# 独立运行(如快捷键直启)时默认 GUI：无继承的 SELECTOR_UI 且无终端时用 rofi
+# 独立运行时默认 GUI；从 settings 子菜单进入则继承 SELECTOR_UI
 if [ -z "$_inherited_ui" ]; then
   if selector_gui_supported; then
     SELECTOR_UI=gui
@@ -30,7 +25,6 @@ if [ -z "$_inherited_ui" ]; then
     SELECTOR_UI=tui
   fi
 fi
-# 允许 --gui / --tui 覆盖
 for _arg in "$@"; do
   case "$_arg" in
     --gui) selector_gui_supported && SELECTOR_UI=gui ;;

@@ -2,10 +2,7 @@
 """ANSI → ANSI 转换器（fzf preview 用）
 
 将含光标左右移动(ESC[nC/D)的终端输出转为纯 SGR 颜色输出。
-光标移动被替换为精确的空格填充，使 fzf preview 能正确显示对齐布局。
-
-用法:
-  fastfetch --pipe false | ansi-to-ansi.py --colors colors.toml
+光标移动被替换为精确的空格填充，否则 fzf preview 里对齐布局会错乱。
 """
 
 from ansi_parse import strip_trailing_blank, iter_runs, run_cli

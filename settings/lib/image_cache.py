@@ -3,12 +3,7 @@
 #
 # 把缩放后的预览 PNG 缓存到 $XDG_CACHE_HOME/image-cache/，供 img-preview.py 复用。
 # 缓存键 = sha1(源路径 + mtime + 大小 + 目标尺寸)，源变化自动失效，写入时清理过期条目。
-#
-# 说明：rofi 侧直接用原图路径、由 rofi 自行加载缓存，不走本模块。
-#
-# CLI:
-#   image_cache.py --from-image SRC [--max-w W] [--max-h H]   源图 → 缓存 PNG 路径
-#   image_cache.py --prune [--max-age-days N]                  清理过期缓存
+# rofi 侧直接用原图路径，不走本模块。
 import argparse
 import hashlib
 import os

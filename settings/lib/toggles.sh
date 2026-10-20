@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 # toggles.sh - 布尔开关引擎（通用，不含任何具体功能）
-# 作为函数库被 source：菜单 setting-toggles.sh、以及 bspwmrc 的启动套用。
 #
-# 约定：每个开关是 settings/toggles/<key>.sh 下的一个可执行脚本，实现三个子命令：
+# 约定：每个开关是 settings/toggles/<key>.sh 下的可执行脚本，实现三个子命令：
 #   label                 打印显示名
 #   default               打印"未选择时"的默认状态（0/1），缺省视为 1
 #   apply <0|1> [settle]  按给定状态套用（settle 非空时用于骑过窗口重建，可忽略）
-# 状态由本引擎持有：$XDG_STATE_HOME/settings/toggles/<key>（1=开 0=关），无文件时用脚本的 default。
+# 状态文件 $XDG_STATE_HOME/settings/toggles/<key>（1=开 0=关），无文件时用脚本的 default。
 
-# 防止重复加载
 [[ -n "${_TOGGLES_LOADED:-}" ]] && return 0
 _TOGGLES_LOADED=1
 
@@ -30,9 +28,7 @@ toggles_keys() {
 
 toggle_script() { printf '%s/%s.sh\n' "$TOGGLES_DIR" "$1"; }
 
-# 标签与默认状态是开关脚本的静态属性，缓存起来：菜单每次重绘都要它们，
-# 不缓存的话每个开关每帧都要 fork 一次脚本（原先一帧 = 2-3 次 spawn/开关）。
-# 状态文件不存在时才会读默认值，所以默认值也值得缓存。
+# 标签与默认状态是静态属性，缓存起来：菜单每次重绘都要它们，不缓存则每帧 fork 一次脚本。
 declare -A _TOGGLE_LABEL_CACHE=() _TOGGLE_DEFAULT_CACHE=()
 
 toggle_label() {
@@ -52,8 +48,7 @@ toggles_default() {
   printf '%s\n' "${_TOGGLE_DEFAULT_CACHE[$key]}"
 }
 
-# 预热标签/默认值缓存。必须在**父 shell** 里调用：菜单里常见的 `x="$(toggle_label k)"`
-# 会把缓存写进子 shell，父 shell 拿不到，逐帧重绘等于每帧重新 fork 一遍开关脚本。
+# 预热标签/默认值缓存；必须在**父 shell** 里调用：$(toggle_label k) 会把缓存写进子 shell。
 toggles_warm_cache() {
   local key label d
   while IFS= read -r key; do
@@ -68,9 +63,7 @@ toggles_warm_cache() {
   done < <(toggles_keys)
 }
 
-# 菜单快照：每个开关一行 `<key>\t<标签>\t<状态>`（制表符分隔——标签是人写的，可能含空格/冒号）。
-# 这是菜单每帧要的全部信息，一次给全；标签走缓存、状态是文件读取，所以除了调用方那一次
-# `$(toggles_lines)` 不再有子 shell。冷缓存时逐个回退到脚本，不会给出空标签。
+# 菜单快照：每个开关一行 `<key>\t<标签>\t<状态>`（制表符分隔：标签是人写的，可能含空格/冒号）。
 toggles_lines() {
   local key label st state_file
   while IFS= read -r key; do
@@ -86,8 +79,7 @@ toggles_lines() {
   done < <(toggles_keys)
 }
 
-# 当前状态（1=开 0=关），无状态文件时用默认
-# 用 read 而不是 $(cat)：菜单每次重绘都逐项问一次，cat 是外部命令（多一次 fork）
+# 当前状态（1=开 0=关）；用 read 而非 $(cat)：菜单每次重绘都逐项问一次，cat 多一次 fork。
 toggle_state() {
   local f="$TOGGLE_STATE_DIR/$1" st
   if [ -f "$f" ]; then

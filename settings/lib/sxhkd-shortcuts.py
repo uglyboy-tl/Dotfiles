@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# 解析 sxhkdrc，输出花括号展开后的 "键位<TAB>命令"
+# 解析 sxhkdrc，输出花括号展开后的 "键位<TAB>命令"（参数：sxhkdrc 路径）
 # 键位与命令的花括号按组对齐（命令多出的组复用最后一个键位组索引）
-# 用法: sxhkd-shortcuts.py [sxhkdrc路径]
 import itertools
 import re
 import sys
