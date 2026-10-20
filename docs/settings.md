@@ -31,7 +31,7 @@ settings/                              # 设置菜单（独立目录，入口链
 ├── setting-keybindings.sh           # 快捷键速查（条目式，选中即执行）
 ├── setting-about.sh                 # 关于（fastfetch 系统信息，经 show 层双端展示）
 ├── toggles/                         # 布尔开关实现（每个开关一个独立脚本）
-│   ├── polybar-shadow.sh            #   Polybar 阴影
+│   ├── polybar-float.sh             #   Polybar 悬浮效果
 │   └── dunst-pause.sh               #   免打扰（暂停通知）
 ├── rofi/                            # 设置 rofi 主题
 │   ├── settings.rasi                # 主菜单
@@ -89,10 +89,10 @@ settings/                              # 设置菜单（独立目录，入口链
 
 | 开关 | 实现 | 默认 |
 |------|------|------|
-| Polybar 阴影 | 用 picom 的窗口属性 `_COMPTON_SHADOW` **实时**开关：关闭时给 polybar 窗口设 `_COMPTON_SHADOW=0`，开启时移除该属性恢复默认。**不改任何配置文件、不重启 picom**（picom 会监听该属性变化重算阴影）。 | 关（无阴影） |
+| Polybar 悬浮效果 | 一个窗口属性 `_POLYBAR_FLAT` 管两件事（`picom.conf` 的 rules 段最后一条）：存在 = 无阴影 + 不模糊（状态栏背景完全透明，壁纸原样透出）；移除 = 有阴影 + 毛玻璃。**不用 picom 自带的 `_COMPTON_SHADOW`** —— 它只在「没有 rules」的老路径里被读取，本配置是 rules 模式，设了也不生效（`src/wm/win.c` 的 `win_on_factor_change`）。属性落定后发 `SIGUSR1` 让 picom reinitialize：picom 12.x 只在窗口重映射/自身重初始化时重算模糊。 | 关（扁平、透明） |
 | 免打扰 | `dunstctl set-paused` 暂停/恢复通知。关闭时**先 `close-all` 丢弃暂停期间积压的通知再恢复**（否则恢复瞬间会一次性弹出旧通知）。开启时的提示会被暂停的 dunst 排队、看不到，并在下次关闭时随积压一起清掉，属正常。 | 关（正常通知） |
 
-> `_COMPTON_SHADOW` 是会话内属性，polybar 窗口重建后会丢失，且重建期间新旧窗口会短暂并存。故该开关的 `apply` 在 `settle` 模式下于数秒内反复设到当前所有 polybar 窗口上，骑过整个重建（只设一次会落到正在退出的旧窗口上而落空）；交互式翻转只设一次。
+> `_POLYBAR_FLAT` 是会话内窗口属性，polybar 窗口重建后会丢失，且重建期间新旧窗口会短暂并存。故该开关的 `apply` 在 `settle` 模式下于数秒内反复设到当前所有 polybar 窗口上，骑过整个重建（只设一次会落到正在退出的旧窗口上而落空）；交互式翻转只设一次。
 
 ## 内容展示层（show）
 
