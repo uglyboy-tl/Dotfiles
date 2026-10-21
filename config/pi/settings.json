@@ -13,7 +13,7 @@
     "npm:cc-safety-net"
   ],
   "defaultProvider": "opencode-go",
-  "defaultModel": "deepseek-v4.1-flash",
+  "defaultModel": "minimax-m3.1-flash-free",
   "enabledModels": [
     "opencode-go/deepseek-v4.1-flash",
     "deepseek/deepseek-flash",
