@@ -14,7 +14,6 @@
   foreground: {{ foreground }};
   dark-foreground: {{ dark_foreground }};
   light-foreground: {{ light_foreground }};
-  bright-foreground: {{ bright_white }};
 
   /* Semantic colors */
   accent: {{ accent }};

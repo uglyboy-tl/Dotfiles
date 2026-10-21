@@ -122,8 +122,8 @@ bright_black = "#4c566a"   # 8 bright black
 | `darker_background` | `scale(background, 57%)` | 更深一档 |
 | `lighter_background` | `scale(background, 130%)` | hover / 选中行 |
 | `dark_foreground` | `mix(foreground, background, 42%)` | 次要文字（实测 3.8-6.9:1） |
-| `light_foreground` | `mix(foreground, #ffffff, 30%)` | 亮文字 |
-| `muted` | `mix(bright_black, foreground, 25%)` | GUI 禁用态（实测 2.8-7.1:1） |
+| `light_foreground` | `mix(foreground, #ffffff, 30%)` | 亮文字，比 foreground 亮一档 |
+| `muted` | `mix(bright_black, foreground, 35%)` | GUI 禁用态（实测 3.4-8.3:1） |
 | `accent` | `@blue` | 强调色 |
 | `orange` | `mix(red, yellow, 50%)` | Polybar/Rofi 橙色 |
 | `selection` | `@selection_background` | 兼容直接引用 `selection` 的模板 |
@@ -133,7 +133,12 @@ bright_black = "#4c566a"   # 8 bright black
 全部 6 个可对照的 Omarchy 主题的 `orange` 实测 dE00 < 0.5，说明这是通行做法而非巧合。
 
 **`muted` 不等于 ANSI 8。** 模板里 ANSI 8 槽直接写 `{{ bright_black }}`；`muted` 只服务于
-GTK `insensitive_fg_color` 等 GUI 禁用态，所以向 `foreground` 提了 25% 以保证读得出来。
+GTK `insensitive_fg_color` 等 GUI 禁用态，所以向 `foreground` 提了 35% 以保证读得出来。
+
+**不要把 ANSI 15 当「亮前景」用。** 需要比 `foreground` 亮一档的文字时引用
+`{{ light_foreground }}`，不要引用 `{{ bright_white }}`：ANSI 15 忠实跟随上游，而各主题对它
+的定位不一——Catppuccin 的 ANSI 15 是 subtext0（`#a6adc8`，**比 foreground 还暗**），
+Dracula/Nord 却是最亮的白。ANSI 槽只给终端调色板用。
 
 ### 模板变量
 

@@ -9,7 +9,7 @@ lighter-background = {{ lighter_background }}
 foreground = {{ foreground }}
 dark-foreground = {{ dark_foreground }}
 light-foreground = {{ light_foreground }}
-bright-foreground = {{ bright_white }}
+bright-foreground = {{ bright_foreground }}
 
 ; Semantic colors
 accent = {{ accent }}
