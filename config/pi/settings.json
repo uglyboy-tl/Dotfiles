@@ -17,7 +17,9 @@
   "enabledModels": [
     "opencode-go/deepseek-v4.1-flash",
     "deepseek/deepseek-flash",
-    "opencode-go/mimo-v2.6-flash"
+    "opencode-go/mimo-v2.6-flash",
+    "opencode-go/longcat-2.5-preview-free",
+    "opencode-go/minimax-m3.1-flash-free"
   ],
   "defaultThinkingLevel": "low",
   "treeFilterMode": "no-tools",
