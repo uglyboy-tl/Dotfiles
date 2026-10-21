@@ -6,6 +6,8 @@ set -euo pipefail
 : "${XDG_DATA_HOME:=$HOME/.local/share}"
 : "${XDG_CONFIG_HOME:=$HOME/.config}"
 : "${XDG_STATE_HOME:=$HOME/.local/state}"
+# 必须 export：render.conf 的重载命令是 sh -c "..."，子 shell 拿不到未导出的变量
+export XDG_DATA_HOME XDG_CONFIG_HOME XDG_STATE_HOME
 
 DOTFILES_DIR="$XDG_DATA_HOME/dotfiles"
 
