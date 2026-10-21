@@ -11,6 +11,7 @@
 | 源头 | 终端模拟器（Alacritty/Ghostty/URxvt） | 定义 16 色映射 | 需要 |
 | 跟随 | CLI/TUI 工具（bat/zsh/neomutt/fastfetch/herdr/pi 等） | 继承终端 16 色 | 不需要 |
 | 独立 | GUI 应用（Polybar/Rofi/Dunst/Zathura） | 独立颜色系统 | 需要 |
+| 独立 | TUI 但不读终端调色板（btop） | 自带主题文件，颜色只能由模板写 hex | 需要 |
 
 CLI 工具跟随终端的好处：一次切换全局生效，维护成本低。pi 的主题用 `config/pi/themes/flat.json`（`settings.json` 里 `theme = flat`），文件里**只写 ANSI 索引（0-255）和 `""`（终端默认色），不写 hex**——pi 把数字索引当 ANSI 转义序列输出，由终端用自己的调色板渲染（见 pi 的 `docs/themes.md`），所以换主题时 pi 的颜色跟着变。它不需要模板：**8 个主题渲染出的 `flat.json` 完全一样**。
 
@@ -170,8 +171,13 @@ GTK `insensitive_fg_color` 等 GUI 禁用态，所以向 `foreground` 提了 25%
 | Rofi | `rofi.rasi.tpl` | `rofi/colors.rasi` | 下次启动生效 |
 | Zathura | `zathura.conf.tpl` | `zathura/colors.conf` | 重启 |
 | BSPWM | `bspwm.sh.tpl` | `bspwm/colors.sh` | `bspc wm -r` |
+| btop（主题） | `btop.theme.tpl` | `btop/themes/dotfiles.theme` | 重启 btop |
+| btop（布局） | `btop.conf.tpl` | `btop/btop.conf` | 重启 btop（btop 退出时会回写该文件，模板才是真源） |
 | fcitx5 | `fcitx5.conf.tpl` | `fcitx5/themes/dotfiles/theme.conf`（`data:` 前缀，落 `XDG_DATA_HOME`） | `fcitx5 -r -d`（必须重启：DBus `ReloadAddonConfig classicui` 虽能重读 `theme.conf`，但候选窗不重绘，实测无效） |
 | GTK3 / GTK4 | `gtk3.css.tpl` / `gtk4.css.tpl` | `gtk-3.0/gtk.css` / `gtk-4.0/gtk.css` | 应用重启（标记 `always`，始终渲染） |
+
+> btop 的两行没有 `always` 标记：未装 btop 的机器切主题不会生成 `~/.config/btop/`，事后装了要再切一次主题才有配色。
+> btop 退出时会整份回写 `btop.conf`（值保留、注释被替换成它自己的），改设置请改模板。
 
 > fcitx5 主题名固定为 `dotfiles`，换肤只重写 `theme.conf`，故 `classicui.conf`（已由 dotbot 纳管）里的 `Theme=dotfiles` 只需写一次，不随换肤改变。
 

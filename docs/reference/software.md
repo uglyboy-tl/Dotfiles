@@ -45,6 +45,7 @@
 | Alacritty / Ghostty / URxvt | `desktop/alacritty/`、`desktop/ghostty/`、`desktop/X11/`；默认终端由 `x-terminal-emulator` 选择（`sudo update-alternatives --config x-terminal-emulator`） |
 | Dunst / Zathura / MPV | `desktop/dunst/dunstrc`、`desktop/zathura/`、`desktop/mpv/` |
 | Jellyfin MPV Shim | 仅纳管 `desktop/systemd/jellyfin-mpv-shim.service`；`conf.json` 有意不纳管（原因与关键设置见 [维护笔记](../maintenance.md#已知问题)），`cred.json`/`users.json` 属凭据留本地 |
+| btop（终端系统监控） | `themes/templates/btop.conf.tpl`、`btop.theme.tpl`（渲染产物在 `~/.config/btop/`，非软链；btop 退出时会回写自身配置，见 [维护笔记](../maintenance.md)）。模板里的 `disks_filter`、`net_iface` 是**本机专属值**（挂载点 + eno1），换机器要改模板 |
 | Picom / Redshift / 字体 | `desktop/picom/picom.conf`、`desktop/redshift/redshift.conf`、`desktop/fontconfig/fonts.conf` |
 | 桌面入口文件（.desktop） | `desktop/applications/` |
 | Udiskie | `desktop/udiskie/config.yml` |
