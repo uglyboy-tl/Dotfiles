@@ -9,6 +9,7 @@
     - picom
     # 状态栏 / 启动器 / 通知 / 挂载
     - polybar
+    - btop
     - rofi
     - dunst
     - libnotify-bin
@@ -32,7 +33,6 @@
     - fcitx5-rime
     # 终端 / 文档 / 媒体
     - ghostty
-    - yazi
     - mpv
     - ncmpcpp
     # 脚本运行时
