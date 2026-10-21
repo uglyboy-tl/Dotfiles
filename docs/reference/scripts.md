@@ -35,7 +35,6 @@
 |------|------|
 | `rofi-powermenu.sh` | 电源 rofi 菜单（polybar powermenu 模块点击） |
 | `rofi-calendar.py` | rofi 月历弹出（polybar date 模块点击），主题 `desktop/rofi/calendar.rasi` |
-| `rofi-sysinfo.py` | rofi 系统信息面板（CPU/内存/温度/网络/swap/uptime + 音量/亮度加减），主题 `desktop/rofi/sysinfo.rasi`。入口暂在 `cpu.ini` 中注释未启用 |
 
 ## 树莓派命令（`rpi` 配置）
 
